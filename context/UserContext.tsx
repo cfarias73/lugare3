@@ -7,6 +7,7 @@ interface UserContextType {
   user: User | null;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signUp: (email: string, password: string, name: string, role: 'user' | 'provider') => Promise<{ error: any }>;
+  login: (email: string, name: string, role: 'user' | 'provider' | 'admin') => void;
   logout: () => Promise<void>;
   bookings: Booking[];
   addBooking: (booking: Booking) => void;
@@ -38,6 +39,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
           .single();
 
         setUser({
+          id: session.user.id,
           email: session.user.email!,
           name: profile?.name || session.user.user_metadata.name || 'Usuario',
           isAuthenticated: true,
@@ -56,6 +58,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
           .single();
 
         setUser({
+          id: session.user.id,
           email: session.user.email!,
           name: profile?.name || session.user.user_metadata.name || 'Usuario',
           isAuthenticated: true,
@@ -89,6 +92,17 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await supabase.auth.signOut();
   };
 
+  // Legacy synchronous login (used by AdminLogin for dummy access).
+  const login = (email: string, name: string, role: 'user' | 'provider' | 'admin') => {
+    setUser({
+      id: 'local-' + role,
+      email,
+      name,
+      isAuthenticated: true,
+      role,
+    });
+  };
+
   const addBooking = (booking: Booking) => {
     setBookings((prev) => [booking, ...prev]);
   };
@@ -115,7 +129,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <UserContext.Provider value={{ user, signIn, signUp, logout, bookings, addBooking, invitations, addInvitation, messages, sendMessage, draftInvitation, updateDraftInvitation }}>
+    <UserContext.Provider value={{ user, signIn, signUp, login, logout, bookings, addBooking, invitations, addInvitation, messages, sendMessage, draftInvitation, updateDraftInvitation }}>
       {children}
     </UserContext.Provider>
   );
