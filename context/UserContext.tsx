@@ -92,6 +92,17 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await supabase.auth.signOut();
   };
 
+  // Legacy synchronous login (used by AdminLogin for dummy access).
+  const login = (email: string, name: string, role: 'user' | 'provider' | 'admin') => {
+    setUser({
+      id: 'local-' + role,
+      email,
+      name,
+      isAuthenticated: true,
+      role,
+    });
+  };
+
   const addBooking = (booking: Booking) => {
     setBookings((prev) => [booking, ...prev]);
   };
@@ -118,7 +129,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <UserContext.Provider value={{ user, signIn, signUp, logout, bookings, addBooking, invitations, addInvitation, messages, sendMessage, draftInvitation, updateDraftInvitation }}>
+    <UserContext.Provider value={{ user, signIn, signUp, login, logout, bookings, addBooking, invitations, addInvitation, messages, sendMessage, draftInvitation, updateDraftInvitation }}>
       {children}
     </UserContext.Provider>
   );
