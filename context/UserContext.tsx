@@ -7,6 +7,7 @@ interface UserContextType {
   user: User | null;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signUp: (email: string, password: string, name: string, role: 'user' | 'provider') => Promise<{ error: any }>;
+  login: (email: string, name: string, role: 'user' | 'provider' | 'admin') => void;
   logout: () => Promise<void>;
   bookings: Booking[];
   addBooking: (booking: Booking) => void;
@@ -38,6 +39,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
           .single();
 
         setUser({
+          id: session.user.id,
           email: session.user.email!,
           name: profile?.name || session.user.user_metadata.name || 'Usuario',
           isAuthenticated: true,
@@ -56,6 +58,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
           .single();
 
         setUser({
+          id: session.user.id,
           email: session.user.email!,
           name: profile?.name || session.user.user_metadata.name || 'Usuario',
           isAuthenticated: true,
