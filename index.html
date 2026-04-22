@@ -1,0 +1,74 @@
+
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LUGARE</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round|Material+Icons+Outlined" rel="stylesheet" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              primary: "#F26B3A",
+              secondary: "#00A8B5",
+              "background-light": "#FAFAFA",
+              "background-dark": "#121212",
+              "surface-light": "#FFFFFF",
+              "surface-dark": "#1E1E1E",
+            },
+            fontFamily: {
+              sans: ["Poppins", "sans-serif"],
+              display: ["Plus Jakarta Sans", "sans-serif"],
+            },
+            borderRadius: {
+              DEFAULT: "12px",
+              'xl': '20px',
+              '2xl': '24px',
+              '3xl': '32px',
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      body {
+        font-family: 'Poppins', sans-serif;
+        -webkit-tap-highlight-color: transparent;
+      }
+      .no-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+      .no-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+      .map-bg {
+        background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDqso2q7AL-eZ9aIS2-ccegqa8rbIMxGaws5nDn4ci2kQmIn5e5YMb5NSGL_N7eYaDWLyl_bE3tmVcC3s-nRvjU3qE88xYcdSSak8DxdAHy3uvk-OiK_dmI2rdoYYy0K94ggT9qC_9lR_8wg4UnL0Ap5l525mfSesVLyYnfz0VcWh9cjHhteUDsM5sfiR8gIFLqtbdvmIIuc1IZedDgP_7NcTGQuU_dGKLdn4l-gEa1MCE4tHpxZSd10imroUK0EdRWdQX3BQYScN5l');
+        background-size: cover;
+        background-position: center;
+        filter: grayscale(0.2) contrast(0.9);
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react-router-dom": "https://esm.sh/react-router-dom@^7.13.0",
+    "react/": "https://esm.sh/react@^19.2.4/",
+    "react": "https://esm.sh/react@^19.2.4",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.4/"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 antialiased">
+    <div id="root"></div>
+  <script type="module" src="/index.tsx"></script>
+</body>
+</html>

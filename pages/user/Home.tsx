@@ -1,0 +1,291 @@
+
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import Layout from '../../components/Layout';
+import { useUser } from '../../context/UserContext';
+import { getVenues } from '../../src/services/venueService';
+import { Venue } from '../../types';
+
+const Home: React.FC = () => {
+  const navigate = useNavigate();
+  const { user, bookings, invitations } = useUser();
+  const [venues, setVenues] = useState<Venue[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchVenues = async () => {
+      setIsLoading(true);
+      const data = await getVenues();
+      setVenues(data);
+      setIsLoading(false);
+    };
+    fetchVenues();
+  }, []);
+
+  const nextBooking = bookings.length > 0 ? bookings[0] : null;
+
+  const handleShare = (e: React.MouseEvent, name: string) => {
+    e.stopPropagation();
+    if (navigator.share) {
+      navigator.share({
+        title: name,
+        text: `Mira este lugar para eventos: ${name}`,
+        url: window.location.href,
+      }).catch(console.error);
+    } else {
+      alert(`Enlace de ${name} copiado`);
+    }
+  };
+
+  return (
+    <Layout>
+      <header className="px-6 pt-12 pb-4 flex justify-between items-center bg-white dark:bg-surface-dark sticky top-0 z-40 shadow-sm transition-colors">
+        <div>
+          <h1 className="text-xl font-bold text-slate-800 dark:text-white font-display">Hola, {user?.name || 'Bienvenido'}</h1>
+        </div>
+        <div className="flex items-center space-x-4">
+          <div className="relative">
+            <span className="material-icons-outlined text-slate-600 dark:text-slate-300">notifications</span>
+            <span className="absolute top-0 right-0 h-2.5 w-2.5 bg-primary border-2 border-white dark:border-surface-dark rounded-full"></span>
+          </div>
+          <img 
+            alt="Avatar" 
+            className="w-10 h-10 rounded-full object-cover ring-2 ring-primary/20" 
+            src="https://lh3.googleusercontent.com/aida-public/AB6AXuCAkY7AviIRiCpv8Koe6LoTyPAt1AJqCGkHEjpFdo4D8JlpGdzUheoCp65Ss2T4-6h5KivvUSvZTqKeC7TsGwEjRb7Oz4do6MpDaKU2HIAu8ZHw7Ohu2ZqkuaCgIOwbm-7nMP_2Rrlf2f1OmMl58h1G4x13DAmAb-De3dxfsK6EPpaol91SSNHQm1YRIwDjPQ36zWMi5cCqel-vSp5_fr14NVk8YSKipiYZwaPbKnTijIAfYrFYafCkd1TLCs1HI5yIgudbnm9F9spC" 
+            loading="lazy"
+          />
+        </div>
+      </header>
+
+      <div className="px-5 mt-4 space-y-8">
+        {/* Next Booking Card */}
+        {nextBooking && (
+          <section>
+            <div className="flex justify-between items-end mb-4">
+              <h2 className="text-lg font-bold font-display">Tu próxima reserva</h2>
+              <button onClick={() => navigate('/user/bookings')} className="text-secondary font-semibold text-sm">Ver todas</button>
+            </div>
+            <div 
+              onClick={() => navigate('/user/bookings')}
+              className="bg-primary rounded-3xl p-5 text-white shadow-lg shadow-primary/30 relative overflow-hidden cursor-pointer"
+            >
+              <div className="relative z-10">
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <h3 className="text-xl font-bold">{nextBooking.venueName}</h3>
+                    <p className="text-white/80 text-xs flex items-center mt-1">
+                      <span className="material-icons-outlined text-xs mr-1">location_on</span>
+                      {nextBooking.location}
+                    </p>
+                  </div>
+                  <div className="bg-white/20 backdrop-blur-md px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider">
+                    {nextBooking.status}
+                  </div>
+                </div>
+                <div className="flex gap-6">
+                  <div>
+                    <p className="text-white/60 text-[10px] uppercase font-bold tracking-widest mb-1">Fecha</p>
+                    <p className="text-sm font-bold">{nextBooking.date}</p>
+                  </div>
+                  <div>
+                    <p className="text-white/60 text-[10px] uppercase font-bold tracking-widest mb-1">Horario</p>
+                    <p className="text-sm font-bold">{nextBooking.time}</p>
+                  </div>
+                </div>
+              </div>
+              <span className="material-icons-outlined absolute -right-4 -bottom-4 text-white/10 text-9xl rotate-12">event_available</span>
+            </div>
+          </section>
+        )}
+
+        {/* Invitations Status */}
+        {invitations.length > 0 && (
+          <section>
+            <div className="flex justify-between items-end mb-4">
+              <h2 className="text-lg font-bold font-display">Tus invitaciones</h2>
+              <button className="text-secondary font-semibold text-sm">Gestionar</button>
+            </div>
+            <div className="bg-white dark:bg-surface-dark rounded-3xl p-5 border border-slate-100 dark:border-slate-800 shadow-sm flex items-center gap-4">
+              <div className="bg-secondary/10 w-12 h-12 rounded-2xl flex items-center justify-center">
+                <span className="material-icons-outlined text-secondary">send</span>
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-bold text-slate-800 dark:text-white">
+                  {invitations.length} {invitations.length === 1 ? 'invitación enviada' : 'invitaciones enviadas'}
+                </p>
+                <p className="text-xs text-slate-500">
+                  {invitations[0].guests?.length || 0} invitados en total
+                </p>
+              </div>
+              <button className="text-primary font-bold text-xs">Ver estado</button>
+            </div>
+          </section>
+        )}
+
+        {/* Search Bar */}
+        <div className="flex gap-3">
+          <div className="relative flex-grow">
+            <span className="material-icons-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">search</span>
+            <input 
+              className="w-full pl-12 pr-12 py-3.5 bg-slate-100 dark:bg-slate-800 border-none rounded-2xl text-sm focus:ring-2 focus:ring-primary focus:bg-white transition-all dark:text-white" 
+              placeholder="Buscar espacios, ubicaciones..." 
+              type="text"
+            />
+            <span className="material-icons-outlined absolute right-4 top-1/2 -translate-y-1/2 text-primary cursor-pointer">tune</span>
+          </div>
+          <button 
+            onClick={() => navigate('/user/explore')}
+            className="bg-slate-100 dark:bg-slate-800 p-3.5 rounded-2xl flex items-center justify-center hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+          >
+            <span className="material-icons-outlined text-primary">map</span>
+          </button>
+        </div>
+
+        {/* Categories Scroller */}
+        <div className="flex overflow-x-auto no-scrollbar gap-3 -mx-5 px-5 pb-2 snap-x">
+          <button className="snap-start shrink-0 flex items-center gap-2 px-5 py-2.5 bg-primary text-white rounded-full font-medium shadow-lg shadow-primary/20 whitespace-nowrap">
+            <span className="material-icons-outlined text-lg">grid_view</span> Todos
+          </button>
+          <button className="snap-start shrink-0 flex items-center gap-2 px-5 py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-full font-medium whitespace-nowrap">
+            <span className="material-icons-outlined text-lg">meeting_room</span> Salones
+          </button>
+          <button className="snap-start shrink-0 flex items-center gap-2 px-5 py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-full font-medium whitespace-nowrap">
+            <span className="material-icons-outlined text-lg">celebration</span> Fiestas
+          </button>
+          <button className="snap-start shrink-0 flex items-center gap-2 px-5 py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-full font-medium whitespace-nowrap">
+            <span className="material-icons-outlined text-lg">work</span> Reuniones
+          </button>
+        </div>
+
+        {/* Featured Section */}
+        <section>
+          <div className="flex justify-between items-end mb-4">
+            <h2 className="text-lg font-bold font-display">Espacios destacados</h2>
+            <button className="text-secondary font-semibold text-sm">Ver todos</button>
+          </div>
+          <div className="flex overflow-x-auto no-scrollbar gap-5 -mx-5 px-5 pb-4 snap-x snap-mandatory">
+            {isLoading ? (
+              [1, 2].map((i) => (
+                <div key={i} className="snap-center shrink-0 min-w-[280px] bg-white dark:bg-surface-dark rounded-3xl overflow-hidden shadow-sm border border-slate-100 dark:border-slate-800">
+                  <div className="h-48 bg-slate-200 dark:bg-slate-700 animate-pulse" />
+                  <div className="p-4 space-y-3">
+                    <div className="h-5 bg-slate-200 dark:bg-slate-700 animate-pulse w-3/4" />
+                    <div className="h-4 bg-slate-200 dark:bg-slate-700 animate-pulse w-1/2" />
+                  </div>
+                </div>
+              ))
+            ) : venues.map((venue) => (
+              <div 
+                key={venue.id} 
+                onClick={() => navigate(`/user/venue/${venue.id}`)}
+                className="snap-center shrink-0 min-w-[280px] bg-white dark:bg-surface-dark rounded-3xl overflow-hidden shadow-sm border border-slate-100 dark:border-slate-800 cursor-pointer transform hover:scale-[0.98] transition-transform"
+              >
+                <div className="relative h-48">
+                  <img alt={venue.name} className="w-full h-full object-cover" src={venue.image} loading="lazy" />
+                  {venue.isFeatured && (
+                    <div className="absolute top-4 left-4 bg-[#FFB347] text-white text-[10px] font-bold px-3 py-1 rounded-lg uppercase tracking-wider">Destacado</div>
+                  )}
+                  {venue.discount && (
+                    <div className="absolute top-4 left-4 bg-primary text-white text-[10px] font-bold px-3 py-1 rounded-lg uppercase tracking-wider">{venue.discount}</div>
+                  )}
+                  <div className="absolute top-4 right-4 flex gap-2 z-10">
+                    <button 
+                      className="bg-white/90 p-2 rounded-full shadow-md hover:text-primary transition-colors" 
+                      onClick={(e) => handleShare(e, venue.name)}
+                    >
+                      <span className="material-icons-outlined text-slate-700 text-xl">share</span>
+                    </button>
+                    <button 
+                      className="bg-white/90 p-2 rounded-full shadow-md hover:text-red-500 transition-colors" 
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <span className="material-icons-outlined text-primary text-xl">favorite_border</span>
+                    </button>
+                  </div>
+                </div>
+                <div className="p-4">
+                  <div className="flex justify-between items-start mb-1">
+                    <h3 className="font-bold text-slate-800 dark:text-white truncate flex-1 mr-2">{venue.name}</h3>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <span className="material-icons text-yellow-400 text-sm">star</span>
+                      <span className="text-xs font-bold dark:text-white">{venue.rating}</span>
+                    </div>
+                  </div>
+                  <p className="text-slate-400 text-xs flex items-center mb-4 truncate">
+                    <span className="material-icons-outlined text-xs mr-1">location_on</span> {venue.location}
+                  </p>
+                  <div className="flex justify-between items-center">
+                    <p className="font-bold text-primary font-display">${venue.price.toLocaleString()}<span className="text-[10px] text-slate-400 font-normal">/hora</span></p>
+                    <button className="bg-secondary text-white px-6 py-3 rounded-xl text-xs font-bold hover:bg-secondary/90 transition-colors">Reservar</button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Special Offer Banner */}
+        <section>
+          <div className="relative rounded-3xl overflow-hidden h-48 mb-6 group cursor-pointer active:scale-95 transition-transform">
+            <img alt="Oferta Especial" className="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBJCcVSxHXMqWL1D4Ap0yOFvrwRYhqXowDMsbrTsgHOtCkR_vzmhL0MO_1853LQo0OgIRqUpRAeX5rdG8k86F_5Oa_I_qv5jqeemhAKIeR8IFUZn0K2LDcyt25oPvlkrEykml9JS7WUgzz2kIrCqXwRsMAqM7uLZnX2ctNyXwDnlBlNe2zIzL1f8c1qeJ36DeHGd9_J3zVsrxJoEGZuJ0DV5KaRkpBsOPvPpVwsOOCKFXXHkQL2jSUJW96Xmrt8qOEwixUqi9ahkIqq" loading="lazy" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+            <div className="absolute bottom-5 left-5 text-white">
+              <div className="bg-primary text-[10px] font-bold px-3 py-1 rounded-lg uppercase inline-block mb-2">Exclusivo</div>
+              <h3 className="text-xl font-bold font-display">20% en Jardín Botánico</h3>
+              <p className="text-white/80 text-xs">Para eventos de fin de semana</p>
+            </div>
+          </div>
+        </section>
+
+        {/* Recommended List */}
+        <section className="pb-8">
+          <div className="flex justify-between items-end mb-4">
+            <h2 className="text-lg font-bold font-display">Recomendados para ti</h2>
+            <button className="text-secondary font-semibold text-sm">Ver todos</button>
+          </div>
+          <div className="flex overflow-x-auto no-scrollbar gap-5 -mx-5 px-5 pb-4 snap-x snap-mandatory">
+            {venues.slice().reverse().map((venue) => (
+              <div 
+                key={`rec-${venue.id}`} 
+                onClick={() => navigate(`/user/venue/${venue.id}`)}
+                className="snap-center shrink-0 min-w-[280px] bg-white dark:bg-surface-dark rounded-3xl overflow-hidden shadow-sm border border-slate-100 dark:border-slate-800 cursor-pointer"
+              >
+                <div className="relative h-48">
+                  <img alt={venue.name} className="w-full h-full object-cover" src={venue.image} loading="lazy" />
+                  <div className="absolute bottom-4 left-4 bg-secondary text-white text-[10px] font-bold px-3 py-1 rounded-lg uppercase tracking-wider">Popular</div>
+                  <div className="absolute top-4 right-4 flex gap-2 z-10">
+                    <button 
+                      className="bg-white/90 p-2 rounded-full shadow-md hover:text-primary transition-colors"
+                      onClick={(e) => handleShare(e, venue.name)}
+                    >
+                      <span className="material-icons-outlined text-slate-700 text-xl">share</span>
+                    </button>
+                    <button className="bg-white/90 p-2 rounded-full shadow-md" onClick={(e) => e.stopPropagation()}>
+                      <span className="material-icons-outlined text-primary text-xl">favorite_border</span>
+                    </button>
+                  </div>
+                </div>
+                <div className="p-4">
+                  <div className="flex justify-between items-start mb-1">
+                    <h3 className="font-bold text-slate-800 dark:text-white truncate flex-1 mr-2">{venue.name}</h3>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <span className="material-icons text-yellow-400 text-sm">star</span>
+                      <span className="text-xs font-bold dark:text-white">{venue.rating}</span>
+                    </div>
+                  </div>
+                  <p className="text-slate-400 text-xs mb-4">{venue.city}</p>
+                  <div className="flex justify-between items-center">
+                    <p className="font-bold text-primary font-display">${venue.price.toLocaleString()}<span className="text-[10px] text-slate-400 font-normal">/hora</span></p>
+                    <button className="bg-secondary text-white px-5 py-2 rounded-xl text-xs font-bold">Reservar</button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      </div>
+    </Layout>
+  );
+};
+
+export default Home;

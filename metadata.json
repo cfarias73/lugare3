@@ -1,0 +1,7 @@
+{
+  "name": "LUGARE - Marketplace de Eventos",
+  "description": "Una aplicación tipo marketplace para buscar y reservar lugares para eventos especiales como bodas, bautizos y reuniones corporativas.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
