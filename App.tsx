@@ -23,6 +23,7 @@ import VenueDetail from './pages/user/VenueDetail';
 import BookingCalendar from './pages/user/BookingCalendar';
 import Favorites from './pages/user/Favorites';
 import Checkout from './pages/user/Checkout';
+import PaymentSuccess from './pages/user/PaymentSuccess';
 import Messages from './pages/user/Messages';
 import Bookings from './pages/user/Bookings';
 import Profile from './pages/user/Profile';
@@ -54,6 +55,7 @@ import AdminHosts from './pages/admin/Hosts';
 import AdminSpaces from './pages/admin/Spaces';
 import AdminBookings from './pages/admin/Bookings';
 import AdminDisputes from './pages/admin/Disputes';
+import AdminSettings from './pages/admin/Settings';
 
 const App: React.FC = () => {
   return (
@@ -76,6 +78,7 @@ const App: React.FC = () => {
         <Route path="/user/booking/:id" element={<ProtectedRoute allowedRole="user"><RouteWrapper><BookingCalendar /></RouteWrapper></ProtectedRoute>} />
         <Route path="/user/favorites" element={<ProtectedRoute allowedRole="user"><RouteWrapper><Favorites /></RouteWrapper></ProtectedRoute>} />
         <Route path="/user/checkout/:id" element={<ProtectedRoute allowedRole="user"><RouteWrapper><Checkout /></RouteWrapper></ProtectedRoute>} />
+        <Route path="/user/payment-success" element={<ProtectedRoute allowedRole="user"><RouteWrapper><PaymentSuccess /></RouteWrapper></ProtectedRoute>} />
         <Route path="/user/messages" element={<ProtectedRoute allowedRole="user"><RouteWrapper><Messages /></RouteWrapper></ProtectedRoute>} />
         <Route path="/user/bookings" element={<ProtectedRoute allowedRole="user"><RouteWrapper><Bookings /></RouteWrapper></ProtectedRoute>} />
         <Route path="/user/profile" element={<ProtectedRoute allowedRole="user"><RouteWrapper><Profile /></RouteWrapper></ProtectedRoute>} />
@@ -106,6 +109,7 @@ const App: React.FC = () => {
         <Route path="/admin/spaces" element={<ProtectedRoute allowedRole="admin"><RouteWrapper><AdminSpaces /></RouteWrapper></ProtectedRoute>} />
         <Route path="/admin/bookings" element={<ProtectedRoute allowedRole="admin"><RouteWrapper><AdminBookings /></RouteWrapper></ProtectedRoute>} />
         <Route path="/admin/disputes" element={<ProtectedRoute allowedRole="admin"><RouteWrapper><AdminDisputes /></RouteWrapper></ProtectedRoute>} />
+        <Route path="/admin/settings" element={<ProtectedRoute allowedRole="admin"><RouteWrapper><AdminSettings /></RouteWrapper></ProtectedRoute>} />
 
         {/* Redirects */}
         <Route path="*" element={<Navigate to="/" replace />} />
