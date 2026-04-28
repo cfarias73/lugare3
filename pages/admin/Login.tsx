@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../../context/UserContext';
 import { supabase } from '../../lib/supabaseClient';
@@ -7,12 +7,21 @@ import { toast } from 'sonner';
 
 const AdminLogin: React.FC = () => {
   const navigate = useNavigate();
-  const { signIn } = useUser();
+  const { signIn, user } = useUser();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
+  const [pendingRedirect, setPendingRedirect] = useState(false);
+
+  // Wait until UserContext has hydrated the admin role before navigating.
+  // Prevents race condition where ProtectedRoute bounces back to /admin/login.
+  useEffect(() => {
+    if (pendingRedirect && user?.isAuthenticated && user.role === 'admin') {
+      navigate('/admin/dashboard', { replace: true });
+    }
+  }, [pendingRedirect, user, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,7 +44,6 @@ const AdminLogin: React.FC = () => {
         return;
       }
 
-      // Verify admin role server-side via has_role()
       const { data: { user: authUser } } = await supabase.auth.getUser();
       if (!authUser) {
         toast.error('No se pudo verificar la sesión');
@@ -43,14 +51,14 @@ const AdminLogin: React.FC = () => {
         return;
       }
 
-      const { data: roles } = await supabase
+      const { data: adminRow } = await supabase
         .from('user_roles')
         .select('role')
         .eq('user_id', authUser.id)
         .eq('role', 'admin')
         .maybeSingle();
 
-      if (!roles) {
+      if (!adminRow) {
         await supabase.auth.signOut();
         toast.error('Esta cuenta no tiene permisos de administrador');
         setIsLoading(false);
@@ -58,7 +66,8 @@ const AdminLogin: React.FC = () => {
       }
 
       toast.success('Bienvenido, Admin');
-      navigate('/admin/dashboard');
+      // Defer navigation until UserContext finishes hydrating the admin role.
+      setPendingRedirect(true);
     } catch (err) {
       console.error(err);
       toast.error('Error al iniciar sesión');
