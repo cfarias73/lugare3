@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../../context/UserContext';
 import { supabase } from '../../lib/supabaseClient';
@@ -7,21 +7,12 @@ import { toast } from 'sonner';
 
 const AdminLogin: React.FC = () => {
   const navigate = useNavigate();
-  const { signIn, user } = useUser();
+  const { signIn } = useUser();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
-  const [pendingRedirect, setPendingRedirect] = useState(false);
-
-  // Wait until UserContext has hydrated the admin role before navigating.
-  // Prevents race condition where ProtectedRoute bounces back to /admin/login.
-  useEffect(() => {
-    if (pendingRedirect && user?.isAuthenticated && user.role === 'admin') {
-      navigate('/admin/dashboard', { replace: true });
-    }
-  }, [pendingRedirect, user, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,8 +57,7 @@ const AdminLogin: React.FC = () => {
       }
 
       toast.success('Bienvenido, Admin');
-      // Defer navigation until UserContext finishes hydrating the admin role.
-      setPendingRedirect(true);
+      navigate('/admin/dashboard', { replace: true });
     } catch (err) {
       console.error(err);
       toast.error('Error al iniciar sesión');
