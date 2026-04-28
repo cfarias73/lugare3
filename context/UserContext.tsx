@@ -7,7 +7,6 @@ interface UserContextType {
   user: User | null;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signUp: (email: string, password: string, name: string, role: 'user' | 'provider') => Promise<{ error: any }>;
-  login: (email: string, name: string, role: 'user' | 'provider' | 'admin') => void;
   logout: () => Promise<void>;
   bookings: Booking[];
   addBooking: (booking: Booking) => void;
@@ -21,6 +20,35 @@ interface UserContextType {
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
+// Resolve role from user_roles table (admin > provider > user precedence)
+const resolveRole = async (userId: string): Promise<'user' | 'provider' | 'admin'> => {
+  const { data, error } = await supabase
+    .from('user_roles')
+    .select('role')
+    .eq('user_id', userId);
+
+  if (error || !data || data.length === 0) return 'user';
+  const roles = data.map((r: any) => r.role);
+  if (roles.includes('admin')) return 'admin';
+  if (roles.includes('provider')) return 'provider';
+  return 'user';
+};
+
+const hydrateUser = async (sessionUser: any): Promise<User> => {
+  const [{ data: profile }, role] = await Promise.all([
+    supabase.from('profiles').select('name').eq('id', sessionUser.id).single(),
+    resolveRole(sessionUser.id),
+  ]);
+
+  return {
+    id: sessionUser.id,
+    email: sessionUser.email!,
+    name: profile?.name || sessionUser.user_metadata?.name || 'Usuario',
+    isAuthenticated: true,
+    role,
+  };
+};
+
 export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [bookings, setBookings] = useState<Booking[]>(MOCK_BOOKINGS);
@@ -29,43 +57,21 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [draftInvitation, setDraftInvitation] = useState<Partial<Invitation> | null>(null);
 
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (session) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('role, name')
-          .eq('id', session.user.id)
-          .single();
-
-        setUser({
-          id: session.user.id,
-          email: session.user.email!,
-          name: profile?.name || session.user.user_metadata.name || 'Usuario',
-          isAuthenticated: true,
-          role: profile?.role || session.user.user_metadata.role || 'user',
-        });
+    // IMPORTANT: set up listener BEFORE getSession (avoids race conditions)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        // Defer Supabase calls to avoid deadlock inside the callback
+        setTimeout(() => {
+          hydrateUser(session.user).then(setUser);
+        }, 0);
+      } else {
+        setUser(null);
       }
     });
 
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      if (session) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('role, name')
-          .eq('id', session.user.id)
-          .single();
-
-        setUser({
-          id: session.user.id,
-          email: session.user.email!,
-          name: profile?.name || session.user.user_metadata.name || 'Usuario',
-          isAuthenticated: true,
-          role: profile?.role || session.user.user_metadata.role || 'user',
-        });
-      } else {
-        setUser(null);
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        hydrateUser(session.user).then(setUser);
       }
     });
 
@@ -73,15 +79,17 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
     return { error };
   };
 
   const signUp = async (email: string, password: string, name: string, role: 'user' | 'provider') => {
-    const { data, error } = await supabase.auth.signUp({
+    const redirectUrl = `${window.location.origin}/`;
+    const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
+        emailRedirectTo: redirectUrl,
         data: { name, role },
       },
     });
@@ -92,30 +100,14 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await supabase.auth.signOut();
   };
 
-  // Legacy synchronous login (used by AdminLogin for dummy access).
-  const login = (email: string, name: string, role: 'user' | 'provider' | 'admin') => {
-    setUser({
-      id: 'local-' + role,
-      email,
-      name,
-      isAuthenticated: true,
-      role,
-    });
-  };
-
-  const addBooking = (booking: Booking) => {
-    setBookings((prev) => [booking, ...prev]);
-  };
-
-  const addInvitation = (invitation: Invitation) => {
-    setInvitations((prev) => [invitation, ...prev]);
-  };
+  const addBooking = (booking: Booking) => setBookings((prev) => [booking, ...prev]);
+  const addInvitation = (invitation: Invitation) => setInvitations((prev) => [invitation, ...prev]);
 
   const sendMessage = (content: string, venueName: string = 'Soporte') => {
     const newMessage: Message = {
       id: Date.now().toString(),
-      sender: 'Tú', // Or user.name
-      avatar: 'https://ui-avatars.com/api/?name=You&background=random', // Placeholder
+      sender: 'Tú',
+      avatar: 'https://ui-avatars.com/api/?name=You&background=random',
       content,
       time: 'Ahora',
       venueName,
@@ -129,7 +121,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <UserContext.Provider value={{ user, signIn, signUp, login, logout, bookings, addBooking, invitations, addInvitation, messages, sendMessage, draftInvitation, updateDraftInvitation }}>
+    <UserContext.Provider value={{ user, signIn, signUp, logout, bookings, addBooking, invitations, addInvitation, messages, sendMessage, draftInvitation, updateDraftInvitation }}>
       {children}
     </UserContext.Provider>
   );
