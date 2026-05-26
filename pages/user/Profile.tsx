@@ -103,14 +103,26 @@ const Profile: React.FC = () => {
     toast.success(`Idioma: ${lang}`);
   };
 
-  const handleDeleteAccount = () => {
-    localStorage.removeItem('user_profile');
-    localStorage.removeItem('user_avatar');
-    localStorage.removeItem('user_notifications');
-    localStorage.removeItem('user_language');
-    toast.success('Cuenta eliminada');
-    setShowDeleteConfirm(false);
-    navigate('/user/login');
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDeleteAccount = async () => {
+    setIsDeleting(true);
+    try {
+      const { error } = await supabase.rpc('delete_my_account');
+      if (error) throw error;
+      await supabase.auth.signOut();
+      localStorage.removeItem('user_profile');
+      localStorage.removeItem('user_avatar');
+      localStorage.removeItem('user_notifications');
+      localStorage.removeItem('user_language');
+      toast.success('Cuenta eliminada');
+      setShowDeleteConfirm(false);
+      navigate('/user/login');
+    } catch (err: any) {
+      toast.error(err?.message || 'No se pudo eliminar la cuenta');
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   return (
