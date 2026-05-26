@@ -1,30 +1,50 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../../../context/UserContext';
 import { Invitation } from '../../../types';
+import { createInvitation } from '../../../src/services/invitationService';
 
 const SendInvitation: React.FC = () => {
   const navigate = useNavigate();
-  const { draftInvitation, addInvitation, updateDraftInvitation } = useUser();
+  const { user, draftInvitation, addInvitation, updateDraftInvitation } = useUser();
   const guests = draftInvitation?.guests || [];
+  const [sending, setSending] = useState(false);
 
-  const handleSend = () => {
-    if (draftInvitation) {
-      const newInvitation: Invitation = {
-        id: Date.now().toString(),
-        designId: draftInvitation.designId || 'romantico',
-        eventName: draftInvitation.eventName || 'Evento sin nombre',
-        date: draftInvitation.date || '',
-        time: draftInvitation.time || '',
-        location: draftInvitation.location || '',
-        guests: guests
-      };
-      addInvitation(newInvitation);
-      updateDraftInvitation({}); // Clear draft
-      alert('¡Invitaciones enviadas con éxito!');
-      navigate('/user/home');
+  const handleSend = async () => {
+    if (!draftInvitation) return;
+    if (!user) {
+      alert('Debes iniciar sesión para enviar invitaciones.');
+      navigate('/user/login');
+      return;
     }
+    setSending(true);
+    const saved = await createInvitation(user.id, {
+      designId: draftInvitation.designId || 'romantico',
+      eventName: draftInvitation.eventName || 'Evento sin nombre',
+      date: draftInvitation.date || '',
+      time: draftInvitation.time || '',
+      location: draftInvitation.location || '',
+      guests,
+    });
+    setSending(false);
+    if (!saved) {
+      alert('No se pudo guardar la invitación. Intenta de nuevo.');
+      return;
+    }
+    const newInvitation: Invitation = {
+      id: saved.id,
+      designId: saved.design_id,
+      eventName: saved.event_name,
+      date: saved.event_date || '',
+      time: saved.event_time || '',
+      location: saved.location || '',
+      guests,
+    };
+    addInvitation(newInvitation);
+    updateDraftInvitation({});
+    alert('¡Invitaciones guardadas con éxito!');
+    navigate('/user/home');
   };
 
   return (
@@ -88,7 +108,8 @@ const SendInvitation: React.FC = () => {
       <footer className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/80 dark:bg-background-dark/80 backdrop-blur-md p-6 border-t border-slate-100 dark:border-slate-800 z-50">
         <button 
           onClick={handleSend}
-          className="w-full py-4 bg-primary hover:bg-orange-600 text-white font-bold text-lg rounded-2xl transition-all shadow-lg shadow-primary/30 active:scale-[0.98]"
+          disabled={sending}
+          className="w-full py-4 bg-primary hover:bg-orange-600 text-white font-bold text-lg rounded-2xl transition-all shadow-lg shadow-primary/30 active:scale-[0.98] disabled:opacity-60"
         >
           INVITAR
         </button>

@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useRealtimeNotifications } from '../src/hooks/useRealtimeNotifications';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -10,6 +11,7 @@ interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ children, hideNav = false }) => {
   const location = useLocation();
   const navigate = useNavigate();
+  useRealtimeNotifications();
 
   const isActive = (path: string) => location.pathname === path;
 
