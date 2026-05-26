@@ -228,9 +228,10 @@ const Home: React.FC = () => {
                     </button>
                     <button 
                       className="bg-white/90 p-2 rounded-full shadow-md hover:text-red-500 transition-colors" 
-                      onClick={(e) => e.stopPropagation()}
+                      onClick={(e) => { e.stopPropagation(); toggleFavorite(venue.id); }}
+                      aria-label={isFavorite(venue.id) ? 'Quitar de favoritos' : 'Añadir a favoritos'}
                     >
-                      <span className="material-icons-outlined text-primary text-xl">favorite_border</span>
+                      <span className="material-icons-outlined text-primary text-xl">{isFavorite(venue.id) ? 'favorite' : 'favorite_border'}</span>
                     </button>
                   </div>
                 </div>
