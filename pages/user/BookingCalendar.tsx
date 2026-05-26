@@ -1,15 +1,49 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { MOCK_VENUES } from '../../constants';
+import { supabase } from '../../lib/supabaseClient';
+
+const SLOT_TIMES = {
+  morning: { start: '08:00:00', end: '13:00:00', hours: 5 },
+  afternoon: { start: '14:00:00', end: '19:00:00', hours: 5 },
+  night: { start: '20:00:00', end: '02:00:00', hours: 6 },
+} as const;
 
 const BookingCalendar: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [selectedSlot, setSelectedSlot] = useState<'morning' | 'afternoon' | 'night' | null>(null);
+  const [venue, setVenue] = useState<any>(MOCK_VENUES[0]);
 
-  const venue = useMemo(() => MOCK_VENUES.find(v => v.id === id) || MOCK_VENUES[0], [id]);
+  useEffect(() => {
+    if (!id) return;
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+    if (!isUuid) {
+      const mock = MOCK_VENUES.find(v => v.id === id);
+      if (mock) setVenue(mock);
+      return;
+    }
+    supabase
+      .from('venues')
+      .select('*, venue_images(image_url)')
+      .eq('id', id)
+      .single()
+      .then(({ data }) => {
+        if (data) {
+          setVenue({
+            id: data.id,
+            name: data.name,
+            location: data.location || data.city,
+            image: data.venue_images?.[0]?.image_url || MOCK_VENUES[0].image,
+            price: Number(data.price_per_hour) || 0,
+            rating: data.rating || 0,
+            reviewsCount: data.reviews_count || 0,
+          });
+        }
+      });
+  }, [id]);
 
   const days = Array.from({ length: 31 }, (_, i) => i + 1);
 
@@ -18,7 +52,16 @@ const BookingCalendar: React.FC = () => {
 
   const handleContinue = () => {
     if (selectedDay && selectedSlot) {
-      navigate(`/user/checkout/${venue.id}`);
+      const slot = SLOT_TIMES[selectedSlot];
+      const date = `2025-10-${String(selectedDay).padStart(2, '0')}`;
+      const params = new URLSearchParams({
+        date,
+        start: slot.start,
+        end: slot.end,
+        hours: String(slot.hours),
+        guests: '10',
+      });
+      navigate(`/user/checkout/${id}?${params.toString()}`);
     } else {
       alert('Por favor selecciona un día y un horario.');
     }
