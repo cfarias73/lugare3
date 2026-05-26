@@ -67,8 +67,20 @@ const Checkout: React.FC = () => {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Error creando checkout');
 
-      // Redirect to Stripe Checkout
-      window.location.href = data.url;
+      // Redirect to Stripe Checkout.
+      // En el preview de Lovable estamos dentro de un iframe con Permissions-Policy
+      // que bloquea la navegación a dominios externos (checkout.stripe.com),
+      // por lo que intentamos navegar el top frame y, si falla, abrimos en nueva pestaña.
+      try {
+        if (window.top && window.top !== window.self) {
+          window.top.location.href = data.url;
+        } else {
+          window.location.href = data.url;
+        }
+      } catch {
+        const w = window.open(data.url, '_blank');
+        if (!w) window.location.href = data.url;
+      }
     } catch (e: any) {
       console.error(e);
       toast.error(e.message || 'Error al procesar el pago');
