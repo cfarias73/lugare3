@@ -46,11 +46,22 @@ const Bookings: React.FC = () => {
   const { bookings } = useUser();
   const [loading, setLoading] = useState(true);
   const [selectedBooking, setSelectedBooking] = useState<any>(null);
+  const [query, setQuery] = useState('');
 
   useEffect(() => {
     const timer = setTimeout(() => setLoading(false), 1000);
     return () => clearTimeout(timer);
   }, []);
+
+  const filteredBookings = bookings.filter((b) => {
+    const q = query.trim().toLowerCase();
+    if (!q) return true;
+    return (
+      b.venueName?.toLowerCase().includes(q) ||
+      b.date?.toLowerCase().includes(q) ||
+      b.location?.toLowerCase().includes(q)
+    );
+  });
 
   return (
     <Layout>
