@@ -46,11 +46,22 @@ const Bookings: React.FC = () => {
   const { bookings } = useUser();
   const [loading, setLoading] = useState(true);
   const [selectedBooking, setSelectedBooking] = useState<any>(null);
+  const [query, setQuery] = useState('');
 
   useEffect(() => {
     const timer = setTimeout(() => setLoading(false), 1000);
     return () => clearTimeout(timer);
   }, []);
+
+  const filteredBookings = bookings.filter((b) => {
+    const q = query.trim().toLowerCase();
+    if (!q) return true;
+    return (
+      b.venueName?.toLowerCase().includes(q) ||
+      b.date?.toLowerCase().includes(q) ||
+      b.location?.toLowerCase().includes(q)
+    );
+  });
 
   return (
     <Layout>
@@ -73,16 +84,18 @@ const Bookings: React.FC = () => {
       <main className="p-4 space-y-6">
         <div className="relative">
           <span className="material-icons-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">search</span>
-          <input 
-            className="w-full pl-12 pr-4 py-3 bg-slate-100 dark:bg-slate-800 border-none rounded-2xl focus:ring-2 focus:ring-primary/50 text-slate-600 dark:text-slate-300 placeholder:text-slate-400" 
-            placeholder="Buscar por nombre o fecha" 
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            className="w-full pl-12 pr-4 py-3 bg-slate-100 dark:bg-slate-800 border-none rounded-2xl focus:ring-2 focus:ring-primary/50 text-slate-600 dark:text-slate-300 placeholder:text-slate-400"
+            placeholder="Buscar por nombre o fecha"
             type="text"
           />
         </div>
 
         <div className="flex justify-between items-center">
           <h2 className="text-lg font-bold text-slate-800 dark:text-white">Reservas próximas</h2>
-          <span className="text-sm text-[#00B4BB] font-medium">{bookings.length} reservas</span>
+          <span className="text-sm text-[#00B4BB] font-medium">{filteredBookings.length} reservas</span>
         </div>
 
         <div className="space-y-6">
@@ -91,15 +104,15 @@ const Bookings: React.FC = () => {
               <Skeleton className="h-44 rounded-3xl" />
               <Skeleton className="h-44 rounded-3xl" />
             </div>
-          ) : bookings.length === 0 ? (
+          ) : filteredBookings.length === 0 ? (
             <EmptyState 
               icon="event_busy"
-              title="Sin reservas"
-              description="Aún no tienes reservas próximas."
-              action={{ label: 'Explorar lugares', onClick: () => navigate('/user/home') }}
+              title={query ? 'Sin resultados' : 'Sin reservas'}
+              description={query ? `No hay reservas que coincidan con "${query}".` : 'Aún no tienes reservas próximas.'}
+              action={query ? undefined : { label: 'Explorar lugares', onClick: () => navigate('/user/home') }}
             />
           ) : (
-            bookings.map((booking) => (
+            filteredBookings.map((booking) => (
               <div key={booking.id} className="bg-white dark:bg-surface-dark rounded-3xl overflow-hidden shadow-md border border-slate-100 dark:border-slate-800">
                 <div className="relative h-44">
                   <img alt={booking.venueName} className="w-full h-full object-cover" src={booking.image} />

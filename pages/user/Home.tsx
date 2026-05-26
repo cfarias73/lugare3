@@ -9,7 +9,7 @@ import { Venue } from '../../types';
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
-  const { user, bookings, invitations } = useUser();
+  const { user, bookings, invitations, isFavorite, toggleFavorite } = useUser();
   const [venues, setVenues] = useState<Venue[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [activeCategory, setActiveCategory] = useState<string>('all');
@@ -228,9 +228,10 @@ const Home: React.FC = () => {
                     </button>
                     <button 
                       className="bg-white/90 p-2 rounded-full shadow-md hover:text-red-500 transition-colors" 
-                      onClick={(e) => e.stopPropagation()}
+                      onClick={(e) => { e.stopPropagation(); toggleFavorite(venue.id); }}
+                      aria-label={isFavorite(venue.id) ? 'Quitar de favoritos' : 'Añadir a favoritos'}
                     >
-                      <span className="material-icons-outlined text-primary text-xl">favorite_border</span>
+                      <span className="material-icons-outlined text-primary text-xl">{isFavorite(venue.id) ? 'favorite' : 'favorite_border'}</span>
                     </button>
                   </div>
                 </div>
@@ -247,7 +248,7 @@ const Home: React.FC = () => {
                   </p>
                   <div className="flex justify-between items-center">
                     <p className="font-bold text-primary font-display">${venue.price.toLocaleString()}<span className="text-[10px] text-slate-400 font-normal">/hora</span></p>
-                    <button className="bg-secondary text-white px-6 py-3 rounded-xl text-xs font-bold hover:bg-secondary/90 transition-colors">Reservar</button>
+                    <button onClick={(e) => { e.stopPropagation(); navigate(`/user/venue/${venue.id}`); }} className="bg-secondary text-white px-6 py-3 rounded-xl text-xs font-bold hover:bg-secondary/90 transition-colors">Reservar</button>
                   </div>
                 </div>
               </div>
@@ -291,8 +292,8 @@ const Home: React.FC = () => {
                     >
                       <span className="material-icons-outlined text-slate-700 text-xl">share</span>
                     </button>
-                    <button className="bg-white/90 p-2 rounded-full shadow-md" onClick={(e) => e.stopPropagation()}>
-                      <span className="material-icons-outlined text-primary text-xl">favorite_border</span>
+                    <button className="bg-white/90 p-2 rounded-full shadow-md" onClick={(e) => { e.stopPropagation(); toggleFavorite(venue.id); }} aria-label={isFavorite(venue.id) ? 'Quitar de favoritos' : 'Añadir a favoritos'}>
+                      <span className="material-icons-outlined text-primary text-xl">{isFavorite(venue.id) ? 'favorite' : 'favorite_border'}</span>
                     </button>
                   </div>
                 </div>
@@ -307,7 +308,7 @@ const Home: React.FC = () => {
                   <p className="text-slate-400 text-xs mb-4">{venue.city}</p>
                   <div className="flex justify-between items-center">
                     <p className="font-bold text-primary font-display">${venue.price.toLocaleString()}<span className="text-[10px] text-slate-400 font-normal">/hora</span></p>
-                    <button className="bg-secondary text-white px-5 py-2 rounded-xl text-xs font-bold">Reservar</button>
+                    <button onClick={(e) => { e.stopPropagation(); navigate(`/user/venue/${venue.id}`); }} className="bg-secondary text-white px-5 py-2 rounded-xl text-xs font-bold">Reservar</button>
                   </div>
                 </div>
               </div>
