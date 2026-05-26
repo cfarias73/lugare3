@@ -112,16 +112,18 @@ const Messages: React.FC = () => {
   };
 
   const handleSendReply = () => {
-    if (!draft.trim() || !activeConversation) return;
     const text = draft.trim();
+    if ((!text && !pendingAttachment) || !activeConversation) return;
+    const att = pendingAttachment;
     setThreads((prev) => ({
       ...prev,
       [activeConversation.id]: [
         ...(prev[activeConversation.id] || []),
-        { id: `${Date.now()}-me`, from: 'me', text, time: formatNow() },
+        { id: `${Date.now()}-me`, from: 'me', text, time: formatNow(), attachment: att || undefined },
       ],
     }));
     setDraft('');
+    setPendingAttachment(null);
     // Simulated reply
     setTimeout(() => {
       setThreads((prev) => ({
@@ -131,13 +133,29 @@ const Messages: React.FC = () => {
           {
             id: `${Date.now()}-them`,
             from: 'them',
-            text: 'Gracias por tu mensaje, te respondo en breve 🙌',
+            text: att ? '¡Recibido! Gracias por el archivo 🙌' : 'Gracias por tu mensaje, te respondo en breve 🙌',
             time: formatNow(),
           },
         ],
       }));
     }, 1200);
   };
+
+  const handleFileSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    const MAX = 10 * 1024 * 1024;
+    if (file.size > MAX) {
+      showToast('El archivo supera 10 MB');
+      return;
+    }
+    const isImage = file.type.startsWith('image/');
+    const url = URL.createObjectURL(file);
+    setPendingAttachment({ name: file.name, size: file.size, type: file.type, url, isImage });
+    showToast(`Archivo listo: ${file.name}`);
+  };
+
 
   // ============= CONVERSATION (CHAT THREAD) VIEW =============
   if (activeConversation) {
