@@ -1,26 +1,35 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../../components/Layout';
 import { useUser } from '../../context/UserContext';
 import { getVenues } from '../../src/services/venueService';
+import { getCategories, Category } from '../../src/services/categoryService';
 import { Venue } from '../../types';
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
   const { user, bookings, invitations } = useUser();
   const [venues, setVenues] = useState<Venue[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [activeCategory, setActiveCategory] = useState<string>('all');
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const fetchVenues = async () => {
+    const load = async () => {
       setIsLoading(true);
-      const data = await getVenues();
-      setVenues(data);
+      const [v, c] = await Promise.all([getVenues(), getCategories()]);
+      setVenues(v);
+      setCategories(c);
       setIsLoading(false);
     };
-    fetchVenues();
+    load();
   }, []);
+
+  const filteredVenues = useMemo(() => {
+    if (activeCategory === 'all') return venues;
+    return venues.filter((v) => (v as any).category === activeCategory);
+  }, [venues, activeCategory]);
 
   const nextBooking = bookings.length > 0 ? bookings[0] : null;
 
