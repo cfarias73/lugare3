@@ -94,11 +94,16 @@ const RateExperience: React.FC = () => {
 
       <main className="flex-1 overflow-y-auto px-5 py-4 space-y-6 pb-32">
         <div className="p-4 border border-gray-100 dark:border-gray-800 rounded-2xl bg-white dark:bg-surface-dark shadow-sm flex items-center gap-4">
-          <img alt="Venue" className="w-20 h-20 rounded-xl object-cover shadow-sm" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBlb4r72VIvNk5AkKrZaDvYibUqqXBMwVArIHuEiK7TCkdai7FWPOpyixgjlVQzikI06LtdXFoWgR0tUO7IA2ogNuMSKKRz1K2bhRRP_Y4QcUFbRvu_yVBvN0WWeGkFCeKA_3el9C584p4cjYyCZvDpYt5IUj204ZYofPEun34KG-Sxf-l0a9DGNZlxzYYKReVhpq1z1G3-MUM9R-E6NorSuZPCVd5np4JpR-wyAud_34hf3ZinZy3k-dcHesCZXt8Ucg1OeMLUZjO2"/>
+          <img alt={venueName} className="w-20 h-20 rounded-xl object-cover shadow-sm" src={venueImage}/>
           <div className="flex-1">
-            <h2 className="text-lg font-semibold text-slate-800 dark:text-white leading-tight">Casa Loma</h2>
-            <p className="text-sm text-slate-500 dark:text-slate-400">Salón para eventos</p>
-            <p className="text-[12px] text-slate-400 dark:text-slate-500 mt-1">12 de Agosto, 2023 • 18:00 - 22:00</p>
+            <h2 className="text-lg font-semibold text-slate-800 dark:text-white leading-tight">{venueName}</h2>
+            <p className="text-sm text-slate-500 dark:text-slate-400">Espacio para eventos</p>
+            {(venueDate || venueTime) && (
+              <p className="text-[12px] text-slate-400 dark:text-slate-500 mt-1">{venueDate} {venueTime && `• ${venueTime}`}</p>
+            )}
+            {!venueId && (
+              <p className="text-[11px] text-amber-600 mt-1">Selecciona una reserva pasada en "Reservas" para valorarla.</p>
+            )}
           </div>
         </div>
 
