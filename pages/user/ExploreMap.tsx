@@ -31,11 +31,34 @@ const MapController: React.FC<{ center: [number, number], zoom: number }> = ({ c
   return null;
 };
 
+type PriceRange = { label: string; min: number; max: number };
+type CapacityRange = { label: string; min: number; max: number };
+
+const PRICE_RANGES: PriceRange[] = [
+  { label: 'Hasta $20,000', min: 0, max: 20000 },
+  { label: '$20,000 - $50,000', min: 20000, max: 50000 },
+  { label: '$50,000 - $100,000', min: 50000, max: 100000 },
+  { label: 'Más de $100,000', min: 100000, max: Infinity },
+];
+
+const CAPACITY_RANGES: CapacityRange[] = [
+  { label: 'Hasta 50 personas', min: 0, max: 50 },
+  { label: '50 - 100 personas', min: 50, max: 100 },
+  { label: '100 - 300 personas', min: 100, max: 300 },
+  { label: 'Más de 300 personas', min: 300, max: Infinity },
+];
+
+const RATING_OPTIONS = [3, 3.5, 4, 4.5];
+
 const ExploreMap: React.FC = () => {
   const navigate = useNavigate();
   const [selectedVenue, setSelectedVenue] = useState<Venue | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeFilter, setActiveFilter] = useState<string | null>(null);
+  const [openFilter, setOpenFilter] = useState<string | null>(null);
+  const [priceRange, setPriceRange] = useState<PriceRange | null>(null);
+  const [capacityRange, setCapacityRange] = useState<CapacityRange | null>(null);
+  const [dateFilter, setDateFilter] = useState<string>('');
+  const [minRating, setMinRating] = useState<number | null>(null);
   const [mapCenter, setMapCenter] = useState<[number, number]>([19.4326, -99.1332]);
   const [zoom, setZoom] = useState(13);
   const [venues, setVenues] = useState<Venue[]>([]);
