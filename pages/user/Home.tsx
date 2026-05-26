@@ -9,7 +9,7 @@ import { Venue } from '../../types';
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
-  const { user, bookings, invitations } = useUser();
+  const { user, bookings, invitations, isFavorite, toggleFavorite } = useUser();
   const [venues, setVenues] = useState<Venue[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [activeCategory, setActiveCategory] = useState<string>('all');
