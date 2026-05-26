@@ -8,9 +8,10 @@ export interface ConversationRow {
   last_message: string | null;
   last_message_at: string | null;
   created_at: string;
-  venue?: { id: string; name: string; venue_images?: { image_url: string }[] };
-  user_profile?: { id: string; name: string | null };
-  provider_profile?: { id: string; name: string | null };
+  venue_name?: string;
+  venue_image?: string;
+  user_name?: string;
+  provider_name?: string;
 }
 
 export interface MessageRow {
@@ -22,40 +23,68 @@ export interface MessageRow {
   created_at: string;
 }
 
-const CONVERSATION_SELECT = `
-  *,
-  venue:venues!conversations_venue_id_fkey ( id, name, venue_images ( image_url ) ),
-  user_profile:profiles!conversations_user_id_fkey ( id, name ),
-  provider_profile:profiles!conversations_provider_id_fkey ( id, name )
-`;
+const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1519167758481-83f5e181dcc3?auto=format&fit=crop&q=80&w=400';
+
+const hydrateConversations = async (rows: any[]): Promise<ConversationRow[]> => {
+  if (rows.length === 0) return [];
+  const venueIds = Array.from(new Set(rows.map((r) => r.venue_id)));
+  const userIds = Array.from(new Set(rows.flatMap((r) => [r.user_id, r.provider_id])));
+
+  const [venuesRes, profilesRes] = await Promise.all([
+    supabase.from('venues').select('id, name, venue_images(image_url)').in('id', venueIds),
+    supabase.from('profiles').select('id, name').in('id', userIds),
+  ]);
+
+  const venueMap = new Map<string, { name: string; image: string }>();
+  (venuesRes.data || []).forEach((v: any) => {
+    venueMap.set(v.id, {
+      name: v.name,
+      image: v.venue_images?.[0]?.image_url || FALLBACK_IMAGE,
+    });
+  });
+
+  const profileMap = new Map<string, string>();
+  (profilesRes.data || []).forEach((p: any) => {
+    profileMap.set(p.id, p.name || 'Usuario');
+  });
+
+  return rows.map((r) => ({
+    ...r,
+    venue_name: venueMap.get(r.venue_id)?.name || 'Espacio',
+    venue_image: venueMap.get(r.venue_id)?.image || FALLBACK_IMAGE,
+    user_name: profileMap.get(r.user_id) || 'Usuario',
+    provider_name: profileMap.get(r.provider_id) || 'Anfitrión',
+  }));
+};
 
 export const listConversations = async (userId: string): Promise<ConversationRow[]> => {
   const { data, error } = await supabase
     .from('conversations')
-    .select(CONVERSATION_SELECT)
+    .select('*')
     .or(`user_id.eq.${userId},provider_id.eq.${userId}`)
     .order('last_message_at', { ascending: false, nullsFirst: false });
   if (error) {
     console.error('listConversations error', error);
     return [];
   }
-  return (data || []) as any;
+  return hydrateConversations(data || []);
 };
 
 export const getOrCreateConversation = async (
   userId: string,
   venueId: string
 ): Promise<ConversationRow | null> => {
-  // Try existing first
   const existing = await supabase
     .from('conversations')
-    .select(CONVERSATION_SELECT)
+    .select('*')
     .eq('user_id', userId)
     .eq('venue_id', venueId)
     .maybeSingle();
-  if (existing.data) return existing.data as any;
+  if (existing.data) {
+    const [hydrated] = await hydrateConversations([existing.data]);
+    return hydrated;
+  }
 
-  // Need provider/owner of the venue
   const { data: venue, error: vErr } = await supabase
     .from('venues')
     .select('owner_id')
@@ -69,13 +98,14 @@ export const getOrCreateConversation = async (
   const { data, error } = await supabase
     .from('conversations')
     .insert({ user_id: userId, venue_id: venueId, provider_id: venue.owner_id })
-    .select(CONVERSATION_SELECT)
+    .select('*')
     .single();
   if (error) {
     console.error('Create conversation error', error);
     return null;
   }
-  return data as any;
+  const [hydrated] = await hydrateConversations([data]);
+  return hydrated;
 };
 
 export const getMessages = async (conversationId: string): Promise<MessageRow[]> => {
@@ -105,7 +135,6 @@ export const sendMessage = async (
     console.error('sendMessage error', error);
     return null;
   }
-  // Update last_message on conversation (best-effort)
   await supabase
     .from('conversations')
     .update({ last_message: content, last_message_at: new Date().toISOString() })
