@@ -58,6 +58,21 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [messages, setMessages] = useState<Message[]>(MOCK_MESSAGES);
   const [draftInvitation, setDraftInvitation] = useState<Partial<Invitation> | null>(null);
+  const [favorites, setFavorites] = useState<string[]>(() => {
+    try {
+      const raw = localStorage.getItem('user_favorites');
+      return raw ? JSON.parse(raw) : [];
+    } catch { return []; }
+  });
+
+  useEffect(() => {
+    try { localStorage.setItem('user_favorites', JSON.stringify(favorites)); } catch {}
+  }, [favorites]);
+
+  const toggleFavorite = (venueId: string) => {
+    setFavorites((prev) => prev.includes(venueId) ? prev.filter((id) => id !== venueId) : [...prev, venueId]);
+  };
+  const isFavorite = (venueId: string) => favorites.includes(venueId);
 
   useEffect(() => {
     // IMPORTANT: set up listener BEFORE getSession (avoids race conditions)
