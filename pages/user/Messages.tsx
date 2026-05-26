@@ -6,11 +6,20 @@ import { Skeleton } from '../../components/ui/Skeleton';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { Message } from '../../types';
 
+type ChatAttachment = {
+  name: string;
+  size: number;
+  type: string;
+  url: string; // object URL or data URL
+  isImage: boolean;
+};
+
 type ChatBubble = {
   id: string;
   from: 'me' | 'them';
   text: string;
   time: string;
+  attachment?: ChatAttachment;
 };
 
 const formatNow = () =>
@@ -32,6 +41,8 @@ const Messages: React.FC = () => {
   const [toast, setToast] = useState<string | null>(null);
   const [showChatMenu, setShowChatMenu] = useState(false);
   const scrollRef = useRef<HTMLDivElement | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [pendingAttachment, setPendingAttachment] = useState<ChatAttachment | null>(null);
 
   const showToast = (msg: string) => {
     setToast(msg);
@@ -101,16 +112,18 @@ const Messages: React.FC = () => {
   };
 
   const handleSendReply = () => {
-    if (!draft.trim() || !activeConversation) return;
     const text = draft.trim();
+    if ((!text && !pendingAttachment) || !activeConversation) return;
+    const att = pendingAttachment;
     setThreads((prev) => ({
       ...prev,
       [activeConversation.id]: [
         ...(prev[activeConversation.id] || []),
-        { id: `${Date.now()}-me`, from: 'me', text, time: formatNow() },
+        { id: `${Date.now()}-me`, from: 'me', text, time: formatNow(), attachment: att || undefined },
       ],
     }));
     setDraft('');
+    setPendingAttachment(null);
     // Simulated reply
     setTimeout(() => {
       setThreads((prev) => ({
@@ -120,13 +133,29 @@ const Messages: React.FC = () => {
           {
             id: `${Date.now()}-them`,
             from: 'them',
-            text: 'Gracias por tu mensaje, te respondo en breve 🙌',
+            text: att ? '¡Recibido! Gracias por el archivo 🙌' : 'Gracias por tu mensaje, te respondo en breve 🙌',
             time: formatNow(),
           },
         ],
       }));
     }, 1200);
   };
+
+  const handleFileSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    const MAX = 10 * 1024 * 1024;
+    if (file.size > MAX) {
+      showToast('El archivo supera 10 MB');
+      return;
+    }
+    const isImage = file.type.startsWith('image/');
+    const url = URL.createObjectURL(file);
+    setPendingAttachment({ name: file.name, size: file.size, type: file.type, url, isImage });
+    showToast(`Archivo listo: ${file.name}`);
+  };
+
 
   // ============= CONVERSATION (CHAT THREAD) VIEW =============
   if (activeConversation) {
@@ -236,7 +265,26 @@ const Messages: React.FC = () => {
                     : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-bl-md border border-slate-100 dark:border-slate-700'
                 }`}
               >
-                <p className="whitespace-pre-wrap break-words">{b.text}</p>
+                {b.attachment && (
+                  b.attachment.isImage ? (
+                    <a href={b.attachment.url} target="_blank" rel="noreferrer" className="block mb-1.5">
+                      <img src={b.attachment.url} alt={b.attachment.name} className="rounded-lg max-h-56 w-auto object-cover" />
+                    </a>
+                  ) : (
+                    <a
+                      href={b.attachment.url}
+                      download={b.attachment.name}
+                      className={`flex items-center gap-2 mb-1.5 px-2.5 py-2 rounded-lg ${b.from === 'me' ? 'bg-white/15 hover:bg-white/25' : 'bg-slate-100 dark:bg-slate-700/60 hover:bg-slate-200 dark:hover:bg-slate-700'} transition-colors`}
+                    >
+                      <span className="material-icons-outlined text-base">description</span>
+                      <span className="text-xs font-medium truncate max-w-[180px]">{b.attachment.name}</span>
+                      <span className={`text-[10px] ${b.from === 'me' ? 'text-white/70' : 'text-slate-400'}`}>
+                        {(b.attachment.size / 1024).toFixed(0)} KB
+                      </span>
+                    </a>
+                  )
+                )}
+                {b.text && <p className="whitespace-pre-wrap break-words">{b.text}</p>}
                 <p
                   className={`text-[10.5px] mt-1 text-right ${
                     b.from === 'me' ? 'text-white/70' : 'text-slate-400'
@@ -250,8 +298,42 @@ const Messages: React.FC = () => {
         </main>
 
         <div className="sticky bottom-0 bg-white dark:bg-background-dark border-t border-gray-100 dark:border-slate-800 px-3 py-3">
+          {pendingAttachment && (
+            <div className="mb-2 flex items-center gap-2 bg-slate-100 dark:bg-slate-800 rounded-xl px-3 py-2">
+              {pendingAttachment.isImage ? (
+                <img src={pendingAttachment.url} alt={pendingAttachment.name} className="h-10 w-10 rounded object-cover" />
+              ) : (
+                <span className="material-icons-outlined text-slate-500">description</span>
+              )}
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-medium text-slate-800 dark:text-slate-100 truncate">{pendingAttachment.name}</p>
+                <p className="text-[10px] text-slate-400">{(pendingAttachment.size / 1024).toFixed(0)} KB</p>
+              </div>
+              <button
+                onClick={() => {
+                  URL.revokeObjectURL(pendingAttachment.url);
+                  setPendingAttachment(null);
+                }}
+                className="p-1 text-slate-400 hover:text-red-500"
+                aria-label="Quitar adjunto"
+              >
+                <span className="material-icons-outlined text-base">close</span>
+              </button>
+            </div>
+          )}
+          <input
+            ref={fileInputRef}
+            type="file"
+            className="hidden"
+            accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx,.txt"
+            onChange={handleFileSelected}
+          />
           <div className="flex items-end gap-2">
-            <button className="p-2.5 text-slate-400 hover:text-primary rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="p-2.5 text-slate-400 hover:text-primary rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              aria-label="Adjuntar archivo"
+            >
               <span className="material-icons-outlined text-xl">attach_file</span>
             </button>
             <div className="flex-1 bg-slate-100 dark:bg-slate-800 rounded-2xl px-4 py-2.5 focus-within:ring-2 focus-within:ring-primary/30 transition-all">
@@ -271,7 +353,7 @@ const Messages: React.FC = () => {
             </div>
             <button
               onClick={handleSendReply}
-              disabled={!draft.trim()}
+              disabled={!draft.trim() && !pendingAttachment}
               className="w-11 h-11 flex-shrink-0 bg-primary text-white rounded-full flex items-center justify-center shadow-md shadow-primary/30 hover:bg-orange-600 disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 transition-all"
               aria-label="Enviar"
             >
