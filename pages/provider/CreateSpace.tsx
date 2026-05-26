@@ -68,6 +68,7 @@ const CreateSpaceContent: React.FC = () => {
         capacity: '80',
         description: 'Una hermosa casa con jardín para eventos.',
         images: ['https://lh3.googleusercontent.com/aida-public/AB6AXuAwdXTHf3C9pX9-8dMVgDgxBDCTmf0AaI2tnwdqes4fBJiPNTZJ92j0t09QzWqtUIPgo35M-MtteDja5h8WolMwo_OdO5sitsYFH9pihMtihXMQMjzwk0cgTEPEpfH-4Pe1-gTA-gAByTSlapcaCvDdj6PP_dGL4u8WqeC_EB9X9BFJN_xdQUqmU8AH289TyvK1gEZ0t11Lsq1h_AqxbJT4sBKl2fFPh1ddxKSl_vgtkZFaFOkFi9KGbpW9KeKaQMQ01Dpk0VZiUvGA'],
+        category: '',
       };
       setData(venue);
     }
