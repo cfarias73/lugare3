@@ -6,36 +6,82 @@ import { useUser } from '../../context/UserContext';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { motion, AnimatePresence } from 'motion/react';
+import { getUserBookings } from '../../src/services/userService';
 
-const BookingDetailModal: React.FC<{ booking: any; onClose: () => void }> = ({ booking, onClose }) => (
+const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1519167758481-83f5e181dcc3?auto=format&fit=crop&q=80&w=800';
+
+interface UIBooking {
+  id: string;
+  venueId: string;
+  venueName: string;
+  location: string;
+  image: string;
+  date: string;
+  time: string;
+  totalPrice: number;
+  status: string;
+  statusColor: string;
+  eventDate: string; // ISO yyyy-mm-dd
+}
+
+const STATUS_COLORS: Record<string, string> = {
+  confirmed: '#00B4BB',
+  pending: '#F6A623',
+  cancelled: '#E5484D',
+  completed: '#5EB962',
+};
+
+const STATUS_LABELS: Record<string, string> = {
+  confirmed: 'Confirmada',
+  pending: 'Pendiente',
+  cancelled: 'Cancelada',
+  completed: 'Completada',
+};
+
+const formatDate = (iso: string) => {
+  try {
+    return new Date(iso).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
+  } catch { return iso; }
+};
+
+const formatTime = (start: string, end: string) => `${start?.slice(0,5) || ''} - ${end?.slice(0,5) || ''}`;
+
+const mapBooking = (b: any): UIBooking => ({
+  id: b.id,
+  venueId: b.venue_id,
+  venueName: b.venues?.name || 'Espacio',
+  location: b.venues?.location || '',
+  image: b.venues?.venue_images?.[0]?.image_url || FALLBACK_IMAGE,
+  date: formatDate(b.event_date),
+  time: formatTime(b.start_time, b.end_time),
+  totalPrice: Number(b.total_price) || 0,
+  status: STATUS_LABELS[b.status] || b.status,
+  statusColor: STATUS_COLORS[b.status] || '#00B4BB',
+  eventDate: b.event_date,
+});
+
+const BookingDetailModal: React.FC<{ booking: UIBooking; onClose: () => void }> = ({ booking, onClose }) => (
   <AnimatePresence>
     <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
+      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
       className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
       onClick={onClose}
     >
       <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.9 }}
+        initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }}
         className="bg-white dark:bg-surface-dark rounded-[32px] p-6 shadow-2xl w-full max-w-md"
         onClick={(e) => e.stopPropagation()}
       >
         <h2 className="text-xl font-bold mb-4 dark:text-white">Detalles de la Reserva</h2>
-        <div className="space-y-4 text-sm dark:text-slate-300">
+        <div className="space-y-2 text-sm dark:text-slate-300">
           <p><strong>Lugar:</strong> {booking.venueName}</p>
           <p><strong>Fecha:</strong> {booking.date}</p>
           <p><strong>Horario:</strong> {booking.time}</p>
           <p><strong>Ubicación:</strong> {booking.location}</p>
           <p><strong>Total:</strong> ${booking.totalPrice.toLocaleString()}</p>
+          <p><strong>Estado:</strong> {booking.status}</p>
         </div>
-        <div className="mt-6 flex gap-3">
-          <button className="flex-1 py-3 bg-slate-100 dark:bg-slate-800 rounded-xl font-bold dark:text-white">Descargar Contrato</button>
-          <button className="flex-1 py-3 bg-primary text-white rounded-xl font-bold">Descargar Factura</button>
-        </div>
-        <button onClick={onClose} className="mt-4 w-full py-2 text-slate-500 font-medium">Cerrar</button>
+        <button onClick={onClose} className="mt-6 w-full py-3 bg-primary text-white rounded-xl font-bold">Cerrar</button>
       </motion.div>
     </motion.div>
   </AnimatePresence>
@@ -43,17 +89,25 @@ const BookingDetailModal: React.FC<{ booking: any; onClose: () => void }> = ({ b
 
 const Bookings: React.FC = () => {
   const navigate = useNavigate();
-  const { bookings } = useUser();
+  const { user } = useUser();
   const [loading, setLoading] = useState(true);
-  const [selectedBooking, setSelectedBooking] = useState<any>(null);
+  const [bookings, setBookings] = useState<UIBooking[]>([]);
+  const [tab, setTab] = useState<'upcoming' | 'past'>('upcoming');
+  const [selectedBooking, setSelectedBooking] = useState<UIBooking | null>(null);
   const [query, setQuery] = useState('');
 
   useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 1000);
-    return () => clearTimeout(timer);
-  }, []);
+    if (!user) { setLoading(false); return; }
+    setLoading(true);
+    getUserBookings(user.id)
+      .then((data) => setBookings((data || []).map(mapBooking)))
+      .catch((e) => console.error(e))
+      .finally(() => setLoading(false));
+  }, [user]);
 
-  const filteredBookings = bookings.filter((b) => {
+  const today = new Date().toISOString().slice(0, 10);
+  const tabFiltered = bookings.filter((b) => tab === 'upcoming' ? b.eventDate >= today : b.eventDate < today);
+  const filteredBookings = tabFiltered.filter((b) => {
     const q = query.trim().toLowerCase();
     if (!q) return true;
     return (
@@ -72,10 +126,16 @@ const Bookings: React.FC = () => {
           <span className="material-icons-outlined text-primary cursor-pointer">filter_alt</span>
         </div>
         <div className="flex w-full">
-          <button className="flex-1 pb-3 text-center border-b-2 border-primary text-primary font-semibold">
+          <button
+            onClick={() => setTab('upcoming')}
+            className={`flex-1 pb-3 text-center border-b-2 font-semibold ${tab === 'upcoming' ? 'border-primary text-primary' : 'border-transparent text-slate-400 dark:text-slate-500'}`}
+          >
             Próximas
           </button>
-          <button className="flex-1 pb-3 text-center border-b-2 border-transparent text-slate-400 dark:text-slate-500 font-medium">
+          <button
+            onClick={() => setTab('past')}
+            className={`flex-1 pb-3 text-center border-b-2 font-semibold ${tab === 'past' ? 'border-primary text-primary' : 'border-transparent text-slate-400 dark:text-slate-500'}`}
+          >
             Pasadas
           </button>
         </div>
@@ -94,7 +154,7 @@ const Bookings: React.FC = () => {
         </div>
 
         <div className="flex justify-between items-center">
-          <h2 className="text-lg font-bold text-slate-800 dark:text-white">Reservas próximas</h2>
+          <h2 className="text-lg font-bold text-slate-800 dark:text-white">{tab === 'upcoming' ? 'Reservas próximas' : 'Reservas pasadas'}</h2>
           <span className="text-sm text-[#00B4BB] font-medium">{filteredBookings.length} reservas</span>
         </div>
 
@@ -105,10 +165,10 @@ const Bookings: React.FC = () => {
               <Skeleton className="h-44 rounded-3xl" />
             </div>
           ) : filteredBookings.length === 0 ? (
-            <EmptyState 
+            <EmptyState
               icon="event_busy"
-              title={query ? 'Sin resultados' : 'Sin reservas'}
-              description={query ? `No hay reservas que coincidan con "${query}".` : 'Aún no tienes reservas próximas.'}
+              title={query ? 'Sin resultados' : (tab === 'upcoming' ? 'Sin reservas próximas' : 'Sin reservas pasadas')}
+              description={query ? `No hay reservas que coincidan con "${query}".` : 'Cuando hagas una reserva aparecerá aquí.'}
               action={query ? undefined : { label: 'Explorar lugares', onClick: () => navigate('/user/home') }}
             />
           ) : (
@@ -125,9 +185,9 @@ const Bookings: React.FC = () => {
                         {booking.location}
                       </div>
                     </div>
-                    <span 
+                    <span
                       className="text-white text-[10px] font-bold px-3 py-1.5 rounded-lg uppercase tracking-wider"
-                      style={{ backgroundColor: booking.statusColor || '#00B4BB' }}
+                      style={{ backgroundColor: booking.statusColor }}
                     >
                       {booking.status}
                     </span>
@@ -147,20 +207,22 @@ const Bookings: React.FC = () => {
                   <div className="flex items-center justify-between flex-wrap gap-2">
                     <p className="text-slate-800 dark:text-white font-medium">Total: <span className="font-bold text-lg">${booking.totalPrice.toLocaleString()}</span></p>
                     <div className="flex gap-2 flex-wrap">
-                      <button 
-                        onClick={() => navigate('/user/rate')}
-                        className="bg-yellow-400 hover:bg-yellow-500 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-colors flex items-center gap-1"
-                      >
-                        <span className="material-icons-outlined text-base">star</span>
-                        Valorar
-                      </button>
-                      <button 
+                      {tab === 'past' && (
+                        <button
+                          onClick={() => navigate('/user/rate', { state: { venueId: booking.venueId, venueName: booking.venueName, image: booking.image, date: booking.date, time: booking.time } })}
+                          className="bg-yellow-400 hover:bg-yellow-500 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-colors flex items-center gap-1"
+                        >
+                          <span className="material-icons-outlined text-base">star</span>
+                          Valorar
+                        </button>
+                      )}
+                      <button
                         onClick={() => navigate('/user/invitations/create')}
                         className="bg-[#5EB962] hover:bg-green-600 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-colors"
                       >
                         Invitaciones
                       </button>
-                      <button 
+                      <button
                         onClick={() => setSelectedBooking(booking)}
                         className="bg-primary hover:bg-orange-600 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-colors"
                       >
