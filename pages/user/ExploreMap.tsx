@@ -137,8 +137,13 @@ const ExploreMap: React.FC = () => {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
-              <button className="bg-primary text-white p-2 rounded-xl flex items-center justify-center shadow-md hover:bg-orange-600 transition-colors">
-                <span className="material-icons-round text-lg">near_me</span>
+              <button
+                onClick={requestLocation}
+                disabled={locating}
+                title="Usar mi ubicación"
+                className="bg-primary text-white p-2 rounded-xl flex items-center justify-center shadow-md hover:bg-orange-600 transition-colors disabled:opacity-60"
+              >
+                <span className={`material-icons-round text-lg ${locating ? 'animate-pulse' : ''}`}>near_me</span>
               </button>
             </div>
           </div>
