@@ -41,6 +41,8 @@ const Messages: React.FC = () => {
   const [toast, setToast] = useState<string | null>(null);
   const [showChatMenu, setShowChatMenu] = useState(false);
   const scrollRef = useRef<HTMLDivElement | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [pendingAttachment, setPendingAttachment] = useState<ChatAttachment | null>(null);
 
   const showToast = (msg: string) => {
     setToast(msg);
