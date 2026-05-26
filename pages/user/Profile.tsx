@@ -196,6 +196,52 @@ const Profile: React.FC = () => {
         {/* Tarjeta de Idioma oculta por ahora */}
 
         <section className="space-y-4">
+          <h3 className="text-lg font-bold text-slate-800 dark:text-white">Mi actividad</h3>
+          <div className="bg-white dark:bg-surface-dark rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm divide-y divide-slate-100 dark:divide-slate-800 overflow-hidden">
+            <button
+              onClick={() => navigate('/user/favorites')}
+              className="w-full flex items-center gap-4 p-4 text-left hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
+            >
+              <div className="w-10 h-10 rounded-xl bg-red-50 dark:bg-red-900/20 flex items-center justify-center">
+                <span className="material-icons-outlined text-red-500">favorite</span>
+              </div>
+              <div className="flex-1">
+                <p className="font-semibold text-slate-800 dark:text-white">Mis favoritos</p>
+                <p className="text-xs text-slate-400">Espacios que guardaste con corazón</p>
+              </div>
+              <span className="material-icons-outlined text-slate-400">chevron_right</span>
+            </button>
+            <button
+              onClick={() => navigate('/user/rate')}
+              className="w-full flex items-center gap-4 p-4 text-left hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
+            >
+              <div className="w-10 h-10 rounded-xl bg-yellow-50 dark:bg-yellow-900/20 flex items-center justify-center">
+                <span className="material-icons-outlined text-yellow-500">star</span>
+              </div>
+              <div className="flex-1">
+                <p className="font-semibold text-slate-800 dark:text-white">Valorar experiencias</p>
+                <p className="text-xs text-slate-400">Califica los lugares que ya visitaste</p>
+              </div>
+              <span className="material-icons-outlined text-slate-400">chevron_right</span>
+            </button>
+            <button
+              onClick={() => navigate('/user/bookings')}
+              className="w-full flex items-center gap-4 p-4 text-left hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
+            >
+              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                <span className="material-icons-outlined text-primary">event_note</span>
+              </div>
+              <div className="flex-1">
+                <p className="font-semibold text-slate-800 dark:text-white">Mis reservas</p>
+                <p className="text-xs text-slate-400">Próximas y pasadas</p>
+              </div>
+              <span className="material-icons-outlined text-slate-400">chevron_right</span>
+            </button>
+          </div>
+        </section>
+
+
+        <section className="space-y-4">
           <h3 className="text-lg font-bold text-slate-800 dark:text-white">Notificaciones</h3>
           <div className="bg-white dark:bg-surface-dark rounded-xl border border-slate-100 dark:border-slate-800 divide-y divide-slate-100 dark:divide-slate-800 shadow-sm overflow-hidden">
             {([
