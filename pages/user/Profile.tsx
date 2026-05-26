@@ -180,24 +180,7 @@ const Profile: React.FC = () => {
           </div>
         </section>
 
-        <section className="space-y-4">
-          <h3 className="text-lg font-bold text-slate-800 dark:text-white">Preferencias</h3>
-          <div className="bg-white dark:bg-surface-dark rounded-xl border border-slate-100 dark:border-slate-800 divide-y divide-slate-100 dark:divide-slate-800 shadow-sm overflow-hidden">
-            <button
-              onClick={() => setShowLangModal(true)}
-              className="w-full p-4 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
-            >
-              <div className="flex items-center gap-3">
-                <span className="material-icons-round text-primary">language</span>
-                <span className="font-medium text-slate-800 dark:text-white">Idioma</span>
-              </div>
-              <div className="flex items-center gap-1 text-slate-500">
-                <span className="text-sm">{language}</span>
-                <span className="material-icons-round text-xl">chevron_right</span>
-              </div>
-            </button>
-          </div>
-        </section>
+        {/* Tarjeta de Idioma oculta por ahora */}
 
         <section className="space-y-4">
           <h3 className="text-lg font-bold text-slate-800 dark:text-white">Notificaciones</h3>
