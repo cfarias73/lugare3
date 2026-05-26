@@ -107,22 +107,40 @@ const ExploreMap: React.FC = () => {
   }, [requestLocation]);
 
   const filteredVenues = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
     return venues.filter(venue => {
-      const matchesSearch = venue.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                            venue.location.toLowerCase().includes(searchQuery.toLowerCase());
-      
-      if (!matchesSearch) return false;
-
-      if (activeFilter === 'price') {
-        return venue.price < 50000; 
+      if (q) {
+        const matches =
+          venue.name.toLowerCase().includes(q) ||
+          venue.location.toLowerCase().includes(q) ||
+          (venue.city || '').toLowerCase().includes(q);
+        if (!matches) return false;
       }
-      if (activeFilter === 'capacity') {
-        return venue.capacity > 100;
-      }
-      
+      if (priceRange && (venue.price < priceRange.min || venue.price > priceRange.max)) return false;
+      if (capacityRange && (venue.capacity < capacityRange.min || venue.capacity > capacityRange.max)) return false;
+      if (minRating != null && (venue.rating || 0) < minRating) return false;
       return true;
     });
-  }, [searchQuery, activeFilter]);
+  }, [venues, searchQuery, priceRange, capacityRange, minRating]);
+
+  const activeFilterCount =
+    (priceRange ? 1 : 0) + (capacityRange ? 1 : 0) + (dateFilter ? 1 : 0) + (minRating != null ? 1 : 0);
+
+  const clearAllFilters = () => {
+    setPriceRange(null);
+    setCapacityRange(null);
+    setDateFilter('');
+    setMinRating(null);
+    setOpenFilter(null);
+  };
+
+  const chipClass = (active: boolean) =>
+    `flex-shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-full font-semibold text-sm shadow-sm transition-colors border ${
+      active
+        ? 'bg-primary text-white border-primary shadow-primary/20'
+        : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700'
+    }`;
+
 
   // Update map center when a venue is selected
   useEffect(() => {
