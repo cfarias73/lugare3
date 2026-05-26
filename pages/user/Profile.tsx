@@ -212,7 +212,7 @@ const Profile: React.FC = () => {
               <span className="material-icons-outlined text-slate-400">chevron_right</span>
             </button>
             <button
-              onClick={() => navigate('/user/rate')}
+              onClick={() => navigate('/user/bookings')}
               className="w-full flex items-center gap-4 p-4 text-left hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
             >
               <div className="w-10 h-10 rounded-xl bg-yellow-50 dark:bg-yellow-900/20 flex items-center justify-center">
