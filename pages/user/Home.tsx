@@ -308,7 +308,7 @@ const Home: React.FC = () => {
                   <p className="text-slate-400 text-xs mb-4">{venue.city}</p>
                   <div className="flex justify-between items-center">
                     <p className="font-bold text-primary font-display">${venue.price.toLocaleString()}<span className="text-[10px] text-slate-400 font-normal">/hora</span></p>
-                    <button className="bg-secondary text-white px-5 py-2 rounded-xl text-xs font-bold">Reservar</button>
+                    <button onClick={(e) => { e.stopPropagation(); navigate(`/user/venue/${venue.id}`); }} className="bg-secondary text-white px-5 py-2 rounded-xl text-xs font-bold">Reservar</button>
                   </div>
                 </div>
               </div>
