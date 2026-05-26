@@ -162,9 +162,10 @@ const RateExperience: React.FC = () => {
           </button>
           <button 
             onClick={handleSubmit}
-            className="flex-1 py-3.5 bg-primary text-white font-semibold rounded-2xl shadow-lg shadow-primary/20 hover:opacity-90 transition-opacity"
+            disabled={isSubmitting}
+            className="flex-1 py-3.5 bg-primary text-white font-semibold rounded-2xl shadow-lg shadow-primary/20 hover:opacity-90 transition-opacity disabled:opacity-60"
           >
-            Publicar reseña
+            {isSubmitting ? 'Publicando…' : 'Publicar reseña'}
           </button>
         </div>
         <p className="text-center text-[11px] text-slate-400 dark:text-slate-500 max-w-[280px] mx-auto leading-relaxed">
