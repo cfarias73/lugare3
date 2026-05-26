@@ -16,6 +16,9 @@ interface UserContextType {
   sendMessage: (content: string, venueName?: string) => void;
   draftInvitation: Partial<Invitation> | null;
   updateDraftInvitation: (data: Partial<Invitation>) => void;
+  favorites: string[];
+  toggleFavorite: (venueId: string) => void;
+  isFavorite: (venueId: string) => boolean;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
