@@ -3,6 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../../components/Layout';
 import { toast } from 'sonner';
+import { supabase } from '../../lib/supabaseClient';
 
 const DEFAULT_AVATAR = 'https://lh3.googleusercontent.com/aida-public/AB6AXuCAkY7AviIRiCpv8Koe6LoTyPAt1AJqCGkHEjpFdo4D8JlpGdzUheoCp65Ss2T4-6h5KivvUSvZTqKeC7TsGwEjRb7Oz4do6MpDaKU2HIAu8ZHw7Ohu2ZqkuaCgIOwbm-7nMP_2Rrlf2f1OmMl58h1G4x13DAmAb-De3dxfsK6EPpaol91SSNHQm1YRIwDjPQ36zWMi5cCqel-vSp5_fr14NVk8YSKipiYZwaPbKnTijIAfYrFYafCkd1TLCs1HI5yIgudbnm9F9spC';
 
@@ -102,14 +103,26 @@ const Profile: React.FC = () => {
     toast.success(`Idioma: ${lang}`);
   };
 
-  const handleDeleteAccount = () => {
-    localStorage.removeItem('user_profile');
-    localStorage.removeItem('user_avatar');
-    localStorage.removeItem('user_notifications');
-    localStorage.removeItem('user_language');
-    toast.success('Cuenta eliminada');
-    setShowDeleteConfirm(false);
-    navigate('/user/login');
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDeleteAccount = async () => {
+    setIsDeleting(true);
+    try {
+      const { error } = await supabase.rpc('delete_my_account');
+      if (error) throw error;
+      await supabase.auth.signOut();
+      localStorage.removeItem('user_profile');
+      localStorage.removeItem('user_avatar');
+      localStorage.removeItem('user_notifications');
+      localStorage.removeItem('user_language');
+      toast.success('Cuenta eliminada');
+      setShowDeleteConfirm(false);
+      navigate('/user/login');
+    } catch (err: any) {
+      toast.error(err?.message || 'No se pudo eliminar la cuenta');
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   return (
@@ -280,9 +293,10 @@ const Profile: React.FC = () => {
               </button>
               <button
                 onClick={handleDeleteAccount}
-                className="flex-1 p-3 rounded-xl bg-red-500 text-white font-medium"
+                disabled={isDeleting}
+                className="flex-1 p-3 rounded-xl bg-red-500 text-white font-medium disabled:opacity-60"
               >
-                Eliminar
+                {isDeleting ? 'Eliminando…' : 'Eliminar'}
               </button>
             </div>
           </div>
