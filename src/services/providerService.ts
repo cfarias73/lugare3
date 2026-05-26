@@ -3,7 +3,7 @@ import { supabase } from '../../lib/supabaseClient';
 export interface CreateVenueData {
   name: string;
   description: string;
-  category: 'salones' | 'fiestas' | 'reuniones';
+  category: string;
   location: string;
   city: string;
   capacity: number;
