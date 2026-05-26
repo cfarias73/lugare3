@@ -1,10 +1,28 @@
 
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient';
+
+interface RateState {
+  venueId?: string;
+  venueName?: string;
+  image?: string;
+  date?: string;
+  time?: string;
+}
+
+const DEFAULT_IMAGE = 'https://images.unsplash.com/photo-1519167758481-83f5e181dcc3?auto=format&fit=crop&q=80&w=400';
 
 const RateExperience: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const state = (location.state as RateState | null) || {};
+  const venueId = state.venueId || null;
+  const venueName = state.venueName || 'Tu reserva';
+  const venueImage = state.image || DEFAULT_IMAGE;
+  const venueDate = state.date || '';
+  const venueTime = state.time || '';
+
   const [mainRating, setMainRating] = useState(4);
   const [comment, setComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -21,6 +39,11 @@ const RateExperience: React.FC = () => {
   };
 
   const handleSubmit = async () => {
+    if (!venueId) {
+      alert('Selecciona una reserva desde "Pasadas" en Reservas para valorarla.');
+      navigate('/user/bookings');
+      return;
+    }
     setIsSubmitting(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -31,15 +54,13 @@ const RateExperience: React.FC = () => {
       }
       const { error } = await supabase.from('reviews').insert({
         user_id: user.id,
-        venue_id: 'casa-loma',
-        venue_name: 'Casa Loma',
+        venue_id: venueId,
         rating: mainRating,
         comment: comment || null,
-        aspect_ratings: aspectRatings,
       });
       if (error) throw error;
       alert('¡Gracias por tu reseña!');
-      navigate('/user/home');
+      navigate('/user/bookings');
     } catch (e: any) {
       console.error(e);
       alert(`No se pudo guardar la reseña: ${e?.message || 'error desconocido'}`);
