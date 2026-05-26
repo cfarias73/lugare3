@@ -139,7 +139,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <UserContext.Provider value={{ user, signIn, signUp, logout, bookings, addBooking, invitations, addInvitation, messages, sendMessage, draftInvitation, updateDraftInvitation }}>
+    <UserContext.Provider value={{ user, signIn, signUp, logout, bookings, addBooking, invitations, addInvitation, messages, sendMessage, draftInvitation, updateDraftInvitation, favorites, toggleFavorite, isFavorite }}>
       {children}
     </UserContext.Provider>
   );
