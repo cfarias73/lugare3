@@ -31,11 +31,34 @@ const MapController: React.FC<{ center: [number, number], zoom: number }> = ({ c
   return null;
 };
 
+type PriceRange = { label: string; min: number; max: number };
+type CapacityRange = { label: string; min: number; max: number };
+
+const PRICE_RANGES: PriceRange[] = [
+  { label: 'Hasta $20,000', min: 0, max: 20000 },
+  { label: '$20,000 - $50,000', min: 20000, max: 50000 },
+  { label: '$50,000 - $100,000', min: 50000, max: 100000 },
+  { label: 'Más de $100,000', min: 100000, max: Infinity },
+];
+
+const CAPACITY_RANGES: CapacityRange[] = [
+  { label: 'Hasta 50 personas', min: 0, max: 50 },
+  { label: '50 - 100 personas', min: 50, max: 100 },
+  { label: '100 - 300 personas', min: 100, max: 300 },
+  { label: 'Más de 300 personas', min: 300, max: Infinity },
+];
+
+const RATING_OPTIONS = [3, 3.5, 4, 4.5];
+
 const ExploreMap: React.FC = () => {
   const navigate = useNavigate();
   const [selectedVenue, setSelectedVenue] = useState<Venue | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeFilter, setActiveFilter] = useState<string | null>(null);
+  const [openFilter, setOpenFilter] = useState<string | null>(null);
+  const [priceRange, setPriceRange] = useState<PriceRange | null>(null);
+  const [capacityRange, setCapacityRange] = useState<CapacityRange | null>(null);
+  const [dateFilter, setDateFilter] = useState<string>('');
+  const [minRating, setMinRating] = useState<number | null>(null);
   const [mapCenter, setMapCenter] = useState<[number, number]>([19.4326, -99.1332]);
   const [zoom, setZoom] = useState(13);
   const [venues, setVenues] = useState<Venue[]>([]);
@@ -84,22 +107,40 @@ const ExploreMap: React.FC = () => {
   }, [requestLocation]);
 
   const filteredVenues = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
     return venues.filter(venue => {
-      const matchesSearch = venue.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                            venue.location.toLowerCase().includes(searchQuery.toLowerCase());
-      
-      if (!matchesSearch) return false;
-
-      if (activeFilter === 'price') {
-        return venue.price < 50000; 
+      if (q) {
+        const matches =
+          venue.name.toLowerCase().includes(q) ||
+          venue.location.toLowerCase().includes(q) ||
+          (venue.city || '').toLowerCase().includes(q);
+        if (!matches) return false;
       }
-      if (activeFilter === 'capacity') {
-        return venue.capacity > 100;
-      }
-      
+      if (priceRange && (venue.price < priceRange.min || venue.price > priceRange.max)) return false;
+      if (capacityRange && (venue.capacity < capacityRange.min || venue.capacity > capacityRange.max)) return false;
+      if (minRating != null && (venue.rating || 0) < minRating) return false;
       return true;
     });
-  }, [searchQuery, activeFilter]);
+  }, [venues, searchQuery, priceRange, capacityRange, minRating]);
+
+  const activeFilterCount =
+    (priceRange ? 1 : 0) + (capacityRange ? 1 : 0) + (dateFilter ? 1 : 0) + (minRating != null ? 1 : 0);
+
+  const clearAllFilters = () => {
+    setPriceRange(null);
+    setCapacityRange(null);
+    setDateFilter('');
+    setMinRating(null);
+    setOpenFilter(null);
+  };
+
+  const chipClass = (active: boolean) =>
+    `flex-shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-full font-semibold text-sm shadow-sm transition-colors border ${
+      active
+        ? 'bg-primary text-white border-primary shadow-primary/20'
+        : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700'
+    }`;
+
 
   // Update map center when a venue is selected
   useEffect(() => {
@@ -148,26 +189,119 @@ const ExploreMap: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
-            <button 
-              onClick={() => setActiveFilter(activeFilter === 'price' ? null : 'price')}
-              className={`flex-shrink-0 flex items-center gap-1 px-5 py-2 rounded-full font-semibold text-sm shadow-sm transition-colors ${activeFilter === 'price' ? 'bg-primary text-white shadow-primary/20' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700'}`}
-            >
-              Precio
-            </button>
-            <button 
-              onClick={() => setActiveFilter(activeFilter === 'capacity' ? null : 'capacity')}
-              className={`flex-shrink-0 flex items-center gap-1 px-5 py-2 rounded-full font-semibold text-sm shadow-sm transition-colors ${activeFilter === 'capacity' ? 'bg-primary text-white shadow-primary/20' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700'}`}
-            >
-              Capacidad
-            </button>
-            <button className="flex-shrink-0 flex items-center gap-1 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-5 py-2 rounded-full font-semibold text-sm border border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
-              Fecha
-            </button>
-            <button className="flex-shrink-0 flex items-center gap-1 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-5 py-2 rounded-full font-semibold text-sm border border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
-              <span className="material-icons-round text-amber-400 text-sm">star</span> Calificación
-            </button>
+          <div className="relative">
+            <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
+              <button
+                onClick={() => setOpenFilter(openFilter === 'price' ? null : 'price')}
+                className={chipClass(priceRange !== null)}
+              >
+                <span>{priceRange ? priceRange.label : 'Precio'}</span>
+                <span className="material-icons-round text-sm">expand_more</span>
+              </button>
+              <button
+                onClick={() => setOpenFilter(openFilter === 'capacity' ? null : 'capacity')}
+                className={chipClass(capacityRange !== null)}
+              >
+                <span>{capacityRange ? capacityRange.label : 'Capacidad'}</span>
+                <span className="material-icons-round text-sm">expand_more</span>
+              </button>
+              <button
+                onClick={() => setOpenFilter(openFilter === 'date' ? null : 'date')}
+                className={chipClass(!!dateFilter)}
+              >
+                <span className="material-icons-round text-sm">event</span>
+                <span>{dateFilter ? new Date(dateFilter + 'T00:00:00').toLocaleDateString('es-MX', { day: 'numeric', month: 'short' }) : 'Fecha'}</span>
+              </button>
+              <button
+                onClick={() => setOpenFilter(openFilter === 'rating' ? null : 'rating')}
+                className={chipClass(minRating !== null)}
+              >
+                <span className="material-icons-round text-amber-400 text-sm">star</span>
+                <span>{minRating != null ? `${minRating}+` : 'Calificación'}</span>
+              </button>
+              {activeFilterCount > 0 && (
+                <button
+                  onClick={clearAllFilters}
+                  className="flex-shrink-0 flex items-center gap-1 px-3 py-2 rounded-full font-semibold text-sm text-slate-500 hover:text-primary transition-colors"
+                >
+                  <span className="material-icons-round text-sm">close</span>
+                  Limpiar
+                </button>
+              )}
+            </div>
+
+            {openFilter && (
+              <div className="absolute left-0 right-0 top-full mt-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl p-3 z-30">
+                {openFilter === 'price' && (
+                  <div className="flex flex-col gap-1">
+                    {PRICE_RANGES.map((r) => (
+                      <button
+                        key={r.label}
+                        onClick={() => { setPriceRange(priceRange?.label === r.label ? null : r); setOpenFilter(null); }}
+                        className={`text-left px-3 py-2 rounded-xl text-sm font-medium transition-colors ${priceRange?.label === r.label ? 'bg-primary/10 text-primary' : 'hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200'}`}
+                      >
+                        {r.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {openFilter === 'capacity' && (
+                  <div className="flex flex-col gap-1">
+                    {CAPACITY_RANGES.map((r) => (
+                      <button
+                        key={r.label}
+                        onClick={() => { setCapacityRange(capacityRange?.label === r.label ? null : r); setOpenFilter(null); }}
+                        className={`text-left px-3 py-2 rounded-xl text-sm font-medium transition-colors ${capacityRange?.label === r.label ? 'bg-primary/10 text-primary' : 'hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200'}`}
+                      >
+                        {r.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {openFilter === 'date' && (
+                  <div className="flex flex-col gap-2">
+                    <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 px-1">Fecha del evento</label>
+                    <input
+                      type="date"
+                      value={dateFilter}
+                      min={new Date().toISOString().slice(0, 10)}
+                      onChange={(e) => setDateFilter(e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    />
+                    <div className="flex justify-between gap-2 pt-1">
+                      <button
+                        onClick={() => { setDateFilter(''); setOpenFilter(null); }}
+                        className="text-xs font-semibold text-slate-500 hover:text-primary"
+                      >
+                        Limpiar
+                      </button>
+                      <button
+                        onClick={() => setOpenFilter(null)}
+                        className="text-xs font-bold text-primary"
+                      >
+                        Aplicar
+                      </button>
+                    </div>
+                  </div>
+                )}
+                {openFilter === 'rating' && (
+                  <div className="flex flex-col gap-1">
+                    {RATING_OPTIONS.map((r) => (
+                      <button
+                        key={r}
+                        onClick={() => { setMinRating(minRating === r ? null : r); setOpenFilter(null); }}
+                        className={`flex items-center gap-2 text-left px-3 py-2 rounded-xl text-sm font-medium transition-colors ${minRating === r ? 'bg-primary/10 text-primary' : 'hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200'}`}
+                      >
+                        <span className="material-icons-round text-amber-400 text-sm">star</span>
+                        {r}+ estrellas
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
+
         </header>
 
         <main className="flex-1 relative min-h-0 z-10">
