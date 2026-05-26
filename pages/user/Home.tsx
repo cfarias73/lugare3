@@ -52,7 +52,14 @@ const Home: React.FC = () => {
         <div>
           <h1 className="text-xl font-bold text-slate-800 dark:text-white font-display">Hola, {user?.name || 'Bienvenido'}</h1>
         </div>
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-3">
+          <button
+            onClick={() => navigate('/user/favorites')}
+            aria-label="Ver favoritos"
+            className="relative p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+          >
+            <span className="material-icons-outlined text-red-500">favorite</span>
+          </button>
           <div className="relative">
             <span className="material-icons-outlined text-slate-600 dark:text-slate-300">notifications</span>
             <span className="absolute top-0 right-0 h-2.5 w-2.5 bg-primary border-2 border-white dark:border-surface-dark rounded-full"></span>
