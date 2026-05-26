@@ -1,11 +1,13 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '../../lib/supabaseClient';
 
 const RateExperience: React.FC = () => {
   const navigate = useNavigate();
   const [mainRating, setMainRating] = useState(4);
   const [comment, setComment] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [aspectRatings, setAspectRatings] = useState({
     Limpieza: 5,
     Ubicación: 4,
@@ -18,11 +20,32 @@ const RateExperience: React.FC = () => {
     setAspectRatings(prev => ({ ...prev, [aspect]: rating }));
   };
 
-  const handleSubmit = () => {
-    // Here we would typically send this to a backend
-    console.log({ mainRating, comment, aspectRatings });
-    alert('¡Gracias por tu reseña!');
-    navigate('/user/home');
+  const handleSubmit = async () => {
+    setIsSubmitting(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        alert('Debes iniciar sesión para publicar una reseña.');
+        navigate('/user/login');
+        return;
+      }
+      const { error } = await supabase.from('reviews').insert({
+        user_id: user.id,
+        venue_id: 'casa-loma',
+        venue_name: 'Casa Loma',
+        rating: mainRating,
+        comment: comment || null,
+        aspect_ratings: aspectRatings,
+      });
+      if (error) throw error;
+      alert('¡Gracias por tu reseña!');
+      navigate('/user/home');
+    } catch (e: any) {
+      console.error(e);
+      alert(`No se pudo guardar la reseña: ${e?.message || 'error desconocido'}`);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const getRatingText = (rating: number) => {
