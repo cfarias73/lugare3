@@ -163,9 +163,11 @@ const ExploreMap: React.FC = () => {
         <header className="pt-12 pb-4 px-4 bg-white dark:bg-slate-900 z-20 transition-colors shadow-sm">
           <div className="flex items-center justify-between mb-5">
             <h1 className="text-xl font-bold text-slate-800 dark:text-white font-display">Explorar</h1>
-            <button className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
-                <span className="material-icons-round">filter_list</span>
-            </button>
+            {activeFilterCount > 0 && (
+              <span className="text-xs font-semibold text-primary bg-primary/10 px-3 py-1 rounded-full">
+                {activeFilterCount} {activeFilterCount === 1 ? 'filtro activo' : 'filtros activos'}
+              </span>
+            )}
           </div>
           
           <div className="relative mb-4">
