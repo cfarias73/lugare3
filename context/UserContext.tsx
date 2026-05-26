@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, Booking, Invitation, Message } from '../types';
-import { MOCK_BOOKINGS, MOCK_MESSAGES } from '../constants';
 import { supabase } from '../lib/supabaseClient';
 
 interface UserContextType {
@@ -54,9 +53,9 @@ const hydrateUser = async (sessionUser: any): Promise<User> => {
 
 export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [bookings, setBookings] = useState<Booking[]>(MOCK_BOOKINGS);
+  const [bookings, setBookings] = useState<Booking[]>([]);
   const [invitations, setInvitations] = useState<Invitation[]>([]);
-  const [messages, setMessages] = useState<Message[]>(MOCK_MESSAGES);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [draftInvitation, setDraftInvitation] = useState<Partial<Invitation> | null>(null);
   const [favorites, setFavorites] = useState<string[]>(() => {
     try {
