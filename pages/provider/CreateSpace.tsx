@@ -79,6 +79,7 @@ const CreateSpaceContent: React.FC = () => {
     if (!data.name) newErrors.name = 'El nombre es requerido';
     if (!data.capacity) newErrors.capacity = 'La capacidad es requerida';
     if (!data.description) newErrors.description = 'La descripción es requerida';
+    if (!data.category) newErrors.category = 'La categoría es requerida';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -173,6 +174,24 @@ const CreateSpaceContent: React.FC = () => {
                     </select>
                     <span className="material-icons-outlined absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">expand_more</span>
                   </div>
+                </div>
+                <div className="space-y-2">
+                  <label htmlFor="spaceCategory" className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Categoría</label>
+                  <div className="relative">
+                    <select
+                      id="spaceCategory"
+                      className="w-full bg-slate-50 dark:bg-slate-800/50 border-none rounded-2xl px-5 py-4 text-sm font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-primary outline-none appearance-none transition-all"
+                      value={data.category}
+                      onChange={(e) => updateData({ category: e.target.value })}
+                    >
+                      <option value="">Selecciona una categoría</option>
+                      {categories.map((c) => (
+                        <option key={c.id} value={c.slug}>{c.name}</option>
+                      ))}
+                    </select>
+                    <span className="material-icons-outlined absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">expand_more</span>
+                  </div>
+                  <ErrorMessage message={errors.category} />
                 </div>
                 <div className="space-y-2">
                   <label htmlFor="capacity" className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Capacidad máxima</label>
