@@ -293,9 +293,10 @@ const Profile: React.FC = () => {
               </button>
               <button
                 onClick={handleDeleteAccount}
-                className="flex-1 p-3 rounded-xl bg-red-500 text-white font-medium"
+                disabled={isDeleting}
+                className="flex-1 p-3 rounded-xl bg-red-500 text-white font-medium disabled:opacity-60"
               >
-                Eliminar
+                {isDeleting ? 'Eliminando…' : 'Eliminar'}
               </button>
             </div>
           </div>
