@@ -298,8 +298,42 @@ const Messages: React.FC = () => {
         </main>
 
         <div className="sticky bottom-0 bg-white dark:bg-background-dark border-t border-gray-100 dark:border-slate-800 px-3 py-3">
+          {pendingAttachment && (
+            <div className="mb-2 flex items-center gap-2 bg-slate-100 dark:bg-slate-800 rounded-xl px-3 py-2">
+              {pendingAttachment.isImage ? (
+                <img src={pendingAttachment.url} alt={pendingAttachment.name} className="h-10 w-10 rounded object-cover" />
+              ) : (
+                <span className="material-icons-outlined text-slate-500">description</span>
+              )}
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-medium text-slate-800 dark:text-slate-100 truncate">{pendingAttachment.name}</p>
+                <p className="text-[10px] text-slate-400">{(pendingAttachment.size / 1024).toFixed(0)} KB</p>
+              </div>
+              <button
+                onClick={() => {
+                  URL.revokeObjectURL(pendingAttachment.url);
+                  setPendingAttachment(null);
+                }}
+                className="p-1 text-slate-400 hover:text-red-500"
+                aria-label="Quitar adjunto"
+              >
+                <span className="material-icons-outlined text-base">close</span>
+              </button>
+            </div>
+          )}
+          <input
+            ref={fileInputRef}
+            type="file"
+            className="hidden"
+            accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx,.txt"
+            onChange={handleFileSelected}
+          />
           <div className="flex items-end gap-2">
-            <button className="p-2.5 text-slate-400 hover:text-primary rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="p-2.5 text-slate-400 hover:text-primary rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              aria-label="Adjuntar archivo"
+            >
               <span className="material-icons-outlined text-xl">attach_file</span>
             </button>
             <div className="flex-1 bg-slate-100 dark:bg-slate-800 rounded-2xl px-4 py-2.5 focus-within:ring-2 focus-within:ring-primary/30 transition-all">
@@ -319,7 +353,7 @@ const Messages: React.FC = () => {
             </div>
             <button
               onClick={handleSendReply}
-              disabled={!draft.trim()}
+              disabled={!draft.trim() && !pendingAttachment}
               className="w-11 h-11 flex-shrink-0 bg-primary text-white rounded-full flex items-center justify-center shadow-md shadow-primary/30 hover:bg-orange-600 disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 transition-all"
               aria-label="Enviar"
             >
