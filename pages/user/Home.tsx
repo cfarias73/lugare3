@@ -1,26 +1,35 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../../components/Layout';
 import { useUser } from '../../context/UserContext';
 import { getVenues } from '../../src/services/venueService';
+import { getCategories, Category } from '../../src/services/categoryService';
 import { Venue } from '../../types';
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
   const { user, bookings, invitations } = useUser();
   const [venues, setVenues] = useState<Venue[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [activeCategory, setActiveCategory] = useState<string>('all');
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const fetchVenues = async () => {
+    const load = async () => {
       setIsLoading(true);
-      const data = await getVenues();
-      setVenues(data);
+      const [v, c] = await Promise.all([getVenues(), getCategories()]);
+      setVenues(v);
+      setCategories(c);
       setIsLoading(false);
     };
-    fetchVenues();
+    load();
   }, []);
+
+  const filteredVenues = useMemo(() => {
+    if (activeCategory === 'all') return venues;
+    return venues.filter((v) => (v as any).category === activeCategory);
+  }, [venues, activeCategory]);
 
   const nextBooking = bookings.length > 0 ? bookings[0] : null;
 
@@ -149,18 +158,32 @@ const Home: React.FC = () => {
 
         {/* Categories Scroller */}
         <div className="flex overflow-x-auto no-scrollbar gap-3 -mx-5 px-5 pb-2 snap-x">
-          <button className="snap-start shrink-0 flex items-center gap-2 px-5 py-2.5 bg-primary text-white rounded-full font-medium shadow-lg shadow-primary/20 whitespace-nowrap">
+          <button
+            onClick={() => setActiveCategory('all')}
+            className={`snap-start shrink-0 flex items-center gap-2 px-5 py-2.5 rounded-full font-medium whitespace-nowrap transition-all ${
+              activeCategory === 'all'
+                ? 'bg-primary text-white shadow-lg shadow-primary/20'
+                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
+            }`}
+          >
             <span className="material-icons-outlined text-lg">grid_view</span> Todos
           </button>
-          <button className="snap-start shrink-0 flex items-center gap-2 px-5 py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-full font-medium whitespace-nowrap">
-            <span className="material-icons-outlined text-lg">meeting_room</span> Salones
-          </button>
-          <button className="snap-start shrink-0 flex items-center gap-2 px-5 py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-full font-medium whitespace-nowrap">
-            <span className="material-icons-outlined text-lg">celebration</span> Fiestas
-          </button>
-          <button className="snap-start shrink-0 flex items-center gap-2 px-5 py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-full font-medium whitespace-nowrap">
-            <span className="material-icons-outlined text-lg">work</span> Reuniones
-          </button>
+          {categories.map((c) => {
+            const active = activeCategory === c.slug;
+            return (
+              <button
+                key={c.id}
+                onClick={() => setActiveCategory(c.slug)}
+                className={`snap-start shrink-0 flex items-center gap-2 px-5 py-2.5 rounded-full font-medium whitespace-nowrap transition-all ${
+                  active
+                    ? 'bg-primary text-white shadow-lg shadow-primary/20'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
+                }`}
+              >
+                <span className="material-icons-outlined text-lg">{c.icon}</span> {c.name}
+              </button>
+            );
+          })}
         </div>
 
         {/* Featured Section */}
@@ -180,7 +203,9 @@ const Home: React.FC = () => {
                   </div>
                 </div>
               ))
-            ) : venues.map((venue) => (
+            ) : filteredVenues.length === 0 ? (
+              <div className="text-sm text-slate-500 py-8 px-2">No hay espacios en esta categoría.</div>
+            ) : filteredVenues.map((venue) => (
               <div 
                 key={venue.id} 
                 onClick={() => navigate(`/user/venue/${venue.id}`)}

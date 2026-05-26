@@ -5,6 +5,7 @@ import { CreateSpaceProvider, useCreateSpace } from '../../context/CreateSpaceCo
 import { ErrorMessage } from '../../components/ui/ErrorMessage';
 import { useUser } from '../../context/UserContext';
 import { createVenue } from '../../src/services/providerService';
+import { getCategories, Category } from '../../src/services/categoryService';
 
 const CreateSpaceContent: React.FC = () => {
   const navigate = useNavigate();
@@ -16,6 +17,11 @@ const CreateSpaceContent: React.FC = () => {
   const [errors, setErrors] = React.useState<Record<string, string>>({});
   const [loading, setLoading] = React.useState(false);
   const [files, setFiles] = React.useState<File[]>([]);
+  const [categories, setCategories] = React.useState<Category[]>([]);
+
+  useEffect(() => {
+    getCategories().then(setCategories);
+  }, []);
 
   const handleSave = async () => {
     if (!user || user.role !== 'provider') {
@@ -26,18 +32,22 @@ const CreateSpaceContent: React.FC = () => {
       alert('Debes subir al menos una foto');
       return;
     }
+    if (!data.category) {
+      alert('Debes seleccionar una categoría');
+      return;
+    }
     setLoading(true);
     try {
-      await createVenue(user.email, { // Assuming email/id is used as providerId reference
+      await createVenue(user.email, {
         name: data.name,
         description: data.description,
-        category: 'salones', // Simplified mapping based on UI
-        location: 'CDMX', // Default
-        city: 'CDMX', // Default
+        category: data.category,
+        location: 'CDMX',
+        city: 'CDMX',
         capacity: parseInt(data.capacity) || 0,
-        size_sqm: 100, // Default
-        price_per_hour: 500, // Default
-        imageFile: files[0] // Use the first file
+        size_sqm: 100,
+        price_per_hour: 500,
+        imageFile: files[0]
       });
       alert('Espacio creado con éxito');
       navigate('/provider/dashboard');
@@ -58,6 +68,7 @@ const CreateSpaceContent: React.FC = () => {
         capacity: '80',
         description: 'Una hermosa casa con jardín para eventos.',
         images: ['https://lh3.googleusercontent.com/aida-public/AB6AXuAwdXTHf3C9pX9-8dMVgDgxBDCTmf0AaI2tnwdqes4fBJiPNTZJ92j0t09QzWqtUIPgo35M-MtteDja5h8WolMwo_OdO5sitsYFH9pihMtihXMQMjzwk0cgTEPEpfH-4Pe1-gTA-gAByTSlapcaCvDdj6PP_dGL4u8WqeC_EB9X9BFJN_xdQUqmU8AH289TyvK1gEZ0t11Lsq1h_AqxbJT4sBKl2fFPh1ddxKSl_vgtkZFaFOkFi9KGbpW9KeKaQMQ01Dpk0VZiUvGA'],
+        category: '',
       };
       setData(venue);
     }
@@ -68,6 +79,7 @@ const CreateSpaceContent: React.FC = () => {
     if (!data.name) newErrors.name = 'El nombre es requerido';
     if (!data.capacity) newErrors.capacity = 'La capacidad es requerida';
     if (!data.description) newErrors.description = 'La descripción es requerida';
+    if (!data.category) newErrors.category = 'La categoría es requerida';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -162,6 +174,24 @@ const CreateSpaceContent: React.FC = () => {
                     </select>
                     <span className="material-icons-outlined absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">expand_more</span>
                   </div>
+                </div>
+                <div className="space-y-2">
+                  <label htmlFor="spaceCategory" className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Categoría</label>
+                  <div className="relative">
+                    <select
+                      id="spaceCategory"
+                      className="w-full bg-slate-50 dark:bg-slate-800/50 border-none rounded-2xl px-5 py-4 text-sm font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-primary outline-none appearance-none transition-all"
+                      value={data.category}
+                      onChange={(e) => updateData({ category: e.target.value })}
+                    >
+                      <option value="">Selecciona una categoría</option>
+                      {categories.map((c) => (
+                        <option key={c.id} value={c.slug}>{c.name}</option>
+                      ))}
+                    </select>
+                    <span className="material-icons-outlined absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">expand_more</span>
+                  </div>
+                  <ErrorMessage message={errors.category} />
                 </div>
                 <div className="space-y-2">
                   <label htmlFor="capacity" className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Capacidad máxima</label>

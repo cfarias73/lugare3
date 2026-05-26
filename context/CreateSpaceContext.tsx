@@ -6,6 +6,7 @@ interface CreateSpaceData {
   capacity: string;
   description: string;
   images: string[];
+  category: string;
 }
 
 interface CreateSpaceContextType {
@@ -25,6 +26,7 @@ export const CreateSpaceProvider: React.FC<{ children: ReactNode }> = ({ childre
     capacity: '',
     description: '',
     images: [],
+    category: '',
   });
   const [step, setStep] = useState(1);
 
