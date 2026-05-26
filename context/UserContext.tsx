@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User, Booking, Invitation, Message } from '../types';
+import { User, Booking, Invitation } from '../types';
 import { supabase } from '../lib/supabaseClient';
 
 interface UserContextType {
@@ -11,8 +11,6 @@ interface UserContextType {
   addBooking: (booking: Booking) => void;
   invitations: Invitation[];
   addInvitation: (invitation: Invitation) => void;
-  messages: Message[];
-  sendMessage: (content: string, venueName?: string) => void;
   draftInvitation: Partial<Invitation> | null;
   updateDraftInvitation: (data: Partial<Invitation>) => void;
   favorites: string[];
@@ -55,7 +53,6 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [invitations, setInvitations] = useState<Invitation[]>([]);
-  const [messages, setMessages] = useState<Message[]>([]);
   const [draftInvitation, setDraftInvitation] = useState<Partial<Invitation> | null>(null);
   const [favorites, setFavorites] = useState<string[]>(() => {
     try {
@@ -120,25 +117,12 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const addBooking = (booking: Booking) => setBookings((prev) => [booking, ...prev]);
   const addInvitation = (invitation: Invitation) => setInvitations((prev) => [invitation, ...prev]);
 
-  const sendMessage = (content: string, venueName: string = 'Soporte') => {
-    const newMessage: Message = {
-      id: Date.now().toString(),
-      sender: 'Tú',
-      avatar: 'https://ui-avatars.com/api/?name=You&background=random',
-      content,
-      time: 'Ahora',
-      venueName,
-      isOnline: true,
-    };
-    setMessages((prev) => [newMessage, ...prev]);
-  };
-
   const updateDraftInvitation = (data: Partial<Invitation>) => {
     setDraftInvitation((prev) => ({ ...prev, ...data }));
   };
 
   return (
-    <UserContext.Provider value={{ user, signIn, signUp, logout, bookings, addBooking, invitations, addInvitation, messages, sendMessage, draftInvitation, updateDraftInvitation, favorites, toggleFavorite, isFavorite }}>
+    <UserContext.Provider value={{ user, signIn, signUp, logout, bookings, addBooking, invitations, addInvitation, draftInvitation, updateDraftInvitation, favorites, toggleFavorite, isFavorite }}>
       {children}
     </UserContext.Provider>
   );

@@ -193,17 +193,26 @@ const VenueDetail: React.FC = () => {
       </main>
 
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-t border-slate-100 dark:border-slate-800 z-50 max-w-md mx-auto">
-        <div className="flex justify-between items-center">
-          <div>
+        <div className="flex justify-between items-center gap-3">
+          <div className="min-w-0">
             <span className="text-xs text-slate-400 uppercase font-bold tracking-wider">Precio base</span>
-            <div className="text-xl font-bold text-slate-800 dark:text-white">${venue.price.toLocaleString()} MXN</div>
+            <div className="text-xl font-bold text-slate-800 dark:text-white truncate">${venue.price.toLocaleString()} MXN</div>
           </div>
-          <button
-            onClick={() => navigate(`/user/booking/${venue.id}`)}
-            className="bg-primary hover:bg-orange-600 text-white font-bold px-8 py-4 rounded-2xl shadow-lg shadow-primary/20 transition-all active:scale-[0.98]"
-          >
-            Reservar ahora
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => navigate('/user/messages', { state: { openVenueId: venue.id } })}
+              aria-label="Contactar anfitrión"
+              className="w-12 h-12 flex items-center justify-center bg-secondary/10 text-secondary rounded-2xl hover:bg-secondary hover:text-white transition-all active:scale-95"
+            >
+              <span className="material-icons-outlined">chat_bubble_outline</span>
+            </button>
+            <button
+              onClick={() => navigate(`/user/booking/${venue.id}`)}
+              className="bg-primary hover:bg-orange-600 text-white font-bold px-6 py-4 rounded-2xl shadow-lg shadow-primary/20 transition-all active:scale-[0.98]"
+            >
+              Reservar
+            </button>
+          </div>
         </div>
       </div>
     </div>
