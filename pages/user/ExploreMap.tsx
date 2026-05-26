@@ -183,6 +183,17 @@ const ExploreMap: React.FC = () => {
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
               />
               <MapController center={mapCenter} zoom={zoom} />
+              {userLocation && (
+                <Marker
+                  position={userLocation}
+                  icon={L.divIcon({
+                    className: 'user-location-icon',
+                    html: `<div style="width:18px;height:18px;border-radius:9999px;background:#3b82f6;border:3px solid white;box-shadow:0 0 0 4px rgba(59,130,246,0.3);"></div>`,
+                    iconSize: [18, 18],
+                    iconAnchor: [9, 9],
+                  })}
+                />
+              )}
               {filteredVenues.map((venue) => (
                 <Marker 
                   key={venue.id} 
@@ -194,6 +205,12 @@ const ExploreMap: React.FC = () => {
                 />
               ))}
             </MapContainer>
+            {locationError && (
+              <div className="absolute top-4 left-4 right-4 z-[1000] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2 shadow-lg text-xs text-slate-700 dark:text-slate-200 flex items-center gap-2">
+                <span className="material-icons-round text-amber-500 text-sm">location_off</span>
+                {locationError}
+              </div>
+            )}
           </div>
           
           {/* Map Controls */}
