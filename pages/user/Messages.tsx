@@ -6,11 +6,20 @@ import { Skeleton } from '../../components/ui/Skeleton';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { Message } from '../../types';
 
+type ChatAttachment = {
+  name: string;
+  size: number;
+  type: string;
+  url: string; // object URL or data URL
+  isImage: boolean;
+};
+
 type ChatBubble = {
   id: string;
   from: 'me' | 'them';
   text: string;
   time: string;
+  attachment?: ChatAttachment;
 };
 
 const formatNow = () =>
