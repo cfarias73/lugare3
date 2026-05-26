@@ -5,6 +5,7 @@ import { CreateSpaceProvider, useCreateSpace } from '../../context/CreateSpaceCo
 import { ErrorMessage } from '../../components/ui/ErrorMessage';
 import { useUser } from '../../context/UserContext';
 import { createVenue } from '../../src/services/providerService';
+import { getCategories, Category } from '../../src/services/categoryService';
 
 const CreateSpaceContent: React.FC = () => {
   const navigate = useNavigate();
@@ -16,6 +17,11 @@ const CreateSpaceContent: React.FC = () => {
   const [errors, setErrors] = React.useState<Record<string, string>>({});
   const [loading, setLoading] = React.useState(false);
   const [files, setFiles] = React.useState<File[]>([]);
+  const [categories, setCategories] = React.useState<Category[]>([]);
+
+  useEffect(() => {
+    getCategories().then(setCategories);
+  }, []);
 
   const handleSave = async () => {
     if (!user || user.role !== 'provider') {
@@ -26,18 +32,22 @@ const CreateSpaceContent: React.FC = () => {
       alert('Debes subir al menos una foto');
       return;
     }
+    if (!data.category) {
+      alert('Debes seleccionar una categoría');
+      return;
+    }
     setLoading(true);
     try {
-      await createVenue(user.email, { // Assuming email/id is used as providerId reference
+      await createVenue(user.email, {
         name: data.name,
         description: data.description,
-        category: 'salones', // Simplified mapping based on UI
-        location: 'CDMX', // Default
-        city: 'CDMX', // Default
+        category: data.category,
+        location: 'CDMX',
+        city: 'CDMX',
         capacity: parseInt(data.capacity) || 0,
-        size_sqm: 100, // Default
-        price_per_hour: 500, // Default
-        imageFile: files[0] // Use the first file
+        size_sqm: 100,
+        price_per_hour: 500,
+        imageFile: files[0]
       });
       alert('Espacio creado con éxito');
       navigate('/provider/dashboard');
