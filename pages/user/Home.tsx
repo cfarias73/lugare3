@@ -292,8 +292,8 @@ const Home: React.FC = () => {
                     >
                       <span className="material-icons-outlined text-slate-700 text-xl">share</span>
                     </button>
-                    <button className="bg-white/90 p-2 rounded-full shadow-md" onClick={(e) => e.stopPropagation()}>
-                      <span className="material-icons-outlined text-primary text-xl">favorite_border</span>
+                    <button className="bg-white/90 p-2 rounded-full shadow-md" onClick={(e) => { e.stopPropagation(); toggleFavorite(venue.id); }} aria-label={isFavorite(venue.id) ? 'Quitar de favoritos' : 'Añadir a favoritos'}>
+                      <span className="material-icons-outlined text-primary text-xl">{isFavorite(venue.id) ? 'favorite' : 'favorite_border'}</span>
                     </button>
                   </div>
                 </div>
