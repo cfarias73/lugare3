@@ -3,6 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../../components/Layout';
 import { toast } from 'sonner';
+import { supabase } from '../../lib/supabaseClient';
 
 const DEFAULT_AVATAR = 'https://lh3.googleusercontent.com/aida-public/AB6AXuCAkY7AviIRiCpv8Koe6LoTyPAt1AJqCGkHEjpFdo4D8JlpGdzUheoCp65Ss2T4-6h5KivvUSvZTqKeC7TsGwEjRb7Oz4do6MpDaKU2HIAu8ZHw7Ohu2ZqkuaCgIOwbm-7nMP_2Rrlf2f1OmMl58h1G4x13DAmAb-De3dxfsK6EPpaol91SSNHQm1YRIwDjPQ36zWMi5cCqel-vSp5_fr14NVk8YSKipiYZwaPbKnTijIAfYrFYafCkd1TLCs1HI5yIgudbnm9F9spC';
 
