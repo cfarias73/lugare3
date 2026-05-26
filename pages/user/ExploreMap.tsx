@@ -36,9 +36,12 @@ const ExploreMap: React.FC = () => {
   const [selectedVenue, setSelectedVenue] = useState<Venue | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
-  const [mapCenter, setMapCenter] = useState<[number, number]>([19.4326, -99.1332]); // Default to CDMX
+  const [mapCenter, setMapCenter] = useState<[number, number]>([19.4326, -99.1332]);
   const [zoom, setZoom] = useState(13);
   const [venues, setVenues] = useState<Venue[]>([]);
+  const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
+  const [locating, setLocating] = useState(false);
+  const [locationError, setLocationError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchVenues = async () => {
@@ -47,6 +50,38 @@ const ExploreMap: React.FC = () => {
     };
     fetchVenues();
   }, []);
+
+  const requestLocation = React.useCallback(() => {
+    if (!navigator.geolocation) {
+      setLocationError('Geolocalización no soportada en este navegador');
+      return;
+    }
+    setLocating(true);
+    setLocationError(null);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const coords: [number, number] = [pos.coords.latitude, pos.coords.longitude];
+        setUserLocation(coords);
+        setMapCenter(coords);
+        setZoom(14);
+        setLocating(false);
+      },
+      (err) => {
+        console.warn('Geolocation error:', err);
+        setLocationError(
+          err.code === err.PERMISSION_DENIED
+            ? 'Permiso de ubicación denegado. Actívalo en tu navegador.'
+            : 'No se pudo obtener tu ubicación'
+        );
+        setLocating(false);
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+    );
+  }, []);
+
+  useEffect(() => {
+    requestLocation();
+  }, [requestLocation]);
 
   const filteredVenues = useMemo(() => {
     return venues.filter(venue => {
@@ -102,8 +137,13 @@ const ExploreMap: React.FC = () => {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
-              <button className="bg-primary text-white p-2 rounded-xl flex items-center justify-center shadow-md hover:bg-orange-600 transition-colors">
-                <span className="material-icons-round text-lg">near_me</span>
+              <button
+                onClick={requestLocation}
+                disabled={locating}
+                title="Usar mi ubicación"
+                className="bg-primary text-white p-2 rounded-xl flex items-center justify-center shadow-md hover:bg-orange-600 transition-colors disabled:opacity-60"
+              >
+                <span className={`material-icons-round text-lg ${locating ? 'animate-pulse' : ''}`}>near_me</span>
               </button>
             </div>
           </div>
@@ -143,6 +183,17 @@ const ExploreMap: React.FC = () => {
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
               />
               <MapController center={mapCenter} zoom={zoom} />
+              {userLocation && (
+                <Marker
+                  position={userLocation}
+                  icon={L.divIcon({
+                    className: 'user-location-icon',
+                    html: `<div style="width:18px;height:18px;border-radius:9999px;background:#3b82f6;border:3px solid white;box-shadow:0 0 0 4px rgba(59,130,246,0.3);"></div>`,
+                    iconSize: [18, 18],
+                    iconAnchor: [9, 9],
+                  })}
+                />
+              )}
               {filteredVenues.map((venue) => (
                 <Marker 
                   key={venue.id} 
@@ -154,6 +205,12 @@ const ExploreMap: React.FC = () => {
                 />
               ))}
             </MapContainer>
+            {locationError && (
+              <div className="absolute top-4 left-4 right-4 z-[1000] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2 shadow-lg text-xs text-slate-700 dark:text-slate-200 flex items-center gap-2">
+                <span className="material-icons-round text-amber-500 text-sm">location_off</span>
+                {locationError}
+              </div>
+            )}
           </div>
           
           {/* Map Controls */}
