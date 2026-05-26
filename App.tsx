@@ -27,6 +27,7 @@ import PaymentSuccess from './pages/user/PaymentSuccess';
 import Messages from './pages/user/Messages';
 import Bookings from './pages/user/Bookings';
 import Profile from './pages/user/Profile';
+import Notifications from './pages/user/Notifications';
 import RateExperience from './pages/user/RateExperience';
 import CreateInvitation from './pages/user/invitations/CreateInvitation';
 import AddGuests from './pages/user/invitations/AddGuests';
@@ -83,6 +84,7 @@ const App: React.FC = () => {
         <Route path="/user/messages" element={<ProtectedRoute allowedRole="user"><RouteWrapper><Messages /></RouteWrapper></ProtectedRoute>} />
         <Route path="/user/bookings" element={<ProtectedRoute allowedRole="user"><RouteWrapper><Bookings /></RouteWrapper></ProtectedRoute>} />
         <Route path="/user/profile" element={<ProtectedRoute allowedRole="user"><RouteWrapper><Profile /></RouteWrapper></ProtectedRoute>} />
+        <Route path="/user/notifications" element={<ProtectedRoute allowedRole="user"><RouteWrapper><Notifications /></RouteWrapper></ProtectedRoute>} />
         <Route path="/user/rate" element={<ProtectedRoute allowedRole="user"><RouteWrapper><RateExperience /></RouteWrapper></ProtectedRoute>} />
         <Route path="/user/invitations/create" element={<ProtectedRoute allowedRole="user"><RouteWrapper><CreateInvitation /></RouteWrapper></ProtectedRoute>} />
         <Route path="/user/invitations/guests" element={<ProtectedRoute allowedRole="user"><RouteWrapper><AddGuests /></RouteWrapper></ProtectedRoute>} />
