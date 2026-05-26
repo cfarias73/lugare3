@@ -73,7 +73,11 @@ const Favorites: React.FC = () => {
               />
             </div>
 
-            {favoriteVenues.length === 0 ? (
+            {loading && favorites.length > 0 ? (
+              <div className="space-y-4">
+                {[1,2].map(i => <div key={i} className="h-48 rounded-xl bg-slate-100 dark:bg-slate-800 animate-pulse" />)}
+              </div>
+            ) : favoriteVenues.length === 0 ? (
               <EmptyState
                 icon="favorite_border"
                 title="Aún no tienes favoritos"
