@@ -29,7 +29,14 @@ const Messages: React.FC = () => {
   const [threads, setThreads] = useState<Record<string, ChatBubble[]>>({});
   const [unreadCleared, setUnreadCleared] = useState<Record<string, boolean>>({});
   const [draft, setDraft] = useState('');
+  const [toast, setToast] = useState<string | null>(null);
+  const [showChatMenu, setShowChatMenu] = useState(false);
   const scrollRef = useRef<HTMLDivElement | null>(null);
+
+  const showToast = (msg: string) => {
+    setToast(msg);
+    setTimeout(() => setToast(null), 2200);
+  };
 
   useEffect(() => {
     const timer = setTimeout(() => setLoading(false), 600);
@@ -156,14 +163,62 @@ const Messages: React.FC = () => {
                 )}
               </p>
             </div>
-            <button className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors">
+            <button
+              onClick={() => showToast(`Llamando a ${activeConversation.sender}...`)}
+              className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors"
+              aria-label="Llamar"
+            >
               <span className="material-icons-outlined text-slate-700 dark:text-white">call</span>
             </button>
-            <button className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors">
-              <span className="material-icons-outlined text-slate-700 dark:text-white">more_vert</span>
-            </button>
+            <div className="relative">
+              <button
+                onClick={() => setShowChatMenu((v) => !v)}
+                className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors"
+                aria-label="Más opciones"
+              >
+                <span className="material-icons-outlined text-slate-700 dark:text-white">more_vert</span>
+              </button>
+              {showChatMenu && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setShowChatMenu(false)} />
+                  <div className="absolute right-0 mt-2 w-52 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-100 dark:border-slate-700 overflow-hidden z-50">
+                    <button
+                      onClick={() => { setShowChatMenu(false); showToast('Conversación silenciada'); }}
+                      className="w-full text-left px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/50 flex items-center gap-2"
+                    >
+                      <span className="material-icons-outlined text-base">notifications_off</span>
+                      Silenciar
+                    </button>
+                    <button
+                      onClick={() => { setShowChatMenu(false); showToast('Conversación archivada'); }}
+                      className="w-full text-left px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/50 flex items-center gap-2"
+                    >
+                      <span className="material-icons-outlined text-base">archive</span>
+                      Archivar
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowChatMenu(false);
+                        setThreads((p) => ({ ...p, [activeConversation.id]: [] }));
+                        showToast('Mensajes eliminados');
+                      }}
+                      className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2"
+                    >
+                      <span className="material-icons-outlined text-base">delete_outline</span>
+                      Vaciar chat
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         </header>
+
+        {toast && (
+          <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[200] bg-slate-900 text-white text-sm px-4 py-2 rounded-full shadow-lg animate-[fadeIn_0.2s_ease-out]">
+            {toast}
+          </div>
+        )}
 
         <main
           ref={scrollRef}
