@@ -1,10 +1,28 @@
 
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient';
+
+interface RateState {
+  venueId?: string;
+  venueName?: string;
+  image?: string;
+  date?: string;
+  time?: string;
+}
+
+const DEFAULT_IMAGE = 'https://images.unsplash.com/photo-1519167758481-83f5e181dcc3?auto=format&fit=crop&q=80&w=400';
 
 const RateExperience: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const state = (location.state as RateState | null) || {};
+  const venueId = state.venueId || null;
+  const venueName = state.venueName || 'Tu reserva';
+  const venueImage = state.image || DEFAULT_IMAGE;
+  const venueDate = state.date || '';
+  const venueTime = state.time || '';
+
   const [mainRating, setMainRating] = useState(4);
   const [comment, setComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -21,6 +39,11 @@ const RateExperience: React.FC = () => {
   };
 
   const handleSubmit = async () => {
+    if (!venueId) {
+      alert('Selecciona una reserva desde "Pasadas" en Reservas para valorarla.');
+      navigate('/user/bookings');
+      return;
+    }
     setIsSubmitting(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -31,15 +54,13 @@ const RateExperience: React.FC = () => {
       }
       const { error } = await supabase.from('reviews').insert({
         user_id: user.id,
-        venue_id: 'casa-loma',
-        venue_name: 'Casa Loma',
+        venue_id: venueId,
         rating: mainRating,
         comment: comment || null,
-        aspect_ratings: aspectRatings,
       });
       if (error) throw error;
       alert('¡Gracias por tu reseña!');
-      navigate('/user/home');
+      navigate('/user/bookings');
     } catch (e: any) {
       console.error(e);
       alert(`No se pudo guardar la reseña: ${e?.message || 'error desconocido'}`);
@@ -73,11 +94,16 @@ const RateExperience: React.FC = () => {
 
       <main className="flex-1 overflow-y-auto px-5 py-4 space-y-6 pb-32">
         <div className="p-4 border border-gray-100 dark:border-gray-800 rounded-2xl bg-white dark:bg-surface-dark shadow-sm flex items-center gap-4">
-          <img alt="Venue" className="w-20 h-20 rounded-xl object-cover shadow-sm" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBlb4r72VIvNk5AkKrZaDvYibUqqXBMwVArIHuEiK7TCkdai7FWPOpyixgjlVQzikI06LtdXFoWgR0tUO7IA2ogNuMSKKRz1K2bhRRP_Y4QcUFbRvu_yVBvN0WWeGkFCeKA_3el9C584p4cjYyCZvDpYt5IUj204ZYofPEun34KG-Sxf-l0a9DGNZlxzYYKReVhpq1z1G3-MUM9R-E6NorSuZPCVd5np4JpR-wyAud_34hf3ZinZy3k-dcHesCZXt8Ucg1OeMLUZjO2"/>
+          <img alt={venueName} className="w-20 h-20 rounded-xl object-cover shadow-sm" src={venueImage}/>
           <div className="flex-1">
-            <h2 className="text-lg font-semibold text-slate-800 dark:text-white leading-tight">Casa Loma</h2>
-            <p className="text-sm text-slate-500 dark:text-slate-400">Salón para eventos</p>
-            <p className="text-[12px] text-slate-400 dark:text-slate-500 mt-1">12 de Agosto, 2023 • 18:00 - 22:00</p>
+            <h2 className="text-lg font-semibold text-slate-800 dark:text-white leading-tight">{venueName}</h2>
+            <p className="text-sm text-slate-500 dark:text-slate-400">Espacio para eventos</p>
+            {(venueDate || venueTime) && (
+              <p className="text-[12px] text-slate-400 dark:text-slate-500 mt-1">{venueDate} {venueTime && `• ${venueTime}`}</p>
+            )}
+            {!venueId && (
+              <p className="text-[11px] text-amber-600 mt-1">Selecciona una reserva pasada en "Reservas" para valorarla.</p>
+            )}
           </div>
         </div>
 

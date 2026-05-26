@@ -1,18 +1,28 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../../components/Layout';
-import { MOCK_VENUES } from '../../constants';
 import { useUser } from '../../context/UserContext';
 import { EmptyState } from '../../components/ui/EmptyState';
+import { getVenuesByIds } from '../../src/services/venueService';
+import { Venue } from '../../types';
 
 const Favorites: React.FC = () => {
   const navigate = useNavigate();
   const { favorites, toggleFavorite } = useUser();
   const [activeTab, setActiveTab] = useState<'espacios' | 'colecciones'>('espacios');
   const [query, setQuery] = useState('');
+  const [favoriteVenues, setFavoriteVenues] = useState<Venue[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const favoriteVenues = useMemo(() => MOCK_VENUES.filter((v) => favorites.includes(v.id)), [favorites]);
+  useEffect(() => {
+    setLoading(true);
+    getVenuesByIds(favorites).then((v) => {
+      setFavoriteVenues(v);
+      setLoading(false);
+    });
+  }, [favorites]);
+
   const visibleVenues = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return favoriteVenues;
@@ -63,7 +73,11 @@ const Favorites: React.FC = () => {
               />
             </div>
 
-            {favoriteVenues.length === 0 ? (
+            {loading && favorites.length > 0 ? (
+              <div className="space-y-4">
+                {[1,2].map(i => <div key={i} className="h-48 rounded-xl bg-slate-100 dark:bg-slate-800 animate-pulse" />)}
+              </div>
+            ) : favoriteVenues.length === 0 ? (
               <EmptyState
                 icon="favorite_border"
                 title="Aún no tienes favoritos"
