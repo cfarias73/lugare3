@@ -1,11 +1,13 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '../../lib/supabaseClient';
 
 const RateExperience: React.FC = () => {
   const navigate = useNavigate();
   const [mainRating, setMainRating] = useState(4);
   const [comment, setComment] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [aspectRatings, setAspectRatings] = useState({
     Limpieza: 5,
     Ubicación: 4,
@@ -18,11 +20,32 @@ const RateExperience: React.FC = () => {
     setAspectRatings(prev => ({ ...prev, [aspect]: rating }));
   };
 
-  const handleSubmit = () => {
-    // Here we would typically send this to a backend
-    console.log({ mainRating, comment, aspectRatings });
-    alert('¡Gracias por tu reseña!');
-    navigate('/user/home');
+  const handleSubmit = async () => {
+    setIsSubmitting(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        alert('Debes iniciar sesión para publicar una reseña.');
+        navigate('/user/login');
+        return;
+      }
+      const { error } = await supabase.from('reviews').insert({
+        user_id: user.id,
+        venue_id: 'casa-loma',
+        venue_name: 'Casa Loma',
+        rating: mainRating,
+        comment: comment || null,
+        aspect_ratings: aspectRatings,
+      });
+      if (error) throw error;
+      alert('¡Gracias por tu reseña!');
+      navigate('/user/home');
+    } catch (e: any) {
+      console.error(e);
+      alert(`No se pudo guardar la reseña: ${e?.message || 'error desconocido'}`);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const getRatingText = (rating: number) => {
@@ -139,9 +162,10 @@ const RateExperience: React.FC = () => {
           </button>
           <button 
             onClick={handleSubmit}
-            className="flex-1 py-3.5 bg-primary text-white font-semibold rounded-2xl shadow-lg shadow-primary/20 hover:opacity-90 transition-opacity"
+            disabled={isSubmitting}
+            className="flex-1 py-3.5 bg-primary text-white font-semibold rounded-2xl shadow-lg shadow-primary/20 hover:opacity-90 transition-opacity disabled:opacity-60"
           >
-            Publicar reseña
+            {isSubmitting ? 'Publicando…' : 'Publicar reseña'}
           </button>
         </div>
         <p className="text-center text-[11px] text-slate-400 dark:text-slate-500 max-w-[280px] mx-auto leading-relaxed">
