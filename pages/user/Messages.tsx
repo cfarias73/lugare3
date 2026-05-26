@@ -29,7 +29,14 @@ const Messages: React.FC = () => {
   const [threads, setThreads] = useState<Record<string, ChatBubble[]>>({});
   const [unreadCleared, setUnreadCleared] = useState<Record<string, boolean>>({});
   const [draft, setDraft] = useState('');
+  const [toast, setToast] = useState<string | null>(null);
+  const [showChatMenu, setShowChatMenu] = useState(false);
   const scrollRef = useRef<HTMLDivElement | null>(null);
+
+  const showToast = (msg: string) => {
+    setToast(msg);
+    setTimeout(() => setToast(null), 2200);
+  };
 
   useEffect(() => {
     const timer = setTimeout(() => setLoading(false), 600);
