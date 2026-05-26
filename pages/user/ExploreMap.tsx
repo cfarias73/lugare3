@@ -36,9 +36,12 @@ const ExploreMap: React.FC = () => {
   const [selectedVenue, setSelectedVenue] = useState<Venue | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
-  const [mapCenter, setMapCenter] = useState<[number, number]>([19.4326, -99.1332]); // Default to CDMX
+  const [mapCenter, setMapCenter] = useState<[number, number]>([19.4326, -99.1332]);
   const [zoom, setZoom] = useState(13);
   const [venues, setVenues] = useState<Venue[]>([]);
+  const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
+  const [locating, setLocating] = useState(false);
+  const [locationError, setLocationError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchVenues = async () => {
@@ -47,6 +50,38 @@ const ExploreMap: React.FC = () => {
     };
     fetchVenues();
   }, []);
+
+  const requestLocation = React.useCallback(() => {
+    if (!navigator.geolocation) {
+      setLocationError('Geolocalización no soportada en este navegador');
+      return;
+    }
+    setLocating(true);
+    setLocationError(null);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const coords: [number, number] = [pos.coords.latitude, pos.coords.longitude];
+        setUserLocation(coords);
+        setMapCenter(coords);
+        setZoom(14);
+        setLocating(false);
+      },
+      (err) => {
+        console.warn('Geolocation error:', err);
+        setLocationError(
+          err.code === err.PERMISSION_DENIED
+            ? 'Permiso de ubicación denegado. Actívalo en tu navegador.'
+            : 'No se pudo obtener tu ubicación'
+        );
+        setLocating(false);
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+    );
+  }, []);
+
+  useEffect(() => {
+    requestLocation();
+  }, [requestLocation]);
 
   const filteredVenues = useMemo(() => {
     return venues.filter(venue => {
