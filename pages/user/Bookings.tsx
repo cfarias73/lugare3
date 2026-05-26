@@ -144,9 +144,16 @@ const Bookings: React.FC = () => {
                       {booking.time}
                     </div>
                   </div>
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between flex-wrap gap-2">
                     <p className="text-slate-800 dark:text-white font-medium">Total: <span className="font-bold text-lg">${booking.totalPrice.toLocaleString()}</span></p>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 flex-wrap">
+                      <button 
+                        onClick={() => navigate('/user/rate')}
+                        className="bg-yellow-400 hover:bg-yellow-500 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-colors flex items-center gap-1"
+                      >
+                        <span className="material-icons-outlined text-base">star</span>
+                        Valorar
+                      </button>
                       <button 
                         onClick={() => navigate('/user/invitations/create')}
                         className="bg-[#5EB962] hover:bg-green-600 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-colors"
