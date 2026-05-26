@@ -265,7 +265,26 @@ const Messages: React.FC = () => {
                     : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-bl-md border border-slate-100 dark:border-slate-700'
                 }`}
               >
-                <p className="whitespace-pre-wrap break-words">{b.text}</p>
+                {b.attachment && (
+                  b.attachment.isImage ? (
+                    <a href={b.attachment.url} target="_blank" rel="noreferrer" className="block mb-1.5">
+                      <img src={b.attachment.url} alt={b.attachment.name} className="rounded-lg max-h-56 w-auto object-cover" />
+                    </a>
+                  ) : (
+                    <a
+                      href={b.attachment.url}
+                      download={b.attachment.name}
+                      className={`flex items-center gap-2 mb-1.5 px-2.5 py-2 rounded-lg ${b.from === 'me' ? 'bg-white/15 hover:bg-white/25' : 'bg-slate-100 dark:bg-slate-700/60 hover:bg-slate-200 dark:hover:bg-slate-700'} transition-colors`}
+                    >
+                      <span className="material-icons-outlined text-base">description</span>
+                      <span className="text-xs font-medium truncate max-w-[180px]">{b.attachment.name}</span>
+                      <span className={`text-[10px] ${b.from === 'me' ? 'text-white/70' : 'text-slate-400'}`}>
+                        {(b.attachment.size / 1024).toFixed(0)} KB
+                      </span>
+                    </a>
+                  )
+                )}
+                {b.text && <p className="whitespace-pre-wrap break-words">{b.text}</p>}
                 <p
                   className={`text-[10.5px] mt-1 text-right ${
                     b.from === 'me' ? 'text-white/70' : 'text-slate-400'
