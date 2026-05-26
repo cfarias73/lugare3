@@ -48,12 +48,18 @@ const Home: React.FC = () => {
             <span className="material-icons-outlined text-slate-600 dark:text-slate-300">notifications</span>
             <span className="absolute top-0 right-0 h-2.5 w-2.5 bg-primary border-2 border-white dark:border-surface-dark rounded-full"></span>
           </div>
-          <img 
-            alt="Avatar" 
-            className="w-10 h-10 rounded-full object-cover ring-2 ring-primary/20" 
-            src="https://lh3.googleusercontent.com/aida-public/AB6AXuCAkY7AviIRiCpv8Koe6LoTyPAt1AJqCGkHEjpFdo4D8JlpGdzUheoCp65Ss2T4-6h5KivvUSvZTqKeC7TsGwEjRb7Oz4do6MpDaKU2HIAu8ZHw7Ohu2ZqkuaCgIOwbm-7nMP_2Rrlf2f1OmMl58h1G4x13DAmAb-De3dxfsK6EPpaol91SSNHQm1YRIwDjPQ36zWMi5cCqel-vSp5_fr14NVk8YSKipiYZwaPbKnTijIAfYrFYafCkd1TLCs1HI5yIgudbnm9F9spC" 
-            loading="lazy"
-          />
+          <button
+            onClick={() => navigate('/user/profile')}
+            aria-label="Ir a mi perfil"
+            className="rounded-full focus:outline-none focus:ring-2 focus:ring-primary/40"
+          >
+            <img 
+              alt="Avatar" 
+              className="w-10 h-10 rounded-full object-cover ring-2 ring-primary/20 cursor-pointer" 
+              src="https://lh3.googleusercontent.com/aida-public/AB6AXuCAkY7AviIRiCpv8Koe6LoTyPAt1AJqCGkHEjpFdo4D8JlpGdzUheoCp65Ss2T4-6h5KivvUSvZTqKeC7TsGwEjRb7Oz4do6MpDaKU2HIAu8ZHw7Ohu2ZqkuaCgIOwbm-7nMP_2Rrlf2f1OmMl58h1G4x13DAmAb-De3dxfsK6EPpaol91SSNHQm1YRIwDjPQ36zWMi5cCqel-vSp5_fr14NVk8YSKipiYZwaPbKnTijIAfYrFYafCkd1TLCs1HI5yIgudbnm9F9spC" 
+              loading="lazy"
+            />
+          </button>
         </div>
       </header>
 
