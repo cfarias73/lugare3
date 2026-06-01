@@ -3,9 +3,11 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../../components/Layout';
 import { getVenues } from '../../src/services/venueService';
+import { supabase } from '../../lib/supabaseClient';
 import { Venue } from '../../types';
 import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet';
 import L from 'leaflet';
+
 
 // Fix for default marker icon in Leaflet + React
 // @ts-ignore
@@ -59,6 +61,7 @@ const ExploreMap: React.FC = () => {
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
   const [locating, setLocating] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
+  const [unavailableVenueIds, setUnavailableVenueIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     const fetchVenues = async () => {
@@ -67,6 +70,31 @@ const ExploreMap: React.FC = () => {
     };
     fetchVenues();
   }, []);
+
+  // Fetch venues booked on the selected date
+  useEffect(() => {
+    if (!dateFilter) {
+      setUnavailableVenueIds(new Set());
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      const { data, error } = await supabase
+        .from('bookings')
+        .select('venue_id, status')
+        .eq('event_date', dateFilter)
+        .in('status', ['pending', 'confirmed', 'paid']);
+      if (cancelled) return;
+      if (error) {
+        console.warn('Error fetching availability', error);
+        setUnavailableVenueIds(new Set());
+        return;
+      }
+      setUnavailableVenueIds(new Set((data || []).map((b: any) => b.venue_id)));
+    })();
+    return () => { cancelled = true; };
+  }, [dateFilter]);
+
 
   const requestLocation = React.useCallback(() => {
     if (!navigator.geolocation) {
@@ -117,9 +145,11 @@ const ExploreMap: React.FC = () => {
       if (!priceRange && cMax != null && venue.price > cMax) return false;
       if (minCapacity !== '' && venue.capacity < Number(minCapacity)) return false;
       if (minRating != null && (venue.rating || 0) < minRating) return false;
+      if (dateFilter && unavailableVenueIds.has(venue.id)) return false;
       return true;
     });
-  }, [venues, searchQuery, priceRange, customMinPrice, customMaxPrice, minCapacity, minRating]);
+  }, [venues, searchQuery, priceRange, customMinPrice, customMaxPrice, minCapacity, minRating, dateFilter, unavailableVenueIds]);
+
 
   const isCustomPriceActive = !priceRange && (customMinPrice !== '' || customMaxPrice !== '');
   const activeFilterCount =
