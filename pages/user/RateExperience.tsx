@@ -135,13 +135,16 @@ const RateExperience: React.FC = () => {
                 <span className="text-slate-700 dark:text-slate-300 font-medium">{label}</span>
                 <div className="flex gap-0.5">
                   {[1, 2, 3, 4, 5].map(s => (
-                    <span 
-                      key={s} 
+                    <button
+                      key={s}
+                      type="button"
                       onClick={() => handleAspectRating(label, s)}
-                      className={`material-icons text-xl cursor-pointer transition-colors ${s <= (stars as number) ? 'text-[#F2B134]' : 'text-gray-300 dark:text-gray-700'}`}
+                      className="transition-transform hover:scale-110"
                     >
-                      star
-                    </span>
+                      <Star
+                        className={`w-5 h-5 ${s <= (stars as number) ? 'fill-[#F2B134] text-[#F2B134]' : 'fill-transparent text-gray-300 dark:text-gray-700'}`}
+                      />
+                    </button>
                   ))}
                 </div>
               </div>
