@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../../../context/UserContext';
+import { getUserBookings } from '../../../src/services/userService';
 
 const DESIGNS = [
   { 
@@ -54,12 +55,36 @@ const DESIGNS = [
 
 const CreateInvitation: React.FC = () => {
   const navigate = useNavigate();
-  const { updateDraftInvitation, draftInvitation } = useUser();
+  const { user, updateDraftInvitation, draftInvitation } = useUser();
   const [selectedDesign, setSelectedDesign] = useState<string>(draftInvitation?.designId || 'romantico');
   const [eventName, setEventName] = useState(draftInvitation?.eventName || '');
   const [date, setDate] = useState(draftInvitation?.date || '');
   const [time, setTime] = useState(draftInvitation?.time || '');
   const [location, setLocation] = useState(draftInvitation?.location || '');
+
+  // Auto-prefill from latest booking (venue name + address + date + time)
+  useEffect(() => {
+    if (!user) return;
+    if (location && date && time) return; // user already has data
+    (async () => {
+      try {
+        const bookings = await getUserBookings(user.id);
+        const latest = (bookings || []).find((b: any) =>
+          ['confirmed', 'paid', 'pending'].includes(b.status)
+        );
+        if (!latest) return;
+        const venueName = latest.venues?.name || '';
+        const venueAddr = latest.venues?.location || '';
+        const composed = [venueName, venueAddr].filter(Boolean).join(' — ');
+        if (!location && composed) setLocation(composed);
+        if (!date && latest.event_date) setDate(latest.event_date);
+        if (!time && latest.start_time) setTime(String(latest.start_time).slice(0, 5));
+      } catch (e) {
+        console.error('prefill from booking failed', e);
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   const handleNext = () => {
     updateDraftInvitation({
@@ -172,12 +197,12 @@ const CreateInvitation: React.FC = () => {
                 <div className="group">
                   <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-2 ml-1 uppercase tracking-widest">Fecha</label>
                   <div className="relative">
-                    <span className="material-icons-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-primary transition-colors">calendar_today</span>
-                    <input 
-                      className="w-full pl-11 pr-4 py-4 bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-800 rounded-2xl focus:ring-4 focus:ring-primary/10 focus:border-primary text-slate-900 dark:text-white placeholder-slate-300 transition-all outline-none text-sm" 
-                      placeholder="DD/MM/AAAA" 
-                      type="text"
+                    <span className="material-icons-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-primary transition-colors pointer-events-none">calendar_today</span>
+                    <input
+                      className="w-full pl-11 pr-4 py-4 bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-800 rounded-2xl focus:ring-4 focus:ring-primary/10 focus:border-primary text-slate-900 dark:text-white placeholder-slate-300 transition-all outline-none text-sm"
+                      type="date"
                       value={date}
+                      min={new Date().toISOString().split('T')[0]}
                       onChange={(e) => setDate(e.target.value)}
                     />
                   </div>
@@ -185,11 +210,10 @@ const CreateInvitation: React.FC = () => {
                 <div className="group">
                   <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-2 ml-1 uppercase tracking-widest">Hora</label>
                   <div className="relative">
-                    <span className="material-icons-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-primary transition-colors">schedule</span>
-                    <input 
-                      className="w-full pl-11 pr-4 py-4 bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-800 rounded-2xl focus:ring-4 focus:ring-primary/10 focus:border-primary text-slate-900 dark:text-white placeholder-slate-300 transition-all outline-none text-sm" 
-                      placeholder="HH:MM" 
-                      type="text"
+                    <span className="material-icons-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-primary transition-colors pointer-events-none">schedule</span>
+                    <input
+                      className="w-full pl-11 pr-4 py-4 bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-800 rounded-2xl focus:ring-4 focus:ring-primary/10 focus:border-primary text-slate-900 dark:text-white placeholder-slate-300 transition-all outline-none text-sm"
+                      type="time"
                       value={time}
                       onChange={(e) => setTime(e.target.value)}
                     />
