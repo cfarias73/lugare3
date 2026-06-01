@@ -74,8 +74,10 @@ const Messages: React.FC = () => {
     const text = draft.trim();
     if (!text || !activeConversation || !user) return;
     setSending(true);
-    const msg = await sendMessage(activeConversation.id, user.id, text);
-    if (msg) {
+    const { data: msg, error } = await sendMessage(activeConversation.id, user.id, text);
+    if (error) {
+      toast.error(`No se pudo enviar: ${error}`);
+    } else if (msg) {
       setThread((prev) => [...prev, msg]);
       setDraft('');
       setConversations((prev) =>
