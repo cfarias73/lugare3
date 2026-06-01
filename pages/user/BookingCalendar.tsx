@@ -15,6 +15,7 @@ const BookingCalendar: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [selectedSlot, setSelectedSlot] = useState<'morning' | 'afternoon' | 'night' | null>(null);
+  const [extraHours, setExtraHours] = useState<number>(0);
   const [venue, setVenue] = useState<any>(MOCK_VENUES[0]);
 
   useEffect(() => {
@@ -40,6 +41,7 @@ const BookingCalendar: React.FC = () => {
             price: Number(data.price_per_hour) || 0,
             rating: data.rating || 0,
             reviewsCount: data.reviews_count || 0,
+            extraHourPrice: data.extra_hour_price != null ? Number(data.extra_hour_price) : Number(data.price_per_hour) || 0,
           });
         }
       });
