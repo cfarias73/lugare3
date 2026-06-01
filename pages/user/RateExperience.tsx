@@ -88,7 +88,7 @@ const RateExperience: React.FC = () => {
           onClick={() => navigate(-1)}
           className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
         >
-          <span className="material-icons text-slate-700 dark:text-slate-300">arrow_back</span>
+          <ArrowLeft className="w-6 h-6 text-slate-700 dark:text-slate-300" />
         </button>
         <h1 className="flex-1 text-center text-lg font-semibold text-slate-800 dark:text-white mr-8">Valorar experiencia</h1>
       </header>
