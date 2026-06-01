@@ -115,11 +115,11 @@ const ExploreMap: React.FC = () => {
       if (priceRange && (venue.price < priceRange.min || venue.price > priceRange.max)) return false;
       if (!priceRange && cMin != null && venue.price < cMin) return false;
       if (!priceRange && cMax != null && venue.price > cMax) return false;
-      if (capacityRange && (venue.capacity < capacityRange.min || venue.capacity > capacityRange.max)) return false;
+      if (minCapacity !== '' && venue.capacity < Number(minCapacity)) return false;
       if (minRating != null && (venue.rating || 0) < minRating) return false;
       return true;
     });
-  }, [venues, searchQuery, priceRange, customMinPrice, customMaxPrice, capacityRange, minRating]);
+  }, [venues, searchQuery, priceRange, customMinPrice, customMaxPrice, minCapacity, minRating]);
 
   const isCustomPriceActive = !priceRange && (customMinPrice !== '' || customMaxPrice !== '');
   const activeFilterCount =
