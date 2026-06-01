@@ -68,26 +68,54 @@ const Profile: React.FC = () => {
     fileInputRef.current?.click();
   };
 
-  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const compressImage = (file: File, maxSize = 320, quality = 0.82): Promise<string> =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = () => reject(new Error('No se pudo leer la imagen'));
+      reader.onload = (ev) => {
+        const img = new Image();
+        img.onerror = () => reject(new Error('Imagen inválida'));
+        img.onload = () => {
+          const scale = Math.min(1, maxSize / Math.max(img.width, img.height));
+          const w = Math.round(img.width * scale);
+          const h = Math.round(img.height * scale);
+          const canvas = document.createElement('canvas');
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) return reject(new Error('Canvas no disponible'));
+          ctx.drawImage(img, 0, 0, w, h);
+          resolve(canvas.toDataURL('image/jpeg', quality));
+        };
+        img.src = ev.target?.result as string;
+      };
+      reader.readAsDataURL(file);
+    });
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    e.target.value = '';
     if (!file) return;
     if (!file.type.startsWith('image/')) {
       toast.error('Selecciona un archivo de imagen');
       return;
     }
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('La imagen debe pesar menos de 5MB');
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('La imagen debe pesar menos de 10MB');
       return;
     }
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      const dataUrl = ev.target?.result as string;
+    try {
+      const dataUrl = await compressImage(file);
       setAvatar(dataUrl);
-      localStorage.setItem('user_avatar', dataUrl);
-      toast.success('Foto actualizada');
-    };
-    reader.readAsDataURL(file);
-    e.target.value = '';
+      try {
+        localStorage.setItem('user_avatar', dataUrl);
+        toast.success('Foto actualizada');
+      } catch {
+        toast.error('No se pudo guardar (almacenamiento lleno). La foto se verá solo en esta sesión.');
+      }
+    } catch (err: any) {
+      toast.error(err?.message || 'No se pudo procesar la imagen');
+    }
   };
 
   const handleRemoveAvatar = () => {
