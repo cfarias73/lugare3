@@ -171,7 +171,7 @@ const RateExperience: React.FC = () => {
           <h3 className="text-[16px] font-semibold text-slate-800 dark:text-slate-100">Añade fotos de tu evento (opcional)</h3>
           <div className="flex gap-3 overflow-x-auto pb-2 no-scrollbar">
             <div className="flex-shrink-0 w-24 h-24 border-2 border-dashed border-gray-200 dark:border-gray-800 rounded-xl flex items-center justify-center bg-gray-50 dark:bg-gray-900 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-              <span className="material-icons text-gray-300 dark:text-gray-700 text-3xl">add_photo_alternate</span>
+              <ImagePlus className="w-8 h-8 text-gray-300 dark:text-gray-700" />
             </div>
             {['https://lh3.googleusercontent.com/aida-public/AB6AXuBeD_o1hOuusGhRC-qpK-0XDgCGO-UhCPn72mpzx5C9jkDNXbW0t0s7HRm1HNzIHJawBEdN8WIaT8Mhqjtw2b4qu88FUUzTYaneLUIdTj_LWNA8BBkw_ZovYkimebipJBAzPWvucRnKXR8pz4vdmbDxdYDXRFy06HjN3UQiTOXc3Z8WcXo9wNvpyCelKDqrx9AML8RIqMALSaOoRr8lEo8_5aDOmBGo0Db3H3VA0RluOeeLpQ1KiJtPxcbJd6SmcNt6V2fQTxPJ3V0g', 'https://lh3.googleusercontent.com/aida-public/AB6AXuC8CzL_TISuguNpKQV2N4sARQ2KhvS5T7zPSvS6z6xkN_nVG7Tar2omc11no_iNrv_aH3uti5rUkJdIdFDxyRQ_BAYzofsD2RZ5JWfR-yEaiL5iHgr1pRmlb3SiqRGInggzoI25VCeZUG8KCq4cFuXTIDMW8mQ210Qjy_QAb_FDBbye4TfBXggmNfzUrWpxPwkTzmvsBBP8jOJ5kDkCHLb6r_p_2q62u8m0HfTtkCIjYuXep3vCyQjJXYLWHWN0PwpjaI9kEtplYDuL'].map((img, i) => (
               <div key={i} className="relative flex-shrink-0 w-24 h-24 rounded-xl overflow-hidden shadow-sm">
