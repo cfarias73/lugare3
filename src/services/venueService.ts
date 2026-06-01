@@ -22,6 +22,8 @@ const mapVenue = (v: any): Venue => ({
   isNew: v.is_new,
   discount: v.discount_badge,
   category: v.category,
+  minHours: Number(v.min_hours) > 0 ? Number(v.min_hours) : 4,
+  extraHourPrice: v.extra_hour_price != null ? Number(v.extra_hour_price) : Number(v.price_per_hour) || 0,
 });
 
 export const getVenues = async (): Promise<Venue[]> => {

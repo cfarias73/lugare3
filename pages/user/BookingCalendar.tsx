@@ -15,6 +15,7 @@ const BookingCalendar: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [selectedSlot, setSelectedSlot] = useState<'morning' | 'afternoon' | 'night' | null>(null);
+  const [extraHours, setExtraHours] = useState<number>(0);
   const [venue, setVenue] = useState<any>(MOCK_VENUES[0]);
 
   useEffect(() => {
@@ -40,6 +41,7 @@ const BookingCalendar: React.FC = () => {
             price: Number(data.price_per_hour) || 0,
             rating: data.rating || 0,
             reviewsCount: data.reviews_count || 0,
+            extraHourPrice: data.extra_hour_price != null ? Number(data.extra_hour_price) : Number(data.price_per_hour) || 0,
           });
         }
       });
@@ -53,12 +55,19 @@ const BookingCalendar: React.FC = () => {
   const handleContinue = () => {
     if (selectedDay && selectedSlot) {
       const slot = SLOT_TIMES[selectedSlot];
+      const totalHours = slot.hours + extraHours;
+      // Extend end time by extraHours
+      const [eh, em, es] = slot.end.split(':').map(Number);
+      const endDate = new Date(2000, 0, 1, eh, em, es);
+      endDate.setHours(endDate.getHours() + extraHours);
+      const pad = (n: number) => String(n).padStart(2, '0');
+      const newEnd = `${pad(endDate.getHours())}:${pad(endDate.getMinutes())}:${pad(endDate.getSeconds())}`;
       const date = `2025-10-${String(selectedDay).padStart(2, '0')}`;
       const params = new URLSearchParams({
         date,
         start: slot.start,
-        end: slot.end,
-        hours: String(slot.hours),
+        end: newEnd,
+        hours: String(totalHours),
         guests: '10',
       });
       navigate(`/user/checkout/${id}?${params.toString()}`);
@@ -66,6 +75,12 @@ const BookingCalendar: React.FC = () => {
       alert('Por favor selecciona un día y un horario.');
     }
   };
+
+  const extraPrice = Number(venue.extraHourPrice ?? venue.price) || 0;
+  const slotHours = selectedSlot ? SLOT_TIMES[selectedSlot].hours : 0;
+  const estimatedTotal = selectedSlot
+    ? venue.price * slotHours + extraPrice * extraHours
+    : venue.price * 5;
 
   return (
     <div className="bg-background-light dark:bg-background-dark text-slate-800 dark:text-slate-100 min-h-screen max-w-md mx-auto flex flex-col transition-colors">
@@ -159,6 +174,49 @@ const BookingCalendar: React.FC = () => {
           </section>
         )}
 
+        {selectedSlot && (
+          <section className="mt-6 px-4 animate-in fade-in slide-in-from-bottom-4">
+            <div className="bg-white dark:bg-surface-dark p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
+              <div className="flex items-start justify-between mb-3">
+                <div>
+                  <h4 className="text-sm font-bold">Horas extra</h4>
+                  <p className="text-[11px] text-slate-500 mt-0.5">
+                    El horario incluye {slotHours}h. ${extraPrice.toLocaleString()}/h adicional.
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setExtraHours(Math.max(0, extraHours - 1))}
+                    disabled={extraHours === 0}
+                    className="w-9 h-9 rounded-full border border-slate-200 dark:border-slate-700 flex items-center justify-center disabled:opacity-40"
+                    aria-label="Quitar hora extra"
+                  >
+                    <span className="material-icons-round text-[18px]">remove</span>
+                  </button>
+                  <span className="w-8 text-center font-bold">{extraHours}</span>
+                  <button
+                    type="button"
+                    onClick={() => setExtraHours(Math.min(6, extraHours + 1))}
+                    disabled={extraHours >= 6}
+                    className="w-9 h-9 rounded-full border border-slate-200 dark:border-slate-700 flex items-center justify-center disabled:opacity-40"
+                    aria-label="Agregar hora extra"
+                  >
+                    <span className="material-icons-round text-[18px]">add</span>
+                  </button>
+                </div>
+              </div>
+              {extraHours > 0 && (
+                <div className="flex justify-between text-xs text-slate-600 dark:text-slate-300 pt-3 border-t border-slate-100 dark:border-slate-800">
+                  <span>{slotHours}h base + {extraHours}h extra = {slotHours + extraHours}h totales</span>
+                  <span className="font-semibold">+${(extraPrice * extraHours).toLocaleString()}</span>
+                </div>
+              )}
+            </div>
+          </section>
+        )}
+
+
         <section className="mt-8 px-4 py-6 bg-slate-50 dark:bg-slate-900/40">
           <div className="bg-white dark:bg-surface-dark p-5 rounded-3xl shadow-sm space-y-4">
             <h4 className="text-sm font-bold uppercase tracking-wider text-slate-400">Tarifas dinámicas</h4>
@@ -183,7 +241,7 @@ const BookingCalendar: React.FC = () => {
       <footer className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white dark:bg-surface-dark border-t border-slate-100 dark:border-slate-800 p-4 pb-8 flex items-center justify-between z-50">
         <div>
           <div className="text-[10px] text-gray-400">Precio estimado</div>
-          <div className="text-lg font-bold text-slate-900 dark:text-white">${venue.price * 5} MXN</div>
+          <div className="text-lg font-bold text-slate-900 dark:text-white">${estimatedTotal.toLocaleString()} MXN</div>
         </div>
         <button 
           onClick={handleContinue}
