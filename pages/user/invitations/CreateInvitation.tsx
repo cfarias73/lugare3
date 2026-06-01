@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../../../context/UserContext';
+import { getUserBookings } from '../../../src/services/userService';
 
 const DESIGNS = [
   { 
