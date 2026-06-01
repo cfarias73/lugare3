@@ -177,7 +177,7 @@ const RateExperience: React.FC = () => {
               <div key={i} className="relative flex-shrink-0 w-24 h-24 rounded-xl overflow-hidden shadow-sm">
                 <img alt="Event" className="w-full h-full object-cover" src={img} />
                 <button className="absolute top-1 right-1 bg-black/50 rounded-full p-0.5">
-                  <span className="material-icons text-white text-[14px]">close</span>
+                  <X className="w-3.5 h-3.5 text-white" />
                 </button>
               </div>
             ))}
