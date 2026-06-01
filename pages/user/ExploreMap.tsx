@@ -123,13 +123,13 @@ const ExploreMap: React.FC = () => {
 
   const isCustomPriceActive = !priceRange && (customMinPrice !== '' || customMaxPrice !== '');
   const activeFilterCount =
-    (priceRange || isCustomPriceActive ? 1 : 0) + (capacityRange ? 1 : 0) + (dateFilter ? 1 : 0) + (minRating != null ? 1 : 0);
+    (priceRange || isCustomPriceActive ? 1 : 0) + (minCapacity !== '' ? 1 : 0) + (dateFilter ? 1 : 0) + (minRating != null ? 1 : 0);
 
   const clearAllFilters = () => {
     setPriceRange(null);
     setCustomMinPrice('');
     setCustomMaxPrice('');
-    setCapacityRange(null);
+    setMinCapacity('');
     setDateFilter('');
     setMinRating(null);
     setOpenFilter(null);
