@@ -180,6 +180,24 @@ const ExploreMap: React.FC = () => {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={async (e) => {
+                  if (e.key !== 'Enter') return;
+                  const q = searchQuery.trim();
+                  if (!q) return;
+                  try {
+                    const res = await fetch(
+                      `https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=mx&q=${encodeURIComponent(q)}`,
+                      { headers: { 'Accept-Language': 'es' } }
+                    );
+                    const data = await res.json();
+                    if (Array.isArray(data) && data[0]) {
+                      setMapCenter([parseFloat(data[0].lat), parseFloat(data[0].lon)]);
+                      setZoom(13);
+                    }
+                  } catch (err) {
+                    console.error('Geocoding failed', err);
+                  }
+                }}
               />
               <button
                 onClick={requestLocation}
