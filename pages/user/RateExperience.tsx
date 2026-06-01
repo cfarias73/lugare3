@@ -75,11 +75,27 @@ const RateExperience: React.FC = () => {
         navigate('/user/login');
         return;
       }
+
+      // Subir fotos a review-photos/{user_id}/{timestamp}-{i}.{ext}
+      const uploadedUrls: string[] = [];
+      for (let i = 0; i < photos.length; i++) {
+        const { file } = photos[i];
+        const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+        const path = `${user.id}/${Date.now()}-${i}.${ext}`;
+        const { error: upErr } = await supabase.storage
+          .from('review-photos')
+          .upload(path, file, { contentType: file.type, upsert: false });
+        if (upErr) throw upErr;
+        const { data: pub } = supabase.storage.from('review-photos').getPublicUrl(path);
+        uploadedUrls.push(pub.publicUrl);
+      }
+
       const { error } = await supabase.from('reviews').insert({
         user_id: user.id,
         venue_id: venueId,
         rating: mainRating,
         comment: comment || null,
+        photos: uploadedUrls,
       });
       if (error) throw error;
       alert('¡Gracias por tu reseña!');
