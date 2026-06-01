@@ -9,6 +9,7 @@ import AnalyticsTracker from './components/AnalyticsTracker';
 import ProtectedRoute from './components/ProtectedRoute';
 import RouteWrapper from './components/RouteWrapper';
 import Welcome from './pages/Welcome';
+import PublicInvitation from './pages/PublicInvitation';
 
 const NotificationHandler = () => {
   useRealtimeNotifications();
@@ -70,6 +71,7 @@ const App: React.FC = () => {
           <Routes>
           {/* Entry Point */}
           <Route path="/" element={<RouteWrapper><Welcome /></RouteWrapper>} />
+          <Route path="/invite/:id" element={<RouteWrapper><PublicInvitation /></RouteWrapper>} />
 
         {/* User Application Routes */}
         <Route path="/user/login" element={<RouteWrapper><UserLogin /></RouteWrapper>} />
