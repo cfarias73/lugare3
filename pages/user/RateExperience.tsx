@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, Star, ImagePlus, X } from 'lucide-react';
 import { supabase } from '../../lib/supabaseClient';
@@ -34,9 +34,31 @@ const RateExperience: React.FC = () => {
     'Calidad/Precio': 3,
     Instalaciones: 5
   });
+  const [photos, setPhotos] = useState<{ url: string; file: File }[]>([]);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const handleAspectRating = (aspect: string, rating: number) => {
     setAspectRatings(prev => ({ ...prev, [aspect]: rating }));
+  };
+
+  const handleAddPhotos = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    const remaining = Math.max(0, 5 - photos.length);
+    const next = files.slice(0, remaining).map(file => ({
+      url: URL.createObjectURL(file),
+      file,
+    }));
+    setPhotos(prev => [...prev, ...next]);
+    if (e.target) e.target.value = '';
+  };
+
+  const removePhoto = (idx: number) => {
+    setPhotos(prev => {
+      const copy = [...prev];
+      const [removed] = copy.splice(idx, 1);
+      if (removed) URL.revokeObjectURL(removed.url);
+      return copy;
+    });
   };
 
   const handleSubmit = async () => {
@@ -169,21 +191,41 @@ const RateExperience: React.FC = () => {
 
         <div className="space-y-3 pb-4">
           <h3 className="text-[16px] font-semibold text-slate-800 dark:text-slate-100">Añade fotos de tu evento (opcional)</h3>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            multiple
+            className="hidden"
+            onChange={handleAddPhotos}
+          />
           <div className="flex gap-3 overflow-x-auto pb-2 no-scrollbar">
-            <div className="flex-shrink-0 w-24 h-24 border-2 border-dashed border-gray-200 dark:border-gray-800 rounded-xl flex items-center justify-center bg-gray-50 dark:bg-gray-900 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-              <ImagePlus className="w-8 h-8 text-gray-300 dark:text-gray-700" />
-            </div>
-            {['https://lh3.googleusercontent.com/aida-public/AB6AXuBeD_o1hOuusGhRC-qpK-0XDgCGO-UhCPn72mpzx5C9jkDNXbW0t0s7HRm1HNzIHJawBEdN8WIaT8Mhqjtw2b4qu88FUUzTYaneLUIdTj_LWNA8BBkw_ZovYkimebipJBAzPWvucRnKXR8pz4vdmbDxdYDXRFy06HjN3UQiTOXc3Z8WcXo9wNvpyCelKDqrx9AML8RIqMALSaOoRr8lEo8_5aDOmBGo0Db3H3VA0RluOeeLpQ1KiJtPxcbJd6SmcNt6V2fQTxPJ3V0g', 'https://lh3.googleusercontent.com/aida-public/AB6AXuC8CzL_TISuguNpKQV2N4sARQ2KhvS5T7zPSvS6z6xkN_nVG7Tar2omc11no_iNrv_aH3uti5rUkJdIdFDxyRQ_BAYzofsD2RZ5JWfR-yEaiL5iHgr1pRmlb3SiqRGInggzoI25VCeZUG8KCq4cFuXTIDMW8mQ210Qjy_QAb_FDBbye4TfBXggmNfzUrWpxPwkTzmvsBBP8jOJ5kDkCHLb6r_p_2q62u8m0HfTtkCIjYuXep3vCyQjJXYLWHWN0PwpjaI9kEtplYDuL'].map((img, i) => (
-              <div key={i} className="relative flex-shrink-0 w-24 h-24 rounded-xl overflow-hidden shadow-sm">
-                <img alt="Event" className="w-full h-full object-cover" src={img} />
-                <button className="absolute top-1 right-1 bg-black/50 rounded-full p-0.5">
+            {photos.length < 5 && (
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="flex-shrink-0 w-24 h-24 border-2 border-dashed border-gray-200 dark:border-gray-800 rounded-xl flex items-center justify-center bg-gray-50 dark:bg-gray-900 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              >
+                <ImagePlus className="w-8 h-8 text-gray-400 dark:text-gray-600" />
+              </button>
+            )}
+            {photos.map((p, i) => (
+              <div key={p.url} className="relative flex-shrink-0 w-24 h-24 rounded-xl overflow-hidden shadow-sm">
+                <img alt={`Foto ${i + 1}`} className="w-full h-full object-cover" src={p.url} />
+                <button
+                  type="button"
+                  onClick={() => removePhoto(i)}
+                  className="absolute top-1 right-1 bg-black/50 hover:bg-black/70 rounded-full p-0.5"
+                >
                   <X className="w-3.5 h-3.5 text-white" />
                 </button>
               </div>
             ))}
           </div>
+          <p className="text-[11px] text-slate-400 dark:text-slate-500">Máximo 5 fotos</p>
         </div>
       </main>
+
 
       <footer className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/90 dark:bg-background-dark/90 backdrop-blur-md border-t border-gray-100 dark:border-gray-800 px-5 pt-4 pb-8 space-y-3 z-50">
         <div className="flex gap-3">
