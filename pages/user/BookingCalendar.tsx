@@ -55,12 +55,19 @@ const BookingCalendar: React.FC = () => {
   const handleContinue = () => {
     if (selectedDay && selectedSlot) {
       const slot = SLOT_TIMES[selectedSlot];
+      const totalHours = slot.hours + extraHours;
+      // Extend end time by extraHours
+      const [eh, em, es] = slot.end.split(':').map(Number);
+      const endDate = new Date(2000, 0, 1, eh, em, es);
+      endDate.setHours(endDate.getHours() + extraHours);
+      const pad = (n: number) => String(n).padStart(2, '0');
+      const newEnd = `${pad(endDate.getHours())}:${pad(endDate.getMinutes())}:${pad(endDate.getSeconds())}`;
       const date = `2025-10-${String(selectedDay).padStart(2, '0')}`;
       const params = new URLSearchParams({
         date,
         start: slot.start,
-        end: slot.end,
-        hours: String(slot.hours),
+        end: newEnd,
+        hours: String(totalHours),
         guests: '10',
       });
       navigate(`/user/checkout/${id}?${params.toString()}`);
@@ -68,6 +75,12 @@ const BookingCalendar: React.FC = () => {
       alert('Por favor selecciona un día y un horario.');
     }
   };
+
+  const extraPrice = Number(venue.extraHourPrice ?? venue.price) || 0;
+  const slotHours = selectedSlot ? SLOT_TIMES[selectedSlot].hours : 0;
+  const estimatedTotal = selectedSlot
+    ? venue.price * slotHours + extraPrice * extraHours
+    : venue.price * 5;
 
   return (
     <div className="bg-background-light dark:bg-background-dark text-slate-800 dark:text-slate-100 min-h-screen max-w-md mx-auto flex flex-col transition-colors">
