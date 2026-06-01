@@ -112,13 +112,16 @@ const RateExperience: React.FC = () => {
           <h3 className="text-[16px] font-semibold text-slate-800 dark:text-slate-100">¿Cómo calificarías tu experiencia?</h3>
           <div className="flex justify-center gap-1">
             {[1, 2, 3, 4, 5].map(i => (
-              <span 
-                key={i} 
+              <button
+                key={i}
+                type="button"
                 onClick={() => setMainRating(i)}
-                className={`material-icons text-5xl cursor-pointer transition-colors ${i <= mainRating ? 'text-[#F2B134]' : 'text-gray-300 dark:text-gray-700'}`}
+                className="transition-transform hover:scale-110"
               >
-                star
-              </span>
+                <Star
+                  className={`w-12 h-12 ${i <= mainRating ? 'fill-[#F2B134] text-[#F2B134]' : 'fill-transparent text-gray-300 dark:text-gray-700'}`}
+                />
+              </button>
             ))}
           </div>
           <p className="text-primary font-medium text-lg italic">{getRatingText(mainRating)}</p>
