@@ -204,9 +204,15 @@ const ExploreMap: React.FC = () => {
             <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
               <button
                 onClick={() => setOpenFilter(openFilter === 'price' ? null : 'price')}
-                className={chipClass(priceRange !== null)}
+                className={chipClass(priceRange !== null || isCustomPriceActive)}
               >
-                <span>{priceRange ? priceRange.label : 'Precio'}</span>
+                <span>
+                  {priceRange
+                    ? priceRange.label
+                    : isCustomPriceActive
+                      ? `$${customMinPrice ? Number(customMinPrice).toLocaleString() : '0'} - $${customMaxPrice ? Number(customMaxPrice).toLocaleString() : '∞'}`
+                      : 'Precio'}
+                </span>
                 <span className="material-icons-round text-sm">expand_more</span>
               </button>
               <button
