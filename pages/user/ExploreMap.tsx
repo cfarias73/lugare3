@@ -129,8 +129,9 @@ const ExploreMap: React.FC = () => {
     });
   }, [venues, searchQuery, priceRange, customMinPrice, customMaxPrice, capacityRange, minRating]);
 
+  const isCustomPriceActive = !priceRange && (customMinPrice !== '' || customMaxPrice !== '');
   const activeFilterCount =
-    (priceRange ? 1 : 0) + (capacityRange ? 1 : 0) + (dateFilter ? 1 : 0) + (minRating != null ? 1 : 0);
+    (priceRange || isCustomPriceActive ? 1 : 0) + (capacityRange ? 1 : 0) + (dateFilter ? 1 : 0) + (minRating != null ? 1 : 0);
 
   const clearAllFilters = () => {
     setPriceRange(null);
