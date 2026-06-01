@@ -15,7 +15,7 @@ export interface Venue {
   isFeatured?: boolean;
   isNew?: boolean;
   discount?: string;
-  category: 'salones' | 'fiestas' | 'reuniones';
+  category: string;
   minHours?: number;
   extraHourPrice?: number;
 }
