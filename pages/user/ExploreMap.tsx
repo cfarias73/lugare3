@@ -3,9 +3,11 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../../components/Layout';
 import { getVenues } from '../../src/services/venueService';
+import { supabase } from '../../lib/supabaseClient';
 import { Venue } from '../../types';
 import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet';
 import L from 'leaflet';
+
 
 // Fix for default marker icon in Leaflet + React
 // @ts-ignore
