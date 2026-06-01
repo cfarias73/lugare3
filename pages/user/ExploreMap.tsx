@@ -61,6 +61,7 @@ const ExploreMap: React.FC = () => {
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
   const [locating, setLocating] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
+  const [unavailableVenueIds, setUnavailableVenueIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     const fetchVenues = async () => {
@@ -69,6 +70,31 @@ const ExploreMap: React.FC = () => {
     };
     fetchVenues();
   }, []);
+
+  // Fetch venues booked on the selected date
+  useEffect(() => {
+    if (!dateFilter) {
+      setUnavailableVenueIds(new Set());
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      const { data, error } = await supabase
+        .from('bookings')
+        .select('venue_id, status')
+        .eq('event_date', dateFilter)
+        .in('status', ['pending', 'confirmed', 'paid']);
+      if (cancelled) return;
+      if (error) {
+        console.warn('Error fetching availability', error);
+        setUnavailableVenueIds(new Set());
+        return;
+      }
+      setUnavailableVenueIds(new Set((data || []).map((b: any) => b.venue_id)));
+    })();
+    return () => { cancelled = true; };
+  }, [dateFilter]);
+
 
   const requestLocation = React.useCallback(() => {
     if (!navigator.geolocation) {
