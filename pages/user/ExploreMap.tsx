@@ -110,6 +110,8 @@ const ExploreMap: React.FC = () => {
 
   const filteredVenues = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
+    const cMin = customMinPrice ? Number(customMinPrice) : null;
+    const cMax = customMaxPrice ? Number(customMaxPrice) : null;
     return venues.filter(venue => {
       if (q) {
         const matches =
@@ -119,11 +121,13 @@ const ExploreMap: React.FC = () => {
         if (!matches) return false;
       }
       if (priceRange && (venue.price < priceRange.min || venue.price > priceRange.max)) return false;
+      if (!priceRange && cMin != null && venue.price < cMin) return false;
+      if (!priceRange && cMax != null && venue.price > cMax) return false;
       if (capacityRange && (venue.capacity < capacityRange.min || venue.capacity > capacityRange.max)) return false;
       if (minRating != null && (venue.rating || 0) < minRating) return false;
       return true;
     });
-  }, [venues, searchQuery, priceRange, capacityRange, minRating]);
+  }, [venues, searchQuery, priceRange, customMinPrice, customMaxPrice, capacityRange, minRating]);
 
   const activeFilterCount =
     (priceRange ? 1 : 0) + (capacityRange ? 1 : 0) + (dateFilter ? 1 : 0) + (minRating != null ? 1 : 0);
