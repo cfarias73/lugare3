@@ -34,10 +34,10 @@ const MapController: React.FC<{ center: [number, number], zoom: number }> = ({ c
 type PriceRange = { label: string; min: number; max: number };
 
 const PRICE_RANGES: PriceRange[] = [
-  { label: 'Menos de $5,000', min: 0, max: 4999 },
-  { label: '$5,000 - $10,000', min: 5000, max: 10000 },
-  { label: '$10,000 - $20,000', min: 10000, max: 20000 },
-  { label: 'Más de $20,000', min: 20001, max: Infinity },
+  { label: 'Menos de $1,500', min: 0, max: 1499 },
+  { label: '$1,500 - $3,000', min: 1500, max: 3000 },
+  { label: '$3,000 - $5,000', min: 3000, max: 5000 },
+  { label: 'Más de $5,000', min: 5001, max: Infinity },
 ];
 
 const RATING_OPTIONS = [3, 3.5, 4, 4.5];
