@@ -35,10 +35,10 @@ type PriceRange = { label: string; min: number; max: number };
 type CapacityRange = { label: string; min: number; max: number };
 
 const PRICE_RANGES: PriceRange[] = [
-  { label: 'Hasta $20,000', min: 0, max: 20000 },
-  { label: '$20,000 - $50,000', min: 20000, max: 50000 },
-  { label: '$50,000 - $100,000', min: 50000, max: 100000 },
-  { label: 'Más de $100,000', min: 100000, max: Infinity },
+  { label: 'Menos de $5,000', min: 0, max: 4999 },
+  { label: '$5,000 - $10,000', min: 5000, max: 10000 },
+  { label: '$10,000 - $20,000', min: 10000, max: 20000 },
+  { label: 'Más de $20,000', min: 20001, max: Infinity },
 ];
 
 const CAPACITY_RANGES: CapacityRange[] = [
