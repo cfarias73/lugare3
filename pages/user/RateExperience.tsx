@@ -34,9 +34,31 @@ const RateExperience: React.FC = () => {
     'Calidad/Precio': 3,
     Instalaciones: 5
   });
+  const [photos, setPhotos] = useState<{ url: string; file: File }[]>([]);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const handleAspectRating = (aspect: string, rating: number) => {
     setAspectRatings(prev => ({ ...prev, [aspect]: rating }));
+  };
+
+  const handleAddPhotos = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    const remaining = Math.max(0, 5 - photos.length);
+    const next = files.slice(0, remaining).map(file => ({
+      url: URL.createObjectURL(file),
+      file,
+    }));
+    setPhotos(prev => [...prev, ...next]);
+    if (e.target) e.target.value = '';
+  };
+
+  const removePhoto = (idx: number) => {
+    setPhotos(prev => {
+      const copy = [...prev];
+      const [removed] = copy.splice(idx, 1);
+      if (removed) URL.revokeObjectURL(removed.url);
+      return copy;
+    });
   };
 
   const handleSubmit = async () => {
