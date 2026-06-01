@@ -16,6 +16,8 @@ export interface Venue {
   isNew?: boolean;
   discount?: string;
   category: 'salones' | 'fiestas' | 'reuniones';
+  minHours?: number;
+  extraHourPrice?: number;
 }
 
 export interface Review {
