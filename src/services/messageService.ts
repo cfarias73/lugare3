@@ -125,7 +125,7 @@ export const sendMessage = async (
   conversationId: string,
   senderId: string,
   content: string
-): Promise<MessageRow | null> => {
+): Promise<{ data: MessageRow | null; error: string | null }> => {
   const { data, error } = await supabase
     .from('messages')
     .insert({ conversation_id: conversationId, sender_id: senderId, content })
@@ -133,11 +133,11 @@ export const sendMessage = async (
     .single();
   if (error) {
     console.error('sendMessage error', error);
-    return null;
+    return { data: null, error: error.message };
   }
   await supabase
     .from('conversations')
     .update({ last_message: content, last_message_at: new Date().toISOString() })
     .eq('id', conversationId);
-  return data;
+  return { data, error: null };
 };
