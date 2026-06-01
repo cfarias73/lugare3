@@ -52,6 +52,28 @@ export const createInvitation = async (
   return inv;
 };
 
+export interface PublicInvitation {
+  id: string;
+  design_id: string;
+  event_name: string;
+  event_date: string | null;
+  event_time: string | null;
+  location: string | null;
+}
+
+export const getPublicInvitation = async (id: string): Promise<PublicInvitation | null> => {
+  const { data, error } = await supabase
+    .from('invitations')
+    .select('id, design_id, event_name, event_date, event_time, location')
+    .eq('id', id)
+    .maybeSingle();
+  if (error) {
+    console.error('getPublicInvitation error', error);
+    return null;
+  }
+  return data as PublicInvitation | null;
+};
+
 export const listInvitations = async (userId: string): Promise<InvitationRow[]> => {
   const { data, error } = await supabase
     .from('invitations')
