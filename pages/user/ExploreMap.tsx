@@ -35,10 +35,10 @@ type PriceRange = { label: string; min: number; max: number };
 type CapacityRange = { label: string; min: number; max: number };
 
 const PRICE_RANGES: PriceRange[] = [
-  { label: 'Hasta $20,000', min: 0, max: 20000 },
-  { label: '$20,000 - $50,000', min: 20000, max: 50000 },
-  { label: '$50,000 - $100,000', min: 50000, max: 100000 },
-  { label: 'Más de $100,000', min: 100000, max: Infinity },
+  { label: 'Menos de $5,000', min: 0, max: 4999 },
+  { label: '$5,000 - $10,000', min: 5000, max: 10000 },
+  { label: '$10,000 - $20,000', min: 10000, max: 20000 },
+  { label: 'Más de $20,000', min: 20001, max: Infinity },
 ];
 
 const CAPACITY_RANGES: CapacityRange[] = [
@@ -56,6 +56,8 @@ const ExploreMap: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [openFilter, setOpenFilter] = useState<string | null>(null);
   const [priceRange, setPriceRange] = useState<PriceRange | null>(null);
+  const [customMinPrice, setCustomMinPrice] = useState<string>('');
+  const [customMaxPrice, setCustomMaxPrice] = useState<string>('');
   const [capacityRange, setCapacityRange] = useState<CapacityRange | null>(null);
   const [dateFilter, setDateFilter] = useState<string>('');
   const [minRating, setMinRating] = useState<number | null>(null);
@@ -108,6 +110,8 @@ const ExploreMap: React.FC = () => {
 
   const filteredVenues = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
+    const cMin = customMinPrice ? Number(customMinPrice) : null;
+    const cMax = customMaxPrice ? Number(customMaxPrice) : null;
     return venues.filter(venue => {
       if (q) {
         const matches =
@@ -117,17 +121,22 @@ const ExploreMap: React.FC = () => {
         if (!matches) return false;
       }
       if (priceRange && (venue.price < priceRange.min || venue.price > priceRange.max)) return false;
+      if (!priceRange && cMin != null && venue.price < cMin) return false;
+      if (!priceRange && cMax != null && venue.price > cMax) return false;
       if (capacityRange && (venue.capacity < capacityRange.min || venue.capacity > capacityRange.max)) return false;
       if (minRating != null && (venue.rating || 0) < minRating) return false;
       return true;
     });
-  }, [venues, searchQuery, priceRange, capacityRange, minRating]);
+  }, [venues, searchQuery, priceRange, customMinPrice, customMaxPrice, capacityRange, minRating]);
 
+  const isCustomPriceActive = !priceRange && (customMinPrice !== '' || customMaxPrice !== '');
   const activeFilterCount =
-    (priceRange ? 1 : 0) + (capacityRange ? 1 : 0) + (dateFilter ? 1 : 0) + (minRating != null ? 1 : 0);
+    (priceRange || isCustomPriceActive ? 1 : 0) + (capacityRange ? 1 : 0) + (dateFilter ? 1 : 0) + (minRating != null ? 1 : 0);
 
   const clearAllFilters = () => {
     setPriceRange(null);
+    setCustomMinPrice('');
+    setCustomMaxPrice('');
     setCapacityRange(null);
     setDateFilter('');
     setMinRating(null);
@@ -195,9 +204,15 @@ const ExploreMap: React.FC = () => {
             <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
               <button
                 onClick={() => setOpenFilter(openFilter === 'price' ? null : 'price')}
-                className={chipClass(priceRange !== null)}
+                className={chipClass(priceRange !== null || isCustomPriceActive)}
               >
-                <span>{priceRange ? priceRange.label : 'Precio'}</span>
+                <span>
+                  {priceRange
+                    ? priceRange.label
+                    : isCustomPriceActive
+                      ? `$${customMinPrice ? Number(customMinPrice).toLocaleString() : '0'} - $${customMaxPrice ? Number(customMaxPrice).toLocaleString() : '∞'}`
+                      : 'Precio'}
+                </span>
                 <span className="material-icons-round text-sm">expand_more</span>
               </button>
               <button
@@ -239,12 +254,35 @@ const ExploreMap: React.FC = () => {
                     {PRICE_RANGES.map((r) => (
                       <button
                         key={r.label}
-                        onClick={() => { setPriceRange(priceRange?.label === r.label ? null : r); setOpenFilter(null); }}
+                        onClick={() => { setPriceRange(priceRange?.label === r.label ? null : r); setCustomMinPrice(''); setCustomMaxPrice(''); setOpenFilter(null); }}
                         className={`text-left px-3 py-2 rounded-xl text-sm font-medium transition-colors ${priceRange?.label === r.label ? 'bg-primary/10 text-primary' : 'hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200'}`}
                       >
                         {r.label}
                       </button>
                     ))}
+                    <div className="border-t border-slate-200 dark:border-slate-700 my-1" />
+                    <div className="px-3 py-2">
+                      <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Rango personalizado</span>
+                      <div className="flex items-center gap-2 mt-2">
+                        <input
+                          type="number"
+                          min={0}
+                          placeholder="Mín $"
+                          value={customMinPrice}
+                          onChange={(e) => { setCustomMinPrice(e.target.value); setPriceRange(null); }}
+                          className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                        />
+                        <span className="text-slate-400 text-sm">-</span>
+                        <input
+                          type="number"
+                          min={0}
+                          placeholder="Máx $"
+                          value={customMaxPrice}
+                          onChange={(e) => { setCustomMaxPrice(e.target.value); setPriceRange(null); }}
+                          className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                        />
+                      </div>
+                    </div>
                   </div>
                 )}
                 {openFilter === 'capacity' && (
