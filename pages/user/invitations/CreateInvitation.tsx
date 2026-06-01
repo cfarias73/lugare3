@@ -55,12 +55,36 @@ const DESIGNS = [
 
 const CreateInvitation: React.FC = () => {
   const navigate = useNavigate();
-  const { updateDraftInvitation, draftInvitation } = useUser();
+  const { user, updateDraftInvitation, draftInvitation } = useUser();
   const [selectedDesign, setSelectedDesign] = useState<string>(draftInvitation?.designId || 'romantico');
   const [eventName, setEventName] = useState(draftInvitation?.eventName || '');
   const [date, setDate] = useState(draftInvitation?.date || '');
   const [time, setTime] = useState(draftInvitation?.time || '');
   const [location, setLocation] = useState(draftInvitation?.location || '');
+
+  // Auto-prefill from latest booking (venue name + address + date + time)
+  useEffect(() => {
+    if (!user) return;
+    if (location && date && time) return; // user already has data
+    (async () => {
+      try {
+        const bookings = await getUserBookings(user.id);
+        const latest = (bookings || []).find((b: any) =>
+          ['confirmed', 'paid', 'pending'].includes(b.status)
+        );
+        if (!latest) return;
+        const venueName = latest.venues?.name || '';
+        const venueAddr = latest.venues?.location || '';
+        const composed = [venueName, venueAddr].filter(Boolean).join(' — ');
+        if (!location && composed) setLocation(composed);
+        if (!date && latest.event_date) setDate(latest.event_date);
+        if (!time && latest.start_time) setTime(String(latest.start_time).slice(0, 5));
+      } catch (e) {
+        console.error('prefill from booking failed', e);
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   const handleNext = () => {
     updateDraftInvitation({
