@@ -56,6 +56,8 @@ const ExploreMap: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [openFilter, setOpenFilter] = useState<string | null>(null);
   const [priceRange, setPriceRange] = useState<PriceRange | null>(null);
+  const [customMinPrice, setCustomMinPrice] = useState<string>('');
+  const [customMaxPrice, setCustomMaxPrice] = useState<string>('');
   const [capacityRange, setCapacityRange] = useState<CapacityRange | null>(null);
   const [dateFilter, setDateFilter] = useState<string>('');
   const [minRating, setMinRating] = useState<number | null>(null);
