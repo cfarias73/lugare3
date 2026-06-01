@@ -104,7 +104,9 @@ const VenueDetail: React.FC = () => {
                 <div>
                   <p className="text-[10px] font-bold text-primary uppercase tracking-[0.15em] mb-1">Precio desde</p>
                   <p className="text-[15px] font-bold text-slate-800 dark:text-white leading-tight">${venue.price.toLocaleString()} / hora</p>
-                  <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">Selecciona fecha para ver total</p>
+                  <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                    Mínimo {venue.minHours ?? 4}h · desde ${((venue.minHours ?? 4) * venue.price).toLocaleString()} · horas extra ${(venue.extraHourPrice ?? venue.price).toLocaleString()}/h
+                  </p>
                 </div>
               </div>
               <div className="bg-white dark:bg-slate-800 w-8 h-8 rounded-full flex items-center justify-center shadow-sm border border-slate-100 dark:border-slate-700">
