@@ -254,12 +254,35 @@ const ExploreMap: React.FC = () => {
                     {PRICE_RANGES.map((r) => (
                       <button
                         key={r.label}
-                        onClick={() => { setPriceRange(priceRange?.label === r.label ? null : r); setOpenFilter(null); }}
+                        onClick={() => { setPriceRange(priceRange?.label === r.label ? null : r); setCustomMinPrice(''); setCustomMaxPrice(''); setOpenFilter(null); }}
                         className={`text-left px-3 py-2 rounded-xl text-sm font-medium transition-colors ${priceRange?.label === r.label ? 'bg-primary/10 text-primary' : 'hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200'}`}
                       >
                         {r.label}
                       </button>
                     ))}
+                    <div className="border-t border-slate-200 dark:border-slate-700 my-1" />
+                    <div className="px-3 py-2">
+                      <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Rango personalizado</span>
+                      <div className="flex items-center gap-2 mt-2">
+                        <input
+                          type="number"
+                          min={0}
+                          placeholder="Mín $"
+                          value={customMinPrice}
+                          onChange={(e) => { setCustomMinPrice(e.target.value); setPriceRange(null); }}
+                          className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                        />
+                        <span className="text-slate-400 text-sm">-</span>
+                        <input
+                          type="number"
+                          min={0}
+                          placeholder="Máx $"
+                          value={customMaxPrice}
+                          onChange={(e) => { setCustomMaxPrice(e.target.value); setPriceRange(null); }}
+                          className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                        />
+                      </div>
+                    </div>
                   </div>
                 )}
                 {openFilter === 'capacity' && (
