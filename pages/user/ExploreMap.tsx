@@ -209,9 +209,9 @@ const ExploreMap: React.FC = () => {
               </button>
               <button
                 onClick={() => setOpenFilter(openFilter === 'capacity' ? null : 'capacity')}
-                className={chipClass(capacityRange !== null)}
+                className={chipClass(minCapacity !== '')}
               >
-                <span>{capacityRange ? capacityRange.label : 'Capacidad'}</span>
+                <span>{minCapacity !== '' ? `${minCapacity}+ personas` : 'Capacidad'}</span>
                 <span className="material-icons-round text-sm">expand_more</span>
               </button>
               <button
@@ -278,16 +278,30 @@ const ExploreMap: React.FC = () => {
                   </div>
                 )}
                 {openFilter === 'capacity' && (
-                  <div className="flex flex-col gap-1">
-                    {CAPACITY_RANGES.map((r) => (
+                  <div className="flex flex-col gap-2">
+                    <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 px-1">Mínimo de personas</label>
+                    <input
+                      type="number"
+                      min={1}
+                      placeholder="Ej. 80"
+                      value={minCapacity}
+                      onChange={(e) => setMinCapacity(e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    />
+                    <div className="flex justify-between gap-2 pt-1">
                       <button
-                        key={r.label}
-                        onClick={() => { setCapacityRange(capacityRange?.label === r.label ? null : r); setOpenFilter(null); }}
-                        className={`text-left px-3 py-2 rounded-xl text-sm font-medium transition-colors ${capacityRange?.label === r.label ? 'bg-primary/10 text-primary' : 'hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200'}`}
+                        onClick={() => { setMinCapacity(''); setOpenFilter(null); }}
+                        className="text-xs font-semibold text-slate-500 hover:text-primary"
                       >
-                        {r.label}
+                        Limpiar
                       </button>
-                    ))}
+                      <button
+                        onClick={() => setOpenFilter(null)}
+                        className="text-xs font-bold text-primary"
+                      >
+                        Aplicar
+                      </button>
+                    </div>
                   </div>
                 )}
                 {openFilter === 'date' && (
