@@ -134,6 +134,8 @@ const ExploreMap: React.FC = () => {
 
   const clearAllFilters = () => {
     setPriceRange(null);
+    setCustomMinPrice('');
+    setCustomMaxPrice('');
     setCapacityRange(null);
     setDateFilter('');
     setMinRating(null);
