@@ -32,20 +32,12 @@ const MapController: React.FC<{ center: [number, number], zoom: number }> = ({ c
 };
 
 type PriceRange = { label: string; min: number; max: number };
-type CapacityRange = { label: string; min: number; max: number };
 
 const PRICE_RANGES: PriceRange[] = [
   { label: 'Menos de $5,000', min: 0, max: 4999 },
   { label: '$5,000 - $10,000', min: 5000, max: 10000 },
   { label: '$10,000 - $20,000', min: 10000, max: 20000 },
   { label: 'Más de $20,000', min: 20001, max: Infinity },
-];
-
-const CAPACITY_RANGES: CapacityRange[] = [
-  { label: 'Hasta 50 personas', min: 0, max: 50 },
-  { label: '50 - 100 personas', min: 50, max: 100 },
-  { label: '100 - 300 personas', min: 100, max: 300 },
-  { label: 'Más de 300 personas', min: 300, max: Infinity },
 ];
 
 const RATING_OPTIONS = [3, 3.5, 4, 4.5];
@@ -58,7 +50,7 @@ const ExploreMap: React.FC = () => {
   const [priceRange, setPriceRange] = useState<PriceRange | null>(null);
   const [customMinPrice, setCustomMinPrice] = useState<string>('');
   const [customMaxPrice, setCustomMaxPrice] = useState<string>('');
-  const [capacityRange, setCapacityRange] = useState<CapacityRange | null>(null);
+  const [minCapacity, setMinCapacity] = useState<string>('');
   const [dateFilter, setDateFilter] = useState<string>('');
   const [minRating, setMinRating] = useState<number | null>(null);
   const [mapCenter, setMapCenter] = useState<[number, number]>([19.4326, -99.1332]);
@@ -123,21 +115,21 @@ const ExploreMap: React.FC = () => {
       if (priceRange && (venue.price < priceRange.min || venue.price > priceRange.max)) return false;
       if (!priceRange && cMin != null && venue.price < cMin) return false;
       if (!priceRange && cMax != null && venue.price > cMax) return false;
-      if (capacityRange && (venue.capacity < capacityRange.min || venue.capacity > capacityRange.max)) return false;
+      if (minCapacity !== '' && venue.capacity < Number(minCapacity)) return false;
       if (minRating != null && (venue.rating || 0) < minRating) return false;
       return true;
     });
-  }, [venues, searchQuery, priceRange, customMinPrice, customMaxPrice, capacityRange, minRating]);
+  }, [venues, searchQuery, priceRange, customMinPrice, customMaxPrice, minCapacity, minRating]);
 
   const isCustomPriceActive = !priceRange && (customMinPrice !== '' || customMaxPrice !== '');
   const activeFilterCount =
-    (priceRange || isCustomPriceActive ? 1 : 0) + (capacityRange ? 1 : 0) + (dateFilter ? 1 : 0) + (minRating != null ? 1 : 0);
+    (priceRange || isCustomPriceActive ? 1 : 0) + (minCapacity !== '' ? 1 : 0) + (dateFilter ? 1 : 0) + (minRating != null ? 1 : 0);
 
   const clearAllFilters = () => {
     setPriceRange(null);
     setCustomMinPrice('');
     setCustomMaxPrice('');
-    setCapacityRange(null);
+    setMinCapacity('');
     setDateFilter('');
     setMinRating(null);
     setOpenFilter(null);
@@ -217,9 +209,9 @@ const ExploreMap: React.FC = () => {
               </button>
               <button
                 onClick={() => setOpenFilter(openFilter === 'capacity' ? null : 'capacity')}
-                className={chipClass(capacityRange !== null)}
+                className={chipClass(minCapacity !== '')}
               >
-                <span>{capacityRange ? capacityRange.label : 'Capacidad'}</span>
+                <span>{minCapacity !== '' ? `${minCapacity}+ personas` : 'Capacidad'}</span>
                 <span className="material-icons-round text-sm">expand_more</span>
               </button>
               <button
@@ -286,16 +278,30 @@ const ExploreMap: React.FC = () => {
                   </div>
                 )}
                 {openFilter === 'capacity' && (
-                  <div className="flex flex-col gap-1">
-                    {CAPACITY_RANGES.map((r) => (
+                  <div className="flex flex-col gap-2">
+                    <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 px-1">Mínimo de personas</label>
+                    <input
+                      type="number"
+                      min={1}
+                      placeholder="Ej. 80"
+                      value={minCapacity}
+                      onChange={(e) => setMinCapacity(e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    />
+                    <div className="flex justify-between gap-2 pt-1">
                       <button
-                        key={r.label}
-                        onClick={() => { setCapacityRange(capacityRange?.label === r.label ? null : r); setOpenFilter(null); }}
-                        className={`text-left px-3 py-2 rounded-xl text-sm font-medium transition-colors ${capacityRange?.label === r.label ? 'bg-primary/10 text-primary' : 'hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200'}`}
+                        onClick={() => { setMinCapacity(''); setOpenFilter(null); }}
+                        className="text-xs font-semibold text-slate-500 hover:text-primary"
                       >
-                        {r.label}
+                        Limpiar
                       </button>
-                    ))}
+                      <button
+                        onClick={() => setOpenFilter(null)}
+                        className="text-xs font-bold text-primary"
+                      >
+                        Aplicar
+                      </button>
+                    </div>
                   </div>
                 )}
                 {openFilter === 'date' && (
