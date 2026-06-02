@@ -148,9 +148,25 @@ const AvailabilityCalendar: React.FC = () => {
         </div>
       )}
 
-      {!venueId && (
+      {venues.length > 0 && !isWizard && (
+        <div className="bg-white dark:bg-surface-dark rounded-[24px] p-4 shadow-sm border border-slate-100 dark:border-slate-800">
+          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1 block mb-2">Espacio</label>
+          <select
+            value={venueId || ''}
+            onChange={(e) => handleVenueChange(e.target.value)}
+            className="w-full p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl text-slate-800 dark:text-white font-bold tracking-tight outline-none border-0"
+          >
+            <option value="">Selecciona un espacio…</option>
+            {venues.map(v => (
+              <option key={v.id} value={v.id}>{v.name}</option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      {!venueId && venues.length === 0 && (
         <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-2xl p-4 text-sm text-amber-800 dark:text-amber-200">
-          Selecciona un espacio desde "Mis espacios" para gestionar su disponibilidad.
+          Aún no tienes espacios. Crea uno desde "Mis espacios" para gestionar su disponibilidad.
         </div>
       )}
 
