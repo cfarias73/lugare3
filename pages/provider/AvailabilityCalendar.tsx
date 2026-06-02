@@ -23,7 +23,8 @@ const toDateStr = (y: number, m: number, d: number) => `${y}-${pad(m + 1)}-${pad
 
 const AvailabilityCalendar: React.FC = () => {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const { user } = useUser();
+  const [searchParams, setSearchParams] = useSearchParams();
   const isWizard = searchParams.get('wizard') === 'true';
   const venueId = searchParams.get('venueId');
 
@@ -31,12 +32,22 @@ const AvailabilityCalendar: React.FC = () => {
   const [year, setYear] = useState(today.getFullYear());
   const [month, setMonth] = useState(today.getMonth()); // 0-indexed
   const [blockedDates, setBlockedDates] = useState<Set<string>>(new Set());
+  const [bookedDates, setBookedDates] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(false);
   const [venueName, setVenueName] = useState<string>('');
+  const [venues, setVenues] = useState<Array<{ id: string; name: string }>>([]);
+
+  // Load provider venues for the selector
+  useEffect(() => {
+    if (!user?.id) return;
+    getProviderVenues(user.id)
+      .then((rows: any[]) => setVenues((rows || []).map(v => ({ id: v.id, name: v.name }))))
+      .catch(() => setVenues([]));
+  }, [user?.id]);
 
   // Load venue name
   useEffect(() => {
-    if (!venueId) return;
+    if (!venueId) { setVenueName(''); return; }
     supabase
       .from('venues')
       .select('name')
@@ -47,14 +58,18 @@ const AvailabilityCalendar: React.FC = () => {
       });
   }, [venueId]);
 
-  // Load blocked dates for current month/year
+  // Load blocked + booked dates for current month/year
   useEffect(() => {
-    if (!venueId) return;
+    if (!venueId) { setBlockedDates(new Set()); setBookedDates(new Set()); return; }
     let cancelled = false;
     setLoading(true);
-    getBlockedDatesForMonth(venueId, year, month).then(set => {
+    Promise.all([
+      getBlockedDatesForMonth(venueId, year, month),
+      getBookedDatesForMonth(venueId, year, month),
+    ]).then(([blocked, booked]) => {
       if (!cancelled) {
-        setBlockedDates(set);
+        setBlockedDates(blocked);
+        setBookedDates(booked);
         setLoading(false);
       }
     });
