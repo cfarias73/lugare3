@@ -125,7 +125,7 @@ const MySpaces: React.FC = () => {
                     <p className="text-primary font-bold text-xl">${venue.price.toLocaleString()} <span className="text-xs font-medium text-slate-400">/ hora</span></p>
                     <div className="flex gap-2">
                       <button 
-                        onClick={() => navigate('/provider/calendar')}
+                        onClick={() => navigate(`/provider/calendar?venueId=${venue.id}`)}
                         className="w-12 h-12 rounded-[18px] bg-cyan-50 dark:bg-cyan-900/20 text-secondary flex items-center justify-center hover:bg-secondary hover:text-white transition-all shadow-sm active:scale-95"
                       >
                         <span className="material-icons-round text-xl">event</span>
