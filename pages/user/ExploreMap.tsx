@@ -62,6 +62,33 @@ const ExploreMap: React.FC = () => {
   const [locating, setLocating] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
   const [unavailableVenueIds, setUnavailableVenueIds] = useState<Set<string>>(new Set());
+  const [searching, setSearching] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
+
+  const runSearch = React.useCallback(async (raw: string) => {
+    const q = raw.trim();
+    setSearchError(null);
+    if (!q) return;
+    setSearching(true);
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=mx&q=${encodeURIComponent(q)}`,
+        { headers: { 'Accept-Language': 'es' } }
+      );
+      const data = await res.json();
+      if (Array.isArray(data) && data[0]) {
+        setMapCenter([parseFloat(data[0].lat), parseFloat(data[0].lon)]);
+        setZoom(12);
+      } else {
+        setSearchError('No se encontró esa ubicación.');
+      }
+    } catch (err) {
+      console.error('Geocoding failed', err);
+      setSearchError('Error al buscar la ubicación. Intenta de nuevo.');
+    } finally {
+      setSearching(false);
+    }
+  }, []);
 
   useEffect(() => {
     const fetchVenues = async () => {
@@ -203,31 +230,21 @@ const ExploreMap: React.FC = () => {
           
           <div className="relative mb-4">
             <div className="flex items-center bg-slate-100 dark:bg-slate-800 rounded-2xl p-4 gap-3">
-              <span className="material-icons-round text-slate-400">search</span>
-              <input 
-                className="bg-transparent border-none focus:ring-0 w-full text-sm text-slate-700 dark:text-slate-200 placeholder:text-slate-400" 
-                placeholder="¿Dónde quieres celebrar tu evento?" 
+              <button
+                type="button"
+                onClick={() => runSearch(searchQuery)}
+                title="Buscar"
+                className="text-slate-400 hover:text-primary transition-colors"
+              >
+                <span className="material-icons-round">{searching ? 'hourglass_empty' : 'search'}</span>
+              </button>
+              <input
+                className="bg-transparent border-none focus:ring-0 w-full text-sm text-slate-700 dark:text-slate-200 placeholder:text-slate-400"
+                placeholder="¿Dónde quieres celebrar tu evento?"
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyDown={async (e) => {
-                  if (e.key !== 'Enter') return;
-                  const q = searchQuery.trim();
-                  if (!q) return;
-                  try {
-                    const res = await fetch(
-                      `https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=mx&q=${encodeURIComponent(q)}`,
-                      { headers: { 'Accept-Language': 'es' } }
-                    );
-                    const data = await res.json();
-                    if (Array.isArray(data) && data[0]) {
-                      setMapCenter([parseFloat(data[0].lat), parseFloat(data[0].lon)]);
-                      setZoom(13);
-                    }
-                  } catch (err) {
-                    console.error('Geocoding failed', err);
-                  }
-                }}
+                onKeyDown={(e) => { if (e.key === 'Enter') runSearch(searchQuery); }}
               />
               <button
                 onClick={requestLocation}
@@ -238,6 +255,9 @@ const ExploreMap: React.FC = () => {
                 <span className={`material-icons-round text-lg ${locating ? 'animate-pulse' : ''}`}>near_me</span>
               </button>
             </div>
+            {searchError && (
+              <p className="text-xs text-red-500 mt-2 px-2">{searchError}</p>
+            )}
           </div>
 
           <div className="relative">
