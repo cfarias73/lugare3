@@ -99,6 +99,27 @@ const RateExperience: React.FC = () => {
         photos: uploadedUrls,
       });
       if (error) throw error;
+
+      // Notificar al anfitrión
+      try {
+        const { data: venue } = await supabase
+          .from('venues')
+          .select('name, provider_id')
+          .eq('id', venueId)
+          .maybeSingle();
+        if (venue?.provider_id) {
+          await createNotification({
+            userId: venue.provider_id,
+            title: 'Nueva reseña recibida',
+            message: `Recibiste una reseña de ${mainRating}★ en ${venue.name}.`,
+            type: 'info',
+            link: '/provider/stats',
+          });
+        }
+      } catch (notifErr) {
+        console.error('notify provider review failed', notifErr);
+      }
+
       alert('¡Gracias por tu reseña!');
       navigate('/user/bookings');
     } catch (e: any) {
