@@ -1,4 +1,5 @@
 import { supabase } from '../../lib/supabaseClient';
+import { createNotification } from './notificationService';
 
 export const getAdminStats = async () => {
   const { data: users, count: userCount } = await supabase
@@ -30,10 +31,52 @@ export const getPendingVenues = async () => {
 };
 
 export const approveVenue = async (venueId: string) => {
-  const { error } = await supabase
+  const { data: venue, error } = await supabase
     .from('venues')
     .update({ status: 'approved' })
-    .eq('id', venueId);
+    .eq('id', venueId)
+    .select('name, provider_id')
+    .maybeSingle();
 
   if (error) throw error;
+
+  // Notificar al anfitrión
+  if (venue?.provider_id) {
+    try {
+      await createNotification({
+        userId: venue.provider_id,
+        title: 'Espacio aprobado',
+        message: `Tu espacio "${venue.name}" fue aprobado y ya es visible para los huéspedes.`,
+        type: 'success',
+        link: '/provider/spaces',
+      });
+    } catch (e) {
+      console.error('notify approve failed', e);
+    }
+  }
+};
+
+export const rejectVenue = async (venueId: string, reason?: string) => {
+  const { data: venue, error } = await supabase
+    .from('venues')
+    .update({ status: 'rejected' })
+    .eq('id', venueId)
+    .select('name, provider_id')
+    .maybeSingle();
+
+  if (error) throw error;
+
+  if (venue?.provider_id) {
+    try {
+      await createNotification({
+        userId: venue.provider_id,
+        title: 'Espacio rechazado',
+        message: `Tu espacio "${venue.name}" no fue aprobado.${reason ? ` Motivo: ${reason}` : ''}`,
+        type: 'error',
+        link: '/provider/spaces',
+      });
+    } catch (e) {
+      console.error('notify reject failed', e);
+    }
+  }
 };
