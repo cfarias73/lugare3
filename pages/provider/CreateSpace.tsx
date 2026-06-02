@@ -118,6 +118,9 @@ const CreateSpaceContent: React.FC = () => {
         rules: data.rules,
       };
       if (isEdit && venueId) {
+        if (removedExistingIds.length > 0) {
+          await deleteVenueImages(user.id, venueId, removedExistingIds);
+        }
         await updateVenue(user.id, venueId, { ...payload, imageFiles: files });
         toast.success('Espacio actualizado');
       } else {
