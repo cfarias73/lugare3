@@ -1,4 +1,5 @@
 import { supabase } from '../../lib/supabaseClient';
+import { createNotification } from './notificationService';
 
 export const getAdminStats = async () => {
   const { data: users, count: userCount } = await supabase
