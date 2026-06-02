@@ -4,11 +4,14 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import ProviderLayout from '../../components/ProviderLayout';
 import { toast } from 'sonner';
 import { supabase } from '../../lib/supabaseClient';
+import { useUser } from '../../context/UserContext';
 import {
   getBlockedDatesForMonth,
+  getBookedDatesForMonth,
   blockDate,
   unblockDate,
 } from '../../src/services/availabilityService';
+import { getProviderVenues } from '../../src/services/providerService';
 
 const MONTH_NAMES = [
   'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
@@ -20,7 +23,8 @@ const toDateStr = (y: number, m: number, d: number) => `${y}-${pad(m + 1)}-${pad
 
 const AvailabilityCalendar: React.FC = () => {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const { user } = useUser();
+  const [searchParams, setSearchParams] = useSearchParams();
   const isWizard = searchParams.get('wizard') === 'true';
   const venueId = searchParams.get('venueId');
 
@@ -28,12 +32,22 @@ const AvailabilityCalendar: React.FC = () => {
   const [year, setYear] = useState(today.getFullYear());
   const [month, setMonth] = useState(today.getMonth()); // 0-indexed
   const [blockedDates, setBlockedDates] = useState<Set<string>>(new Set());
+  const [bookedDates, setBookedDates] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(false);
   const [venueName, setVenueName] = useState<string>('');
+  const [venues, setVenues] = useState<Array<{ id: string; name: string }>>([]);
+
+  // Load provider venues for the selector
+  useEffect(() => {
+    if (!user?.id) return;
+    getProviderVenues(user.id)
+      .then((rows: any[]) => setVenues((rows || []).map(v => ({ id: v.id, name: v.name }))))
+      .catch(() => setVenues([]));
+  }, [user?.id]);
 
   // Load venue name
   useEffect(() => {
-    if (!venueId) return;
+    if (!venueId) { setVenueName(''); return; }
     supabase
       .from('venues')
       .select('name')
@@ -44,14 +58,18 @@ const AvailabilityCalendar: React.FC = () => {
       });
   }, [venueId]);
 
-  // Load blocked dates for current month/year
+  // Load blocked + booked dates for current month/year
   useEffect(() => {
-    if (!venueId) return;
+    if (!venueId) { setBlockedDates(new Set()); setBookedDates(new Set()); return; }
     let cancelled = false;
     setLoading(true);
-    getBlockedDatesForMonth(venueId, year, month).then(set => {
+    Promise.all([
+      getBlockedDatesForMonth(venueId, year, month),
+      getBookedDatesForMonth(venueId, year, month),
+    ]).then(([blocked, booked]) => {
       if (!cancelled) {
-        setBlockedDates(set);
+        setBlockedDates(blocked);
+        setBookedDates(booked);
         setLoading(false);
       }
     });
@@ -76,10 +94,14 @@ const AvailabilityCalendar: React.FC = () => {
 
   const toggleBlockedDate = async (day: number) => {
     if (!venueId) {
-      toast.error('No se especificó el espacio');
+      toast.error('Selecciona primero un espacio');
       return;
     }
     const dateStr = toDateStr(year, month, day);
+    if (bookedDates.has(dateStr)) {
+      toast.error('Este día ya tiene una reserva confirmada');
+      return;
+    }
     const wasBlocked = blockedDates.has(dateStr);
     // optimistic
     setBlockedDates(prev => {
@@ -106,6 +128,12 @@ const AvailabilityCalendar: React.FC = () => {
     }
   };
 
+  const handleVenueChange = (id: string) => {
+    const next = new URLSearchParams(searchParams);
+    if (id) next.set('venueId', id); else next.delete('venueId');
+    setSearchParams(next, { replace: true });
+  };
+
   const Content = (
     <div className="p-6 space-y-10 max-w-lg mx-auto pb-10">
       {isWizard && (
@@ -120,9 +148,25 @@ const AvailabilityCalendar: React.FC = () => {
         </div>
       )}
 
-      {!venueId && (
+      {venues.length > 0 && !isWizard && (
+        <div className="bg-white dark:bg-surface-dark rounded-[24px] p-4 shadow-sm border border-slate-100 dark:border-slate-800">
+          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1 block mb-2">Espacio</label>
+          <select
+            value={venueId || ''}
+            onChange={(e) => handleVenueChange(e.target.value)}
+            className="w-full p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl text-slate-800 dark:text-white font-bold tracking-tight outline-none border-0"
+          >
+            <option value="">Selecciona un espacio…</option>
+            {venues.map(v => (
+              <option key={v.id} value={v.id}>{v.name}</option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      {!venueId && venues.length === 0 && (
         <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-2xl p-4 text-sm text-amber-800 dark:text-amber-200">
-          Selecciona un espacio desde "Mis espacios" para gestionar su disponibilidad.
+          Aún no tienes espacios. Crea uno desde "Mis espacios" para gestionar su disponibilidad.
         </div>
       )}
 
@@ -156,13 +200,16 @@ const AvailabilityCalendar: React.FC = () => {
           {Array.from({ length: daysInMonth }, (_, i) => i + 1).map((day) => {
             const dateStr = toDateStr(year, month, day);
             const isBlocked = blockedDates.has(dateStr);
+            const isBooked = bookedDates.has(dateStr);
             const isToday =
               day === today.getDate() &&
               month === today.getMonth() &&
               year === today.getFullYear();
 
             let classes = "w-10 h-10 flex items-center justify-center mx-auto rounded-full transition-all cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-75";
-            if (isBlocked) {
+            if (isBooked) {
+              classes = "w-10 h-10 bg-primary text-white flex items-center justify-center mx-auto rounded-[14px] cursor-not-allowed";
+            } else if (isBlocked) {
               classes = "w-10 h-10 bg-slate-900 dark:bg-slate-700 text-white flex items-center justify-center mx-auto rounded-[14px] cursor-pointer active:scale-90 line-through";
             } else if (isToday) {
               classes = "w-10 h-10 border-2 border-primary text-primary rounded-full flex items-center justify-center mx-auto cursor-pointer active:scale-90";
@@ -172,7 +219,8 @@ const AvailabilityCalendar: React.FC = () => {
               <div
                 key={day}
                 className={classes}
-                onClick={() => !loading && toggleBlockedDate(day)}
+                onClick={() => !loading && !isBooked && toggleBlockedDate(day)}
+                title={isBooked ? 'Reserva confirmada' : undefined}
               >
                 {day}
               </div>
@@ -184,6 +232,10 @@ const AvailabilityCalendar: React.FC = () => {
           <div className="flex items-center gap-2">
             <div className="w-2.5 h-2.5 rounded-full border-2 border-primary"></div>
             <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Hoy</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-2.5 h-2.5 rounded-sm bg-primary"></div>
+            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Reservado</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-2.5 h-2.5 rounded-sm bg-slate-900 dark:bg-slate-700"></div>
