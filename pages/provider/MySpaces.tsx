@@ -243,7 +243,7 @@ const MySpaces: React.FC = () => {
                           <span className="material-icons-round text-xl">edit</span>
                         </button>
                         <button
-                          onClick={() => handleDelete(venue)}
+                          onClick={() => setDeletingVenue(venue)}
                           className="w-12 h-12 rounded-[18px] bg-red-50 dark:bg-red-900/20 text-red-500 flex items-center justify-center hover:bg-red-500 hover:text-white transition-all shadow-sm active:scale-95"
                           title="Eliminar"
                         >
