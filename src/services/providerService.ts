@@ -146,7 +146,6 @@ export const getProviderBookings = async (providerId: string, status?: BookingSt
       ),
       profiles (
         name,
-        email,
         phone,
         avatar_url
       )
