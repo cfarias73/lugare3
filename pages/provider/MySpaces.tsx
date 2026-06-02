@@ -12,9 +12,9 @@ const MySpaces: React.FC = () => {
   const [venues, setVenues] = useState<any[]>([]);
 
   useEffect(() => {
-    if (user?.email) {
+    if (user?.id) {
       setLoading(true);
-      getProviderVenues(user.email).then(data => {
+      getProviderVenues(user.id).then(data => {
         setVenues(data.map(v => ({
           id: v.id,
           name: v.name,
