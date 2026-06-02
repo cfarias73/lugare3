@@ -1,22 +1,108 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import ProviderLayout from '../../components/ProviderLayout';
 import { toast } from 'sonner';
+import { supabase } from '../../lib/supabaseClient';
+import {
+  getBlockedDatesForMonth,
+  blockDate,
+  unblockDate,
+} from '../../src/services/availabilityService';
+
+const MONTH_NAMES = [
+  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
+];
+
+const pad = (n: number) => String(n).padStart(2, '0');
+const toDateStr = (y: number, m: number, d: number) => `${y}-${pad(m + 1)}-${pad(d)}`;
 
 const AvailabilityCalendar: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const isWizard = searchParams.get('wizard') === 'true';
-  const [blockedDates, setBlockedDates] = useState<number[]>([26, 27]);
+  const venueId = searchParams.get('venueId');
 
-  const toggleBlockedDate = (day: number) => {
-    if (blockedDates.includes(day)) {
-      setBlockedDates(blockedDates.filter(d => d !== day));
-      toast.success(`Día ${day} desbloqueado`);
-    } else {
-      setBlockedDates([...blockedDates, day]);
-      toast.success(`Día ${day} bloqueado`);
+  const today = new Date();
+  const [year, setYear] = useState(today.getFullYear());
+  const [month, setMonth] = useState(today.getMonth()); // 0-indexed
+  const [blockedDates, setBlockedDates] = useState<Set<string>>(new Set());
+  const [loading, setLoading] = useState(false);
+  const [venueName, setVenueName] = useState<string>('');
+
+  // Load venue name
+  useEffect(() => {
+    if (!venueId) return;
+    supabase
+      .from('venues')
+      .select('name')
+      .eq('id', venueId)
+      .single()
+      .then(({ data }) => {
+        if (data) setVenueName(data.name);
+      });
+  }, [venueId]);
+
+  // Load blocked dates for current month/year
+  useEffect(() => {
+    if (!venueId) return;
+    let cancelled = false;
+    setLoading(true);
+    getBlockedDatesForMonth(venueId, year, month).then(set => {
+      if (!cancelled) {
+        setBlockedDates(set);
+        setLoading(false);
+      }
+    });
+    return () => { cancelled = true; };
+  }, [venueId, year, month]);
+
+  const daysInMonth = useMemo(() => new Date(year, month + 1, 0).getDate(), [year, month]);
+  // Day-of-week of the 1st (0=Sunday). Convert to Monday-first offset.
+  const firstDayOffset = useMemo(() => {
+    const dow = new Date(year, month, 1).getDay();
+    return (dow + 6) % 7; // L=0 ... D=6
+  }, [year, month]);
+
+  const goPrevMonth = () => {
+    if (month === 0) { setYear(y => y - 1); setMonth(11); }
+    else setMonth(m => m - 1);
+  };
+  const goNextMonth = () => {
+    if (month === 11) { setYear(y => y + 1); setMonth(0); }
+    else setMonth(m => m + 1);
+  };
+
+  const toggleBlockedDate = async (day: number) => {
+    if (!venueId) {
+      toast.error('No se especificó el espacio');
+      return;
+    }
+    const dateStr = toDateStr(year, month, day);
+    const wasBlocked = blockedDates.has(dateStr);
+    // optimistic
+    setBlockedDates(prev => {
+      const next = new Set(prev);
+      if (wasBlocked) next.delete(dateStr); else next.add(dateStr);
+      return next;
+    });
+    try {
+      if (wasBlocked) {
+        await unblockDate(venueId, dateStr);
+        toast.success(`Día ${day} desbloqueado`);
+      } else {
+        await blockDate(venueId, dateStr);
+        toast.success(`Día ${day} bloqueado`);
+      }
+    } catch (e: any) {
+      // revert
+      setBlockedDates(prev => {
+        const next = new Set(prev);
+        if (wasBlocked) next.add(dateStr); else next.delete(dateStr);
+        return next;
+      });
+      toast.error(e.message || 'No se pudo guardar el cambio');
     }
   };
 
@@ -34,15 +120,27 @@ const AvailabilityCalendar: React.FC = () => {
         </div>
       )}
 
+      {!venueId && (
+        <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-2xl p-4 text-sm text-amber-800 dark:text-amber-200">
+          Selecciona un espacio desde "Mis espacios" para gestionar su disponibilidad.
+        </div>
+      )}
+
       <div className="bg-white dark:bg-surface-dark rounded-[32px] p-6 shadow-sm border border-slate-100 dark:border-slate-800 flex items-center justify-between group transition-all">
-        <button className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-slate-50 dark:hover:bg-slate-800 transition-all text-slate-400 active:scale-75">
+        <button
+          onClick={goPrevMonth}
+          className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-slate-50 dark:hover:bg-slate-800 transition-all text-slate-400 active:scale-75"
+        >
           <span className="material-icons-outlined">chevron_left</span>
         </button>
         <div className="flex items-center gap-3 font-bold text-lg dark:text-white tracking-tight">
-          <span>Agosto 2024</span>
+          <span>{MONTH_NAMES[month]} {year}</span>
           <span className="material-icons-outlined text-secondary text-2xl">calendar_today</span>
         </div>
-        <button className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-slate-50 dark:hover:bg-slate-800 transition-all text-slate-400 active:scale-75">
+        <button
+          onClick={goNextMonth}
+          className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-slate-50 dark:hover:bg-slate-800 transition-all text-slate-400 active:scale-75"
+        >
           <span className="material-icons-outlined">chevron_right</span>
         </button>
       </div>
@@ -51,64 +149,56 @@ const AvailabilityCalendar: React.FC = () => {
         <div className="grid grid-cols-7 gap-y-6 text-center text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-8">
           <div>L</div><div>M</div><div>M</div><div>J</div><div>V</div><div>S</div><div>D</div>
         </div>
-        <div className="grid grid-cols-7 gap-y-4 text-center text-sm font-bold dark:text-white">
-          <div className="text-slate-200 dark:text-slate-800">31</div>
-          {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => {
-            const isBlocked = blockedDates.includes(day);
-            let classes = "w-10 h-10 flex items-center justify-center mx-auto rounded-full transition-all cursor-pointer hover:bg-slate-50 active:scale-75";
-            
+        <div className={`grid grid-cols-7 gap-y-4 text-center text-sm font-bold dark:text-white ${loading ? 'opacity-50' : ''}`}>
+          {Array.from({ length: firstDayOffset }).map((_, i) => (
+            <div key={`empty-${i}`} />
+          ))}
+          {Array.from({ length: daysInMonth }, (_, i) => i + 1).map((day) => {
+            const dateStr = toDateStr(year, month, day);
+            const isBlocked = blockedDates.has(dateStr);
+            const isToday =
+              day === today.getDate() &&
+              month === today.getMonth() &&
+              year === today.getFullYear();
+
+            let classes = "w-10 h-10 flex items-center justify-center mx-auto rounded-full transition-all cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-75";
             if (isBlocked) {
-              classes = "w-10 h-10 bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center mx-auto rounded-[14px] cursor-pointer";
-            } else if (day === 15) {
-              classes = "w-10 h-10 bg-secondary text-white rounded-[14px] flex items-center justify-center mx-auto shadow-lg shadow-secondary/30 active:scale-90";
-            } else if (day === 5 || day === 23) {
-              classes += " relative after:content-[''] after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:w-4 after:h-1 after:bg-primary after:rounded-full";
+              classes = "w-10 h-10 bg-slate-900 dark:bg-slate-700 text-white flex items-center justify-center mx-auto rounded-[14px] cursor-pointer active:scale-90 line-through";
+            } else if (isToday) {
+              classes = "w-10 h-10 border-2 border-primary text-primary rounded-full flex items-center justify-center mx-auto cursor-pointer active:scale-90";
             }
-            
+
             return (
-              <div 
-                key={day} 
+              <div
+                key={day}
                 className={classes}
-                onClick={() => toggleBlockedDate(day)}
+                onClick={() => !loading && toggleBlockedDate(day)}
               >
                 {day}
               </div>
             );
           })}
         </div>
-        
+
         <div className="mt-12 flex flex-wrap justify-center gap-x-6 gap-y-4">
           <div className="flex items-center gap-2">
-            <div className="w-2.5 h-2.5 rounded-full bg-secondary"></div>
-            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Seleccionado</span>
+            <div className="w-2.5 h-2.5 rounded-full border-2 border-primary"></div>
+            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Hoy</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-2.5 h-2.5 rounded-sm bg-slate-200 dark:bg-slate-800"></div>
+            <div className="w-2.5 h-2.5 rounded-sm bg-slate-900 dark:bg-slate-700"></div>
             <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Bloqueado</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-2.5 h-2.5 rounded-full border-2 border-primary"></div>
+            <div className="w-2.5 h-2.5 rounded-full bg-slate-200 dark:bg-slate-700"></div>
             <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Disponible</span>
           </div>
         </div>
-      </div>
 
-      <section>
-        <h2 className="text-lg font-bold mb-6 px-1 dark:text-white tracking-tight">Precios por temporada</h2>
-        <div className="bg-white dark:bg-surface-dark rounded-[36px] p-8 shadow-sm border border-slate-100 dark:border-slate-800 space-y-8 transition-all">
-          <div className="flex justify-between items-end mb-3 px-1">
-            <p className="text-sm font-bold text-slate-900 dark:text-white">Precio base estándar</p>
-            <p className="text-xl font-bold text-primary font-display">$3,500 <span className="text-[10px] font-medium text-slate-400">MXN</span></p>
-          </div>
-          <div className="w-full bg-slate-50 dark:bg-slate-800/50 h-2.5 rounded-full overflow-hidden shadow-inner">
-            <div className="bg-primary h-full w-[70%] rounded-full shadow-[0_0_10px_rgba(242,107,58,0.3)]"></div>
-          </div>
-          
-          <button className="w-full border-2 border-primary text-primary font-bold py-4 rounded-2xl transition-all hover:bg-primary/5 active:scale-95 uppercase tracking-widest text-[11px]">
-            Configurar temporadas especiales
-          </button>
-        </div>
-      </section>
+        <p className="text-center text-[11px] text-slate-400 mt-6">
+          Toca un día para bloquear o desbloquear.
+        </p>
+      </div>
     </div>
   );
 
@@ -132,10 +222,7 @@ const AvailabilityCalendar: React.FC = () => {
         </main>
 
         <footer className="fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-surface-dark/95 backdrop-blur-xl border-t border-slate-100 dark:border-slate-800 px-6 py-6 flex gap-4 max-w-md mx-auto z-[60]">
-          <button className="flex-1 py-4 border-2 border-primary text-primary font-bold text-[11px] uppercase tracking-[0.15em] rounded-2xl transition-all active:scale-95 hover:bg-primary/5">
-            Guardar
-          </button>
-          <button 
+          <button
             onClick={() => navigate('/provider/spaces')}
             className="flex-1 py-4 bg-primary text-white font-bold text-[11px] uppercase tracking-[0.15em] rounded-2xl shadow-xl shadow-primary/20 transition-all active:scale-95 hover:bg-orange-600"
           >
@@ -155,12 +242,9 @@ const AvailabilityCalendar: React.FC = () => {
           </button>
           <div>
             <h1 className="text-lg font-bold leading-tight dark:text-white font-display tracking-tight">Disponibilidad</h1>
-            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Casa Jardín</p>
+            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{venueName || 'Espacio'}</p>
           </div>
         </div>
-        <button className="w-11 h-11 flex items-center justify-center rounded-2xl bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 transition-all active:scale-90 shadow-sm border border-slate-100 dark:border-slate-800">
-          <span className="material-icons-outlined text-xl">more_vert</span>
-        </button>
       </header>
       {Content}
     </ProviderLayout>
