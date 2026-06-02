@@ -104,9 +104,9 @@ const MySpaces: React.FC = () => {
     }
   };
 
-  const handleDelete = async (venue: VenueRow) => {
-    if (!user?.id) return;
-    if (!confirm(`¿Eliminar "${venue.name}"? Esta acción no se puede deshacer.`)) return;
+  const handleDelete = async () => {
+    if (!user?.id || !deletingVenue) return;
+    const venue = deletingVenue;
     try {
       await deleteVenue(user.id, venue.id);
       setVenues((prev) => prev.filter((v) => v.id !== venue.id));
@@ -114,8 +114,11 @@ const MySpaces: React.FC = () => {
     } catch (e: any) {
       console.error(e);
       toast.error(e.message ?? 'No se pudo eliminar');
+    } finally {
+      setDeletingVenue(null);
     }
   };
+
 
   const editVenue = (id: string) => navigate(`/provider/create-space?id=${id}`);
 
