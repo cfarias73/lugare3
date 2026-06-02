@@ -3,6 +3,7 @@ import React, { useRef, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, Star, ImagePlus, X } from 'lucide-react';
 import { supabase } from '../../lib/supabaseClient';
+import { createNotification } from '../../src/services/notificationService';
 
 interface RateState {
   venueId?: string;
