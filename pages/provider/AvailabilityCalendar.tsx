@@ -200,13 +200,16 @@ const AvailabilityCalendar: React.FC = () => {
           {Array.from({ length: daysInMonth }, (_, i) => i + 1).map((day) => {
             const dateStr = toDateStr(year, month, day);
             const isBlocked = blockedDates.has(dateStr);
+            const isBooked = bookedDates.has(dateStr);
             const isToday =
               day === today.getDate() &&
               month === today.getMonth() &&
               year === today.getFullYear();
 
             let classes = "w-10 h-10 flex items-center justify-center mx-auto rounded-full transition-all cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-75";
-            if (isBlocked) {
+            if (isBooked) {
+              classes = "w-10 h-10 bg-primary text-white flex items-center justify-center mx-auto rounded-[14px] cursor-not-allowed";
+            } else if (isBlocked) {
               classes = "w-10 h-10 bg-slate-900 dark:bg-slate-700 text-white flex items-center justify-center mx-auto rounded-[14px] cursor-pointer active:scale-90 line-through";
             } else if (isToday) {
               classes = "w-10 h-10 border-2 border-primary text-primary rounded-full flex items-center justify-center mx-auto cursor-pointer active:scale-90";
@@ -216,7 +219,8 @@ const AvailabilityCalendar: React.FC = () => {
               <div
                 key={day}
                 className={classes}
-                onClick={() => !loading && toggleBlockedDate(day)}
+                onClick={() => !loading && !isBooked && toggleBlockedDate(day)}
+                title={isBooked ? 'Reserva confirmada' : undefined}
               >
                 {day}
               </div>
@@ -228,6 +232,10 @@ const AvailabilityCalendar: React.FC = () => {
           <div className="flex items-center gap-2">
             <div className="w-2.5 h-2.5 rounded-full border-2 border-primary"></div>
             <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Hoy</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-2.5 h-2.5 rounded-sm bg-primary"></div>
+            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Reservado</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-2.5 h-2.5 rounded-sm bg-slate-900 dark:bg-slate-700"></div>
