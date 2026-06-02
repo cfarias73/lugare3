@@ -1,4 +1,6 @@
 import { supabase } from '../../lib/supabaseClient';
+import { createNotification } from './notificationService';
+
 
 export interface ConversationRow {
   id: string;
@@ -139,5 +141,29 @@ export const sendMessage = async (
     .from('conversations')
     .update({ last_message: content, last_message_at: new Date().toISOString() })
     .eq('id', conversationId);
+
+  // Notificar al otro participante
+  try {
+    const { data: conv } = await supabase
+      .from('conversations')
+      .select('user_id, provider_id, venue_id')
+      .eq('id', conversationId)
+      .maybeSingle();
+    if (conv) {
+      const recipientId = conv.user_id === senderId ? conv.provider_id : conv.user_id;
+      const isProvider = recipientId === conv.provider_id;
+      await createNotification({
+        userId: recipientId,
+        title: 'Nuevo mensaje',
+        message: content.length > 80 ? content.slice(0, 80) + '…' : content,
+        type: 'info',
+        link: isProvider ? '/provider/messages' : '/user/messages',
+      });
+    }
+  } catch (e) {
+    console.error('notify message failed', e);
+  }
+
   return { data, error: null };
 };
+

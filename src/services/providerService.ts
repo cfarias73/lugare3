@@ -163,7 +163,8 @@ export const getProviderBookings = async (providerId: string, status?: BookingSt
 export const updateBookingStatus = async (
   providerId: string,
   bookingId: string,
-  status: BookingStatus
+  status: BookingStatus,
+  rejectionReason?: string
 ) => {
   // Verify ownership via venue
   const { data: booking, error: fetchErr } = await supabase
@@ -175,9 +176,12 @@ export const updateBookingStatus = async (
   // @ts-ignore
   if (booking.venues.provider_id !== providerId) throw new Error('No autorizado');
 
+  const patch: Record<string, unknown> = { status };
+  if (status === 'cancelled' && rejectionReason) patch.rejection_reason = rejectionReason;
+
   const { error } = await supabase
     .from('bookings')
-    .update({ status })
+    .update(patch)
     .eq('id', bookingId);
   if (error) throw error;
   return booking;

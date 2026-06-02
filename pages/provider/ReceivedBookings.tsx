@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ProviderLayout from '../../components/ProviderLayout';
 import { toast } from 'sonner';
-import ConfirmationDialog from '../../components/ui/ConfirmationDialog';
+import RejectBookingDialog from '../../components/ui/RejectBookingDialog';
 import { useUser } from '../../context/UserContext';
 import { getProviderBookings, updateBookingStatus, BookingStatus } from '../../src/services/providerService';
 import { createNotification } from '../../src/services/notificationService';
@@ -76,17 +76,17 @@ const ReceivedBookings: React.FC = () => {
     }
   };
 
-  const handleReject = async () => {
+  const handleReject = async (reason: string) => {
     if (!user?.id || !rejectingBookingId) return;
     const booking = bookings.find(b => b.id === rejectingBookingId);
     if (!booking) return;
     setActioningId(booking.id);
     try {
-      await updateBookingStatus(user.id, booking.id, 'cancelled');
+      await updateBookingStatus(user.id, booking.id, 'cancelled', reason);
       await createNotification({
         userId: booking.user_id,
         title: 'Reserva rechazada',
-        message: `Tu reserva en ${booking.venues?.name ?? 'el espacio'} para el ${booking.event_date} fue rechazada.`,
+        message: `Tu reserva en ${booking.venues?.name ?? 'el espacio'} para el ${booking.event_date} fue rechazada. Motivo: ${reason}`,
         type: 'error',
         link: '/user/bookings',
       });
@@ -103,14 +103,13 @@ const ReceivedBookings: React.FC = () => {
 
   return (
     <ProviderLayout>
-      <ConfirmationDialog
+      <RejectBookingDialog
         isOpen={rejectingBookingId !== null}
         onClose={() => setRejectingBookingId(null)}
         onConfirm={handleReject}
-        title="Rechazar reserva"
-        message="¿Estás seguro de que deseas rechazar esta reserva? Esta acción no se puede deshacer."
-        confirmText="Rechazar"
+        busy={actioningId === rejectingBookingId}
       />
+
       <header className="bg-white dark:bg-card-dark px-4 pt-10 pb-4 flex items-center justify-between sticky top-0 z-30 shadow-sm transition-colors">
         <div className="flex items-center gap-3">
           <button onClick={() => navigate(-1)} className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full">

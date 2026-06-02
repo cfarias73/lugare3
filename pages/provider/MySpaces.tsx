@@ -3,6 +3,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import ProviderLayout from '../../components/ProviderLayout';
+import ConfirmationDialog from '../../components/ui/ConfirmationDialog';
 import { useUser } from '../../context/UserContext';
 import { getProviderVenues, updateVenueStatus, deleteVenue } from '../../src/services/providerService';
 
@@ -32,6 +33,8 @@ const MySpaces: React.FC = () => {
   const [venues, setVenues] = useState<VenueRow[]>([]);
   const [search, setSearch] = useState('');
   const [toggling, setToggling] = useState<string | null>(null);
+  const [deletingVenue, setDeletingVenue] = useState<VenueRow | null>(null);
+
 
   const loadVenues = () => {
     if (!user?.id) return;
@@ -101,9 +104,9 @@ const MySpaces: React.FC = () => {
     }
   };
 
-  const handleDelete = async (venue: VenueRow) => {
-    if (!user?.id) return;
-    if (!confirm(`¿Eliminar "${venue.name}"? Esta acción no se puede deshacer.`)) return;
+  const handleDelete = async () => {
+    if (!user?.id || !deletingVenue) return;
+    const venue = deletingVenue;
     try {
       await deleteVenue(user.id, venue.id);
       setVenues((prev) => prev.filter((v) => v.id !== venue.id));
@@ -111,13 +114,25 @@ const MySpaces: React.FC = () => {
     } catch (e: any) {
       console.error(e);
       toast.error(e.message ?? 'No se pudo eliminar');
+    } finally {
+      setDeletingVenue(null);
     }
   };
+
 
   const editVenue = (id: string) => navigate(`/provider/create-space?id=${id}`);
 
   return (
     <ProviderLayout>
+      <ConfirmationDialog
+        isOpen={deletingVenue !== null}
+        onClose={() => setDeletingVenue(null)}
+        onConfirm={handleDelete}
+        title="Eliminar espacio"
+        message={`¿Eliminar "${deletingVenue?.name ?? ''}"? Esta acción no se puede deshacer.`}
+        confirmText="Eliminar"
+      />
+
       <div className="flex gap-4 px-6 py-2 overflow-x-auto no-scrollbar">
         <div className="min-w-[110px] flex-1 bg-white dark:bg-surface-dark p-5 rounded-[28px] shadow-sm border border-slate-100 dark:border-slate-800">
           <div className="w-8 h-8 rounded-xl bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center text-primary mb-4">
@@ -237,7 +252,7 @@ const MySpaces: React.FC = () => {
                           <span className="material-icons-round text-xl">edit</span>
                         </button>
                         <button
-                          onClick={() => handleDelete(venue)}
+                          onClick={() => setDeletingVenue(venue)}
                           className="w-12 h-12 rounded-[18px] bg-red-50 dark:bg-red-900/20 text-red-500 flex items-center justify-center hover:bg-red-500 hover:text-white transition-all shadow-sm active:scale-95"
                           title="Eliminar"
                         >

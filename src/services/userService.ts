@@ -1,4 +1,5 @@
 import { supabase } from '../../lib/supabaseClient';
+import { createNotification } from './notificationService';
 
 export interface BookingData {
   user_id: string;
@@ -26,7 +27,7 @@ export const checkAvailability = async (venueId: string, eventDate: string, star
 export const createBooking = async (data: BookingData) => {
   const isAvailable = await checkAvailability(data.venue_id, data.event_date, data.start_time, data.end_time);
   if (!isAvailable) throw new Error('El lugar ya está reservado en este horario');
-  
+
   const { data: booking, error } = await supabase
     .from('bookings')
     .insert({
@@ -37,6 +38,27 @@ export const createBooking = async (data: BookingData) => {
     .single();
 
   if (error) throw error;
+
+  // Notificar al anfitrión
+  try {
+    const { data: venue } = await supabase
+      .from('venues')
+      .select('name, provider_id')
+      .eq('id', data.venue_id)
+      .maybeSingle();
+    if (venue?.provider_id) {
+      await createNotification({
+        userId: venue.provider_id,
+        title: 'Nueva reserva recibida',
+        message: `Tienes una solicitud para ${venue.name} el ${data.event_date}.`,
+        type: 'info',
+        link: '/provider/received-bookings',
+      });
+    }
+  } catch (e) {
+    console.error('notify provider failed', e);
+  }
+
   return booking;
 };
 
