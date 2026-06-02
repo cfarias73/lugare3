@@ -14,6 +14,7 @@ export const getCategories = async (): Promise<Category[]> => {
     .from('categories')
     .select('*')
     .eq('is_active', true)
+    .neq('slug', 'fiestas')
     .order('sort_order', { ascending: true });
   if (error) {
     console.error('Error fetching categories:', error);
