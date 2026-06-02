@@ -13,6 +13,7 @@ import {
   ConversationRow,
   MessageRow,
 } from '../../src/services/messageService';
+import { useMessagesRealtime } from '../../src/hooks/useMessagesRealtime';
 
 const formatTime = (iso: string | null) => {
   if (!iso) return '';
