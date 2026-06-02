@@ -12,6 +12,7 @@ import {
   ConversationRow,
   MessageRow,
 } from '../../src/services/messageService';
+import { useMessagesRealtime } from '../../src/hooks/useMessagesRealtime';
 
 const formatTime = (iso: string | null) => {
   if (!iso) return '';
@@ -58,6 +59,26 @@ const Messages: React.FC = () => {
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
   }, [thread]);
+
+  // Realtime: incoming messages for any of the host's conversations
+  const convIds = useMemo(() => conversations.map((c) => c.id), [conversations]);
+  useMessagesRealtime(
+    !!user && convIds.length > 0,
+    (msg) => {
+      if (msg.sender_id === user?.id) return; // ignore own (already optimistic)
+      if (msg.conversation_id === activeId) {
+        setThread((prev) => (prev.some((m) => m.id === msg.id) ? prev : [...prev, msg]));
+      }
+      setConversations((prev) =>
+        prev.map((c) =>
+          c.id === msg.conversation_id
+            ? { ...c, last_message: msg.content, last_message_at: msg.created_at }
+            : c
+        )
+      );
+    },
+    convIds
+  );
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();

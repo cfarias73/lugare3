@@ -313,3 +313,197 @@ export const getProviderDashboard = async (providerId: string, period: Dashboard
     upcoming,
   };
 };
+
+// ============= STATS =============
+export interface ProviderStats {
+  totalReservas: number;
+  totalReservasTrend: string;
+  completadas: number;
+  completadasTrend: string;
+  ingresos: number;
+  ingresosTrend: string;
+  visitas: number; // best-effort
+  visitasTrend: string;
+  trend: { name: string; value: number }[];
+  topVenues: { rank: number; name: string; count: number; trend: string }[];
+  monthLabel: string;
+  prevMonthLabel: string;
+}
+
+const monthName = (d: Date) =>
+  d.toLocaleDateString('es-MX', { month: 'long', year: 'numeric' }).replace(/^./, c => c.toUpperCase());
+
+export const getProviderStats = async (
+  providerId: string,
+  refDate: Date
+): Promise<ProviderStats> => {
+  const from = new Date(refDate.getFullYear(), refDate.getMonth(), 1);
+  const to = new Date(refDate.getFullYear(), refDate.getMonth() + 1, 1);
+  const prevFrom = new Date(refDate.getFullYear(), refDate.getMonth() - 1, 1);
+
+  // Wide window: 6 months back through current month for the trend chart
+  const chartFrom = new Date(refDate.getFullYear(), refDate.getMonth() - 5, 1);
+
+  const { data, error } = await supabase
+    .from('bookings')
+    .select('id, event_date, total_price, status, venues!inner(id, name, provider_id)')
+    .eq('venues.provider_id', providerId)
+    .gte('event_date', fmtDate(chartFrom))
+    .lt('event_date', fmtDate(to));
+  if (error) throw error;
+  const all = data || [];
+
+  const inRange = (b: any, a: Date, z: Date) =>
+    b.event_date >= fmtDate(a) && b.event_date < fmtDate(z);
+
+  const curr = all.filter(b => inRange(b, from, to));
+  const prev = all.filter(b => inRange(b, prevFrom, from));
+
+  const totalReservas = curr.length;
+  const prevReservas = prev.length;
+  const completadas = curr.filter(b => b.status === 'completed' || b.status === 'confirmed').length;
+  const prevCompletadas = prev.filter(b => b.status === 'completed' || b.status === 'confirmed').length;
+  const ingresos = curr.filter(b => b.status === 'confirmed' || b.status === 'completed').reduce((s, b) => s + (Number(b.total_price) || 0), 0);
+  const prevIngresos = prev.filter(b => b.status === 'confirmed' || b.status === 'completed').reduce((s, b) => s + (Number(b.total_price) || 0), 0);
+
+  const pct = (c: number, p: number): string => {
+    if (p === 0) return c > 0 ? '+100%' : '0%';
+    const d = ((c - p) / p) * 100;
+    return `${d >= 0 ? '+' : ''}${Math.round(d)}%`;
+  };
+
+  // Trend: last 6 months count of bookings
+  const trend: { name: string; value: number }[] = [];
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(refDate.getFullYear(), refDate.getMonth() - i, 1);
+    const next = new Date(d.getFullYear(), d.getMonth() + 1, 1);
+    const label = d.toLocaleDateString('es-MX', { month: 'short' }).replace('.', '');
+    trend.push({
+      name: label.charAt(0).toUpperCase() + label.slice(1, 3),
+      value: all.filter(b => inRange(b, d, next)).length,
+    });
+  }
+
+  // Top venues this month
+  const venueCounts = new Map<string, { name: string; count: number; prev: number }>();
+  curr.forEach((b: any) => {
+    const v = venueCounts.get(b.venues.id) || { name: b.venues.name, count: 0, prev: 0 };
+    v.count += 1;
+    venueCounts.set(b.venues.id, v);
+  });
+  prev.forEach((b: any) => {
+    const v = venueCounts.get(b.venues.id) || { name: b.venues.name, count: 0, prev: 0 };
+    v.prev += 1;
+    venueCounts.set(b.venues.id, v);
+  });
+  const topVenues = Array.from(venueCounts.values())
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 3)
+    .map((v, idx) => ({
+      rank: idx + 1,
+      name: v.name,
+      count: v.count,
+      trend: pct(v.count, v.prev),
+    }));
+
+  // Visits: best-effort via analytics_events if present (silent fallback)
+  let visitas = 0;
+  let prevVisitas = 0;
+  try {
+    const venueIds = Array.from(venueCounts.keys());
+    const { data: venuesList } = await supabase
+      .from('venues')
+      .select('id')
+      .eq('provider_id', providerId);
+    const ids = (venuesList || []).map((v: any) => v.id);
+    if (ids.length) {
+      const { data: ev } = await supabase
+        .from('analytics_events')
+        .select('id, created_at, metadata')
+        .eq('event_type', 'venue_view')
+        .gte('created_at', from.toISOString())
+        .lt('created_at', to.toISOString());
+      visitas = (ev || []).filter((e: any) => ids.includes(e.metadata?.venue_id)).length;
+      const { data: evPrev } = await supabase
+        .from('analytics_events')
+        .select('id, metadata')
+        .eq('event_type', 'venue_view')
+        .gte('created_at', prevFrom.toISOString())
+        .lt('created_at', from.toISOString());
+      prevVisitas = (evPrev || []).filter((e: any) => ids.includes(e.metadata?.venue_id)).length;
+    }
+  } catch (_) {
+    // ignore
+  }
+
+  return {
+    totalReservas,
+    totalReservasTrend: pct(totalReservas, prevReservas),
+    completadas,
+    completadasTrend: pct(completadas, prevCompletadas),
+    ingresos,
+    ingresosTrend: pct(ingresos, prevIngresos),
+    visitas,
+    visitasTrend: pct(visitas, prevVisitas),
+    trend,
+    topVenues,
+    monthLabel: monthName(from),
+    prevMonthLabel: monthName(prevFrom),
+  };
+};
+
+// ============= ADDITIONAL SERVICES =============
+export interface VenueService {
+  id: string;
+  venue_id: string;
+  name: string;
+  description: string | null;
+  price: number;
+  created_at: string;
+}
+
+export const listProviderServices = async (providerId: string): Promise<(VenueService & { venue_name: string })[]> => {
+  const { data: venues, error: vErr } = await supabase
+    .from('venues')
+    .select('id, name')
+    .eq('provider_id', providerId);
+  if (vErr) throw vErr;
+  const venueIds = (venues || []).map(v => v.id);
+  if (venueIds.length === 0) return [];
+
+  const { data, error } = await supabase
+    .from('venue_services')
+    .select('*')
+    .in('venue_id', venueIds)
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+
+  const nameMap = new Map((venues || []).map((v: any) => [v.id, v.name]));
+  return (data || []).map((s: any) => ({ ...s, venue_name: nameMap.get(s.venue_id) || 'Espacio' }));
+};
+
+export const createService = async (
+  venueId: string,
+  payload: { name: string; description?: string | null; price: number }
+): Promise<VenueService> => {
+  const { data, error } = await supabase
+    .from('venue_services')
+    .insert({ venue_id: venueId, name: payload.name, description: payload.description ?? null, price: payload.price })
+    .select('*')
+    .single();
+  if (error) throw error;
+  return data;
+};
+
+export const updateService = async (
+  id: string,
+  payload: Partial<{ name: string; description: string | null; price: number; venue_id: string }>
+): Promise<void> => {
+  const { error } = await supabase.from('venue_services').update(payload).eq('id', id);
+  if (error) throw error;
+};
+
+export const deleteService = async (id: string): Promise<void> => {
+  const { error } = await supabase.from('venue_services').delete().eq('id', id);
+  if (error) throw error;
+};
