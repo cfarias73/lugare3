@@ -124,6 +124,15 @@ const MySpaces: React.FC = () => {
 
   return (
     <ProviderLayout>
+      <ConfirmationDialog
+        isOpen={deletingVenue !== null}
+        onClose={() => setDeletingVenue(null)}
+        onConfirm={handleDelete}
+        title="Eliminar espacio"
+        message={`¿Eliminar "${deletingVenue?.name ?? ''}"? Esta acción no se puede deshacer.`}
+        confirmText="Eliminar"
+      />
+
       <div className="flex gap-4 px-6 py-2 overflow-x-auto no-scrollbar">
         <div className="min-w-[110px] flex-1 bg-white dark:bg-surface-dark p-5 rounded-[28px] shadow-sm border border-slate-100 dark:border-slate-800">
           <div className="w-8 h-8 rounded-xl bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center text-primary mb-4">
