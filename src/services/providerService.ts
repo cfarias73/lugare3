@@ -1,63 +1,97 @@
 import { supabase } from '../../lib/supabaseClient';
 
-export interface CreateVenueData {
+export interface VenuePayload {
   name: string;
   description: string;
   category: string;
-  location: string;
+  location: string; // dirección
   city: string;
   capacity: number;
   size_sqm: number;
   price_per_hour: number;
-  imageFile: File;
+  min_hours?: number;
+  extra_hour_price?: number;
+  lat?: number | null;
+  lng?: number | null;
+  rules?: string[];
 }
 
+export interface CreateVenueData extends VenuePayload {
+  imageFiles: File[];
+}
+
+const uploadImages = async (providerId: string, venueId: string, files: File[]): Promise<string[]> => {
+  const urls: string[] = [];
+  for (const file of files) {
+    const ext = file.name.split('.').pop() || 'jpg';
+    const path = `${providerId}/${venueId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+    const { error } = await supabase.storage.from('venues').upload(path, file, {
+      contentType: file.type,
+      upsert: false,
+    });
+    if (error) throw error;
+    const { data } = supabase.storage.from('venues').getPublicUrl(path);
+    urls.push(data.publicUrl);
+  }
+  return urls;
+};
+
 export const createVenue = async (providerId: string, data: CreateVenueData) => {
-  // 1. Upload the image
-  const fileExt = data.imageFile.name.split('.').pop();
-  const filePath = `${providerId}/${Math.random()}.${fileExt}`;
-  
-  const { error: uploadError } = await supabase.storage
-    .from('venues')
-    .upload(filePath, data.imageFile);
+  const { imageFiles, ...payload } = data;
 
-  if (uploadError) throw uploadError;
-
-  const { data: imageUrlData } = supabase.storage
-    .from('venues')
-    .getPublicUrl(filePath);
-
-  // 2. Insert the venue
   const { data: venue, error: venueError } = await supabase
     .from('venues')
     .insert({
       provider_id: providerId,
-      name: data.name,
-      description: data.description,
-      category: data.category,
-      location: data.location,
-      city: data.city,
-      capacity: data.capacity,
-      size_sqm: data.size_sqm,
-      price_per_hour: data.price_per_hour,
-      status: 'pending' // Defaults to pending for admin approval
+      ...payload,
+      status: 'pending',
     })
     .select()
     .single();
 
   if (venueError) throw venueError;
 
-  // 3. Insert the image
-  const { error: imageError } = await supabase
-    .from('venue_images')
-    .insert({
-      venue_id: venue.id,
-      image_url: imageUrlData.publicUrl
-    });
-
-  if (imageError) throw imageError;
+  if (imageFiles.length > 0) {
+    const urls = await uploadImages(providerId, venue.id, imageFiles);
+    const rows = urls.map((url) => ({ venue_id: venue.id, image_url: url }));
+    const { error: imgErr } = await supabase.from('venue_images').insert(rows);
+    if (imgErr) throw imgErr;
+  }
 
   return venue;
+};
+
+export const updateVenue = async (
+  providerId: string,
+  venueId: string,
+  data: Partial<VenuePayload> & { imageFiles?: File[] }
+) => {
+  const { imageFiles, ...payload } = data;
+
+  const { error } = await supabase
+    .from('venues')
+    .update(payload)
+    .eq('id', venueId)
+    .eq('provider_id', providerId);
+  if (error) throw error;
+
+  if (imageFiles && imageFiles.length > 0) {
+    const urls = await uploadImages(providerId, venueId, imageFiles);
+    const rows = urls.map((url) => ({ venue_id: venueId, image_url: url }));
+    const { error: imgErr } = await supabase.from('venue_images').insert(rows);
+    if (imgErr) throw imgErr;
+  }
+};
+
+export const getVenueForEdit = async (providerId: string, venueId: string) => {
+  const { data, error } = await supabase
+    .from('venues')
+    .select('*, venue_images (image_url)')
+    .eq('id', venueId)
+    .eq('provider_id', providerId)
+    .maybeSingle();
+  if (error) throw error;
+  return data;
 };
 
 export const getProviderVenues = async (providerId: string) => {
@@ -69,7 +103,8 @@ export const getProviderVenues = async (providerId: string) => {
         image_url
       )
     `)
-    .eq('provider_id', providerId);
+    .eq('provider_id', providerId)
+    .order('created_at', { ascending: false });
 
   if (error) throw error;
   return data;
