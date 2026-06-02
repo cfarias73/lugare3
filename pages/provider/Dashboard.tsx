@@ -103,8 +103,11 @@ const Dashboard: React.FC = () => {
           >
             <span className="material-icons-round">notifications_none</span>
           </button>
-          <button className="w-11 h-11 flex items-center justify-center rounded-2xl bg-white dark:bg-surface-dark shadow-sm border border-slate-100 dark:border-slate-800 text-slate-600 dark:text-slate-300 transition-colors">
-            <span className="material-icons-round">settings</span>
+          <button
+            onClick={() => navigate('/provider/profile')}
+            className="w-11 h-11 flex items-center justify-center rounded-2xl bg-white dark:bg-surface-dark shadow-sm border border-slate-100 dark:border-slate-800 text-slate-600 dark:text-slate-300 transition-colors"
+          >
+            <span className="material-icons-round">account_circle</span>
           </button>
         </div>
       </header>
