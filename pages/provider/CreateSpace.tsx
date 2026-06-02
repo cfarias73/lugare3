@@ -377,7 +377,7 @@ const CreateSpaceContent: React.FC = () => {
               </div>
               {isEdit && (
                 <p className="text-[10px] text-slate-400 leading-relaxed">
-                  Las fotos nuevas se agregarán a las existentes.
+                  Toca la ✕ para eliminar fotos existentes. Las fotos nuevas se agregarán al guardar.
                 </p>
               )}
             </div>
