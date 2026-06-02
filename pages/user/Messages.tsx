@@ -85,6 +85,26 @@ const Messages: React.FC = () => {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
   }, [thread]);
 
+  // Realtime: incoming messages
+  const convIds = useMemo(() => conversations.map((c) => c.id), [conversations]);
+  useMessagesRealtime(
+    !!user && convIds.length > 0,
+    (msg) => {
+      if (msg.sender_id === user?.id) return;
+      if (msg.conversation_id === activeId) {
+        setThread((prev) => (prev.some((m) => m.id === msg.id) ? prev : [...prev, msg]));
+      }
+      setConversations((prev) =>
+        prev.map((c) =>
+          c.id === msg.conversation_id
+            ? { ...c, last_message: msg.content, last_message_at: msg.created_at }
+            : c
+        )
+      );
+    },
+    convIds
+  );
+
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     if (!q) return conversations;
