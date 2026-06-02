@@ -132,8 +132,10 @@ export const getProviderVenues = async (providerId: string) => {
   return data;
 };
 
-export const getProviderBookings = async (providerId: string) => {
-  const { data, error } = await supabase
+export type BookingStatus = 'pending' | 'confirmed' | 'cancelled' | 'completed';
+
+export const getProviderBookings = async (providerId: string, status?: BookingStatus) => {
+  let q = supabase
     .from('bookings')
     .select(`
       *,
@@ -144,11 +146,40 @@ export const getProviderBookings = async (providerId: string) => {
       ),
       profiles (
         name,
-        email
+        email,
+        phone,
+        avatar_url
       )
     `)
-    .eq('venues.provider_id', providerId);
+    .eq('venues.provider_id', providerId)
+    .order('created_at', { ascending: false });
 
+  if (status) q = q.eq('status', status);
+
+  const { data, error } = await q;
   if (error) throw error;
-  return data;
+  return data || [];
+};
+
+export const updateBookingStatus = async (
+  providerId: string,
+  bookingId: string,
+  status: BookingStatus
+) => {
+  // Verify ownership via venue
+  const { data: booking, error: fetchErr } = await supabase
+    .from('bookings')
+    .select('id, user_id, venue_id, event_date, venues!inner(provider_id, name)')
+    .eq('id', bookingId)
+    .single();
+  if (fetchErr) throw fetchErr;
+  // @ts-ignore
+  if (booking.venues.provider_id !== providerId) throw new Error('No autorizado');
+
+  const { error } = await supabase
+    .from('bookings')
+    .update({ status })
+    .eq('id', bookingId);
+  if (error) throw error;
+  return booking;
 };
