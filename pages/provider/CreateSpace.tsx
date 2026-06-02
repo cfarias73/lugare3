@@ -21,6 +21,8 @@ const CreateSpaceContent: React.FC = () => {
   const [loading, setLoading] = React.useState(false);
   const [loadingVenue, setLoadingVenue] = React.useState(isEdit);
   const [files, setFiles] = React.useState<File[]>([]);
+  const [existingImages, setExistingImages] = React.useState<{ id: string; url: string }[]>([]);
+  const [removedExistingIds, setRemovedExistingIds] = React.useState<string[]>([]);
   const [categories, setCategories] = React.useState<Category[]>([]);
 
   useEffect(() => {
