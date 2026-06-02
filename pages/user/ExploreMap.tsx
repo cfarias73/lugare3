@@ -378,7 +378,6 @@ const ExploreMap: React.FC = () => {
                     <input
                       type="date"
                       value={dateFilter}
-                      min={new Date().toISOString().slice(0, 10)}
                       onChange={(e) => setDateFilter(e.target.value)}
                       className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
                     />
