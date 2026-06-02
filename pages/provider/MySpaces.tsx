@@ -33,6 +33,8 @@ const MySpaces: React.FC = () => {
   const [venues, setVenues] = useState<VenueRow[]>([]);
   const [search, setSearch] = useState('');
   const [toggling, setToggling] = useState<string | null>(null);
+  const [deletingVenue, setDeletingVenue] = useState<VenueRow | null>(null);
+
 
   const loadVenues = () => {
     if (!user?.id) return;
