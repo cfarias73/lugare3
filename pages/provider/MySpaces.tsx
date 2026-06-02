@@ -3,6 +3,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import ProviderLayout from '../../components/ProviderLayout';
+import ConfirmationDialog from '../../components/ui/ConfirmationDialog';
 import { useUser } from '../../context/UserContext';
 import { getProviderVenues, updateVenueStatus, deleteVenue } from '../../src/services/providerService';
 
