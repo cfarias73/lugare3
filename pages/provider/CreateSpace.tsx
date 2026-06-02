@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 import { CreateSpaceProvider, useCreateSpace } from '../../context/CreateSpaceContext';
 import { ErrorMessage } from '../../components/ui/ErrorMessage';
 import { useUser } from '../../context/UserContext';
-import { createVenue, updateVenue, getVenueForEdit } from '../../src/services/providerService';
+import { createVenue, updateVenue, getVenueForEdit, deleteVenueImages } from '../../src/services/providerService';
 import { getCategories, Category } from '../../src/services/categoryService';
 
 const RULES = ['No mascotas', 'No fumar', 'Horarios de silencio', 'No fiestas'];
@@ -21,6 +21,8 @@ const CreateSpaceContent: React.FC = () => {
   const [loading, setLoading] = React.useState(false);
   const [loadingVenue, setLoadingVenue] = React.useState(isEdit);
   const [files, setFiles] = React.useState<File[]>([]);
+  const [existingImages, setExistingImages] = React.useState<{ id: string; url: string }[]>([]);
+  const [removedExistingIds, setRemovedExistingIds] = React.useState<string[]>([]);
   const [categories, setCategories] = React.useState<Category[]>([]);
 
   useEffect(() => {
@@ -38,12 +40,15 @@ const CreateSpaceContent: React.FC = () => {
           navigate('/provider/spaces');
           return;
         }
+        const imgs = (v.venue_images ?? []) as { id: string; image_url: string }[];
+        setExistingImages(imgs.map((i) => ({ id: i.id, url: i.image_url })));
+        setRemovedExistingIds([]);
         setData({
           name: v.name ?? '',
           type: v.type ?? 'Jardín',
           capacity: v.capacity?.toString() ?? '',
           description: v.description ?? '',
-          images: (v.venue_images ?? []).map((i: any) => i.image_url),
+          images: imgs.map((i) => i.image_url),
           category: v.category ?? '',
           address: v.location ?? '',
           city: v.city ?? 'CDMX',
@@ -113,6 +118,9 @@ const CreateSpaceContent: React.FC = () => {
         rules: data.rules,
       };
       if (isEdit && venueId) {
+        if (removedExistingIds.length > 0) {
+          await deleteVenueImages(user.id, venueId, removedExistingIds);
+        }
         await updateVenue(user.id, venueId, { ...payload, imageFiles: files });
         toast.success('Espacio actualizado');
       } else {
@@ -150,8 +158,19 @@ const CreateSpaceContent: React.FC = () => {
   };
 
   const removeImage = (index: number) => {
+    const url = data.images[index];
+    // ¿Es existente?
+    const existing = existingImages.find((e) => e.url === url && !removedExistingIds.includes(e.id));
+    if (existing) {
+      setRemovedExistingIds((prev) => [...prev, existing.id]);
+      updateData({ images: data.images.filter((_, i) => i !== index) });
+      return;
+    }
+    // Es nueva: localizar el índice dentro de `files` (las nuevas van después de las existentes vivas)
+    const liveExistingCount = existingImages.filter((e) => !removedExistingIds.includes(e.id)).length;
+    const fileIdx = index - liveExistingCount;
     updateData({ images: data.images.filter((_, i) => i !== index) });
-    setFiles(prev => prev.filter((_, i) => i !== index));
+    setFiles((prev) => prev.filter((_, i) => i !== fileIdx));
   };
 
   const toggleRule = (rule: string) => {
@@ -358,7 +377,7 @@ const CreateSpaceContent: React.FC = () => {
               </div>
               {isEdit && (
                 <p className="text-[10px] text-slate-400 leading-relaxed">
-                  Las fotos nuevas se agregarán a las existentes.
+                  Toca la ✕ para eliminar fotos existentes. Las fotos nuevas se agregarán al guardar.
                 </p>
               )}
             </div>

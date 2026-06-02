@@ -86,12 +86,36 @@ export const updateVenue = async (
 export const getVenueForEdit = async (providerId: string, venueId: string) => {
   const { data, error } = await supabase
     .from('venues')
-    .select('*, venue_images (image_url)')
+    .select('*, venue_images (id, image_url)')
     .eq('id', venueId)
     .eq('provider_id', providerId)
     .maybeSingle();
   if (error) throw error;
   return data;
+};
+
+export const deleteVenueImages = async (
+  providerId: string,
+  venueId: string,
+  imageIds: string[]
+) => {
+  if (imageIds.length === 0) return;
+  // Verificar ownership del venue
+  const { data: venue, error: vErr } = await supabase
+    .from('venues')
+    .select('id')
+    .eq('id', venueId)
+    .eq('provider_id', providerId)
+    .maybeSingle();
+  if (vErr) throw vErr;
+  if (!venue) throw new Error('No autorizado');
+
+  const { error } = await supabase
+    .from('venue_images')
+    .delete()
+    .in('id', imageIds)
+    .eq('venue_id', venueId);
+  if (error) throw error;
 };
 
 export const updateVenueStatus = async (
