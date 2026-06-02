@@ -94,6 +94,28 @@ export const getVenueForEdit = async (providerId: string, venueId: string) => {
   return data;
 };
 
+export const updateVenueStatus = async (
+  providerId: string,
+  venueId: string,
+  status: 'approved' | 'paused' | 'pending'
+) => {
+  const { error } = await supabase
+    .from('venues')
+    .update({ status })
+    .eq('id', venueId)
+    .eq('provider_id', providerId);
+  if (error) throw error;
+};
+
+export const deleteVenue = async (providerId: string, venueId: string) => {
+  const { error } = await supabase
+    .from('venues')
+    .delete()
+    .eq('id', venueId)
+    .eq('provider_id', providerId);
+  if (error) throw error;
+};
+
 export const getProviderVenues = async (providerId: string) => {
   const { data, error } = await supabase
     .from('venues')
