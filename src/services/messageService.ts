@@ -1,4 +1,6 @@
 import { supabase } from '../../lib/supabaseClient';
+import { createNotification } from './notificationService';
+
 
 export interface ConversationRow {
   id: string;
