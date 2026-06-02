@@ -57,3 +57,24 @@ export const getVenuesBlockedOnDate = async (dateStr: string): Promise<Set<strin
   }
   return new Set((data || []).map((r: any) => r.venue_id));
 };
+
+/** Returns Set of 'YYYY-MM-DD' strings for confirmed bookings of the venue in the given month. */
+export const getBookedDatesForMonth = async (
+  venueId: string,
+  year: number,
+  month: number
+): Promise<Set<string>> => {
+  const { start, end } = monthRange(year, month);
+  const { data, error } = await supabase
+    .from('bookings')
+    .select('event_date, status')
+    .eq('venue_id', venueId)
+    .in('status', ['confirmed', 'completed'])
+    .gte('event_date', start)
+    .lte('event_date', end);
+  if (error) {
+    console.warn('Error fetching booked dates', error);
+    return new Set();
+  }
+  return new Set((data || []).map((r: any) => r.event_date));
+};
