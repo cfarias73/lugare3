@@ -40,12 +40,15 @@ const CreateSpaceContent: React.FC = () => {
           navigate('/provider/spaces');
           return;
         }
+        const imgs = (v.venue_images ?? []) as { id: string; image_url: string }[];
+        setExistingImages(imgs.map((i) => ({ id: i.id, url: i.image_url })));
+        setRemovedExistingIds([]);
         setData({
           name: v.name ?? '',
           type: v.type ?? 'Jardín',
           capacity: v.capacity?.toString() ?? '',
           description: v.description ?? '',
-          images: (v.venue_images ?? []).map((i: any) => i.image_url),
+          images: imgs.map((i) => i.image_url),
           category: v.category ?? '',
           address: v.location ?? '',
           city: v.city ?? 'CDMX',
