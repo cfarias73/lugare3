@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ProviderLayout from '../../components/ProviderLayout';
 import { toast } from 'sonner';
-import ConfirmationDialog from '../../components/ui/ConfirmationDialog';
+import RejectBookingDialog from '../../components/ui/RejectBookingDialog';
 import { useUser } from '../../context/UserContext';
 import { getProviderBookings, updateBookingStatus, BookingStatus } from '../../src/services/providerService';
 import { createNotification } from '../../src/services/notificationService';
