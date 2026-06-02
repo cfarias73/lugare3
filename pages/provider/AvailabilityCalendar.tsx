@@ -4,11 +4,14 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import ProviderLayout from '../../components/ProviderLayout';
 import { toast } from 'sonner';
 import { supabase } from '../../lib/supabaseClient';
+import { useUser } from '../../context/UserContext';
 import {
   getBlockedDatesForMonth,
+  getBookedDatesForMonth,
   blockDate,
   unblockDate,
 } from '../../src/services/availabilityService';
+import { getProviderVenues } from '../../src/services/providerService';
 
 const MONTH_NAMES = [
   'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
