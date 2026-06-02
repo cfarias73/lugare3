@@ -158,8 +158,19 @@ const CreateSpaceContent: React.FC = () => {
   };
 
   const removeImage = (index: number) => {
+    const url = data.images[index];
+    // ¿Es existente?
+    const existing = existingImages.find((e) => e.url === url && !removedExistingIds.includes(e.id));
+    if (existing) {
+      setRemovedExistingIds((prev) => [...prev, existing.id]);
+      updateData({ images: data.images.filter((_, i) => i !== index) });
+      return;
+    }
+    // Es nueva: localizar el índice dentro de `files` (las nuevas van después de las existentes vivas)
+    const liveExistingCount = existingImages.filter((e) => !removedExistingIds.includes(e.id)).length;
+    const fileIdx = index - liveExistingCount;
     updateData({ images: data.images.filter((_, i) => i !== index) });
-    setFiles(prev => prev.filter((_, i) => i !== index));
+    setFiles((prev) => prev.filter((_, i) => i !== fileIdx));
   };
 
   const toggleRule = (rule: string) => {
