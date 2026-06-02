@@ -1,8 +1,9 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { MOCK_VENUES } from '../../constants';
 import { supabase } from '../../lib/supabaseClient';
+import { getBlockedDatesForMonth } from '../../src/services/availabilityService';
 
 const SLOT_TIMES = {
   morning: { start: '08:00:00', end: '13:00:00', hours: 5 },
@@ -10,17 +11,31 @@ const SLOT_TIMES = {
   night: { start: '20:00:00', end: '02:00:00', hours: 6 },
 } as const;
 
+const MONTH_NAMES = [
+  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
+];
+
+const pad = (n: number) => String(n).padStart(2, '0');
+const toDateStr = (y: number, m: number, d: number) => `${y}-${pad(m + 1)}-${pad(d)}`;
+
 const BookingCalendar: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
+  const today = new Date();
+  const [year, setYear] = useState(today.getFullYear());
+  const [month, setMonth] = useState(today.getMonth());
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [selectedSlot, setSelectedSlot] = useState<'morning' | 'afternoon' | 'night' | null>(null);
   const [extraHours, setExtraHours] = useState<number>(0);
   const [venue, setVenue] = useState<any>(MOCK_VENUES[0]);
+  const [blockedDates, setBlockedDates] = useState<Set<string>>(new Set());
+  const [bookedDates, setBookedDates] = useState<Set<string>>(new Set());
+
+  const isUuid = id ? /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id) : false;
 
   useEffect(() => {
     if (!id) return;
-    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
     if (!isUuid) {
       const mock = MOCK_VENUES.find(v => v.id === id);
       if (mock) setVenue(mock);
@@ -45,24 +60,65 @@ const BookingCalendar: React.FC = () => {
           });
         }
       });
-  }, [id]);
+  }, [id, isUuid]);
 
-  const days = Array.from({ length: 31 }, (_, i) => i + 1);
+  // Load blocked + booked dates for the visible month
+  useEffect(() => {
+    if (!id || !isUuid) {
+      setBlockedDates(new Set());
+      setBookedDates(new Set());
+      return;
+    }
+    let cancelled = false;
+    const start = toDateStr(year, month, 1);
+    const end = toDateStr(year, month, new Date(year, month + 1, 0).getDate());
 
-  // Simulate unavailable days (e.g., weekends or random days)
-  const unavailableDays = [5, 12, 19, 26, 15, 16];
+    Promise.all([
+      getBlockedDatesForMonth(id, year, month),
+      supabase
+        .from('bookings')
+        .select('event_date')
+        .eq('venue_id', id)
+        .in('status', ['pending', 'confirmed', 'paid'])
+        .gte('event_date', start)
+        .lte('event_date', end),
+    ]).then(([blocked, { data: bookings }]) => {
+      if (cancelled) return;
+      setBlockedDates(blocked);
+      setBookedDates(new Set((bookings || []).map((b: any) => b.event_date)));
+    });
+    return () => { cancelled = true; };
+  }, [id, isUuid, year, month]);
+
+  const daysInMonth = useMemo(() => new Date(year, month + 1, 0).getDate(), [year, month]);
+  const firstDayOffset = useMemo(() => {
+    const dow = new Date(year, month, 1).getDay();
+    return (dow + 6) % 7;
+  }, [year, month]);
+
+  const goPrevMonth = () => {
+    setSelectedDay(null);
+    setSelectedSlot(null);
+    if (month === 0) { setYear(y => y - 1); setMonth(11); }
+    else setMonth(m => m - 1);
+  };
+  const goNextMonth = () => {
+    setSelectedDay(null);
+    setSelectedSlot(null);
+    if (month === 11) { setYear(y => y + 1); setMonth(0); }
+    else setMonth(m => m + 1);
+  };
 
   const handleContinue = () => {
     if (selectedDay && selectedSlot) {
       const slot = SLOT_TIMES[selectedSlot];
       const totalHours = slot.hours + extraHours;
-      // Extend end time by extraHours
       const [eh, em, es] = slot.end.split(':').map(Number);
       const endDate = new Date(2000, 0, 1, eh, em, es);
       endDate.setHours(endDate.getHours() + extraHours);
-      const pad = (n: number) => String(n).padStart(2, '0');
-      const newEnd = `${pad(endDate.getHours())}:${pad(endDate.getMinutes())}:${pad(endDate.getSeconds())}`;
-      const date = `2025-10-${String(selectedDay).padStart(2, '0')}`;
+      const padN = (n: number) => String(n).padStart(2, '0');
+      const newEnd = `${padN(endDate.getHours())}:${padN(endDate.getMinutes())}:${padN(endDate.getSeconds())}`;
+      const date = toDateStr(year, month, selectedDay);
       const params = new URLSearchParams({
         date,
         start: slot.start,
@@ -111,28 +167,30 @@ const BookingCalendar: React.FC = () => {
 
         <section className="mt-4 px-4">
           <div className="flex items-center justify-between mb-6">
-            <button className="p-1"><span className="material-icons-round">chevron_left</span></button>
-            <h3 className="font-semibold text-base">Octubre 2025</h3>
-            <button className="p-1"><span className="material-icons-round">chevron_right</span></button>
+            <button onClick={goPrevMonth} className="p-1"><span className="material-icons-round">chevron_left</span></button>
+            <h3 className="font-semibold text-base">{MONTH_NAMES[month]} {year}</h3>
+            <button onClick={goNextMonth} className="p-1"><span className="material-icons-round">chevron_right</span></button>
           </div>
           <div className="grid grid-cols-7 text-center text-xs font-medium text-gray-400 dark:text-gray-500 mb-2">
             <div>L</div><div>M</div><div>X</div><div>J</div><div>V</div><div>S</div><div>D</div>
           </div>
           <div className="grid grid-cols-7 gap-1 text-sm">
-            {/* Empty placeholders for calendar start day offset */}
-            <div className="h-10"></div><div className="h-10"></div>
-            {days.map((day) => {
-              const isUnavailable = unavailableDays.includes(day);
+            {Array.from({ length: firstDayOffset }).map((_, i) => (
+              <div key={`empty-${i}`} className="h-10" />
+            ))}
+            {Array.from({ length: daysInMonth }, (_, i) => i + 1).map((day) => {
+              const dateStr = toDateStr(year, month, day);
+              const isUnavailable = blockedDates.has(dateStr) || bookedDates.has(dateStr);
               return (
-                <button 
+                <button
                   key={day}
                   onClick={() => !isUnavailable && setSelectedDay(day)}
                   disabled={isUnavailable}
                   className={`h-10 flex items-center justify-center rounded-lg transition-all ${
-                    isUnavailable 
-                      ? 'text-slate-300 dark:text-slate-600 cursor-not-allowed line-through' 
-                      : selectedDay === day 
-                        ? 'bg-primary text-white font-bold shadow-md' 
+                    isUnavailable
+                      ? 'text-slate-300 dark:text-slate-600 cursor-not-allowed line-through'
+                      : selectedDay === day
+                        ? 'bg-primary text-white font-bold shadow-md'
                         : 'hover:bg-slate-100 dark:hover:bg-slate-800'
                   }`}
                 >
@@ -145,25 +203,25 @@ const BookingCalendar: React.FC = () => {
 
         {selectedDay && (
           <section className="mt-6 px-4 animate-in fade-in slide-in-from-bottom-4">
-            <h4 className="text-base font-semibold">Día {selectedDay} de Octubre</h4>
+            <h4 className="text-base font-semibold">Día {selectedDay} de {MONTH_NAMES[month]}</h4>
             <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">Selecciona la hora para tu reserva</p>
-            
+
             <div className="grid grid-cols-3 gap-2">
-              <button 
+              <button
                 onClick={() => setSelectedSlot('morning')}
                 className={`p-3 rounded-xl text-center border transition-all ${selectedSlot === 'morning' ? 'border-secondary bg-secondary/5' : 'border-slate-100 dark:border-slate-800'}`}
               >
                 <div className={`text-[10px] ${selectedSlot === 'morning' ? 'text-secondary font-medium' : 'text-slate-400'}`}>Mañana</div>
                 <div className={`text-xs font-bold mt-1 ${selectedSlot === 'morning' ? 'text-secondary' : ''}`}>8:00 - 13:00</div>
               </button>
-              <button 
+              <button
                 onClick={() => setSelectedSlot('afternoon')}
                 className={`p-3 rounded-xl text-center border transition-all ${selectedSlot === 'afternoon' ? 'border-secondary bg-secondary/5' : 'border-slate-100 dark:border-slate-800'}`}
               >
                 <div className={`text-[10px] ${selectedSlot === 'afternoon' ? 'text-secondary font-medium' : 'text-slate-400'}`}>Tarde</div>
                 <div className={`text-xs font-bold mt-1 ${selectedSlot === 'afternoon' ? 'text-secondary' : ''}`}>14:00 - 19:00</div>
               </button>
-              <button 
+              <button
                 onClick={() => setSelectedSlot('night')}
                 className={`p-3 rounded-xl text-center border transition-all ${selectedSlot === 'night' ? 'border-secondary bg-secondary/5' : 'border-slate-100 dark:border-slate-800'}`}
               >
@@ -243,12 +301,12 @@ const BookingCalendar: React.FC = () => {
           <div className="text-[10px] text-gray-400">Precio estimado</div>
           <div className="text-lg font-bold text-slate-900 dark:text-white">${estimatedTotal.toLocaleString()} MXN</div>
         </div>
-        <button 
+        <button
           onClick={handleContinue}
           disabled={!selectedDay || !selectedSlot}
           className={`font-semibold px-8 py-3.5 rounded-2xl shadow-lg transition-transform ${
-            selectedDay && selectedSlot 
-              ? 'bg-primary hover:bg-orange-600 text-white shadow-primary/20 active:scale-95' 
+            selectedDay && selectedSlot
+              ? 'bg-primary hover:bg-orange-600 text-white shadow-primary/20 active:scale-95'
               : 'bg-slate-200 dark:bg-slate-800 text-slate-400 cursor-not-allowed'
           }`}
         >

@@ -98,7 +98,7 @@ const ExploreMap: React.FC = () => {
     fetchVenues();
   }, []);
 
-  // Fetch venues booked on the selected date
+  // Fetch venues booked OR blocked on the selected date
   useEffect(() => {
     if (!dateFilter) {
       setUnavailableVenueIds(new Set());
@@ -106,18 +106,24 @@ const ExploreMap: React.FC = () => {
     }
     let cancelled = false;
     (async () => {
-      const { data, error } = await supabase
-        .from('bookings')
-        .select('venue_id, status')
-        .eq('event_date', dateFilter)
-        .in('status', ['pending', 'confirmed', 'paid']);
+      const [bookingsRes, blockedRes] = await Promise.all([
+        supabase
+          .from('bookings')
+          .select('venue_id')
+          .eq('event_date', dateFilter)
+          .in('status', ['pending', 'confirmed', 'paid']),
+        supabase
+          .from('venue_blocked_dates')
+          .select('venue_id')
+          .eq('blocked_date', dateFilter),
+      ]);
       if (cancelled) return;
-      if (error) {
-        console.warn('Error fetching availability', error);
-        setUnavailableVenueIds(new Set());
-        return;
-      }
-      setUnavailableVenueIds(new Set((data || []).map((b: any) => b.venue_id)));
+      const ids = new Set<string>();
+      (bookingsRes.data || []).forEach((b: any) => ids.add(b.venue_id));
+      (blockedRes.data || []).forEach((b: any) => ids.add(b.venue_id));
+      if (bookingsRes.error) console.warn('Error fetching bookings availability', bookingsRes.error);
+      if (blockedRes.error) console.warn('Error fetching blocked dates availability', blockedRes.error);
+      setUnavailableVenueIds(ids);
     })();
     return () => { cancelled = true; };
   }, [dateFilter]);
