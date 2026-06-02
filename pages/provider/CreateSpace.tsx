@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 import { CreateSpaceProvider, useCreateSpace } from '../../context/CreateSpaceContext';
 import { ErrorMessage } from '../../components/ui/ErrorMessage';
 import { useUser } from '../../context/UserContext';
-import { createVenue, updateVenue, getVenueForEdit } from '../../src/services/providerService';
+import { createVenue, updateVenue, getVenueForEdit, deleteVenueImages } from '../../src/services/providerService';
 import { getCategories, Category } from '../../src/services/categoryService';
 
 const RULES = ['No mascotas', 'No fumar', 'Horarios de silencio', 'No fiestas'];
