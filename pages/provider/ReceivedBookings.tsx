@@ -14,8 +14,8 @@ const ReceivedBookings: React.FC = () => {
   const [bookings, setBookings] = useState<any[]>([]);
 
   useEffect(() => {
-    if (user?.email) {
-      getProviderBookings(user.email).then(data => {
+    if (user?.id) {
+      getProviderBookings(user.id).then(data => {
         setBookings(data.map(b => ({
           id: b.id,
           guest: b.profiles?.name || 'Invitado',
