@@ -43,3 +43,21 @@ export const deleteNotification = async (id: string) => {
   const { error } = await supabase.from('notifications').delete().eq('id', id);
   if (error) throw error;
 };
+
+export const createNotification = async (params: {
+  userId: string;
+  title: string;
+  message: string;
+  type?: 'info' | 'success' | 'warning' | 'error';
+  link?: string | null;
+}) => {
+  const { error } = await supabase.from('notifications').insert({
+    user_id: params.userId,
+    title: params.title,
+    message: params.message,
+    type: params.type ?? 'info',
+    link: params.link ?? null,
+    read: false,
+  });
+  if (error) console.error('createNotification error', error);
+};
