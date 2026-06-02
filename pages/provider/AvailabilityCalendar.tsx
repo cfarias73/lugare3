@@ -94,10 +94,14 @@ const AvailabilityCalendar: React.FC = () => {
 
   const toggleBlockedDate = async (day: number) => {
     if (!venueId) {
-      toast.error('No se especificó el espacio');
+      toast.error('Selecciona primero un espacio');
       return;
     }
     const dateStr = toDateStr(year, month, day);
+    if (bookedDates.has(dateStr)) {
+      toast.error('Este día ya tiene una reserva confirmada');
+      return;
+    }
     const wasBlocked = blockedDates.has(dateStr);
     // optimistic
     setBlockedDates(prev => {
@@ -122,6 +126,12 @@ const AvailabilityCalendar: React.FC = () => {
       });
       toast.error(e.message || 'No se pudo guardar el cambio');
     }
+  };
+
+  const handleVenueChange = (id: string) => {
+    const next = new URLSearchParams(searchParams);
+    if (id) next.set('venueId', id); else next.delete('venueId');
+    setSearchParams(next, { replace: true });
   };
 
   const Content = (
