@@ -62,6 +62,33 @@ const ExploreMap: React.FC = () => {
   const [locating, setLocating] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
   const [unavailableVenueIds, setUnavailableVenueIds] = useState<Set<string>>(new Set());
+  const [searching, setSearching] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
+
+  const runSearch = React.useCallback(async (raw: string) => {
+    const q = raw.trim();
+    setSearchError(null);
+    if (!q) return;
+    setSearching(true);
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=mx&q=${encodeURIComponent(q)}`,
+        { headers: { 'Accept-Language': 'es' } }
+      );
+      const data = await res.json();
+      if (Array.isArray(data) && data[0]) {
+        setMapCenter([parseFloat(data[0].lat), parseFloat(data[0].lon)]);
+        setZoom(12);
+      } else {
+        setSearchError('No se encontró esa ubicación.');
+      }
+    } catch (err) {
+      console.error('Geocoding failed', err);
+      setSearchError('Error al buscar la ubicación. Intenta de nuevo.');
+    } finally {
+      setSearching(false);
+    }
+  }, []);
 
   useEffect(() => {
     const fetchVenues = async () => {
