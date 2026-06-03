@@ -66,3 +66,47 @@ export const getVenuesByIds = async (ids: string[]): Promise<Venue[]> => {
   }
   return (data || []).map(mapVenue);
 };
+
+export interface PublicVenueService {
+  id: string;
+  name: string;
+  description: string | null;
+  price: number;
+}
+
+export const getVenueServices = async (venueId: string): Promise<PublicVenueService[]> => {
+  const { data, error } = await supabase
+    .from('venue_services')
+    .select('id, name, description, price')
+    .eq('venue_id', venueId)
+    .order('created_at', { ascending: true });
+  if (error) {
+    console.warn('Error fetching venue services', error);
+    return [];
+  }
+  return (data || []).map((s: any) => ({
+    id: s.id,
+    name: s.name,
+    description: s.description,
+    price: Number(s.price) || 0,
+  }));
+};
+
+export const getServicesByIds = async (ids: string[]): Promise<PublicVenueService[]> => {
+  if (ids.length === 0) return [];
+  const { data, error } = await supabase
+    .from('venue_services')
+    .select('id, name, description, price')
+    .in('id', ids);
+  if (error) {
+    console.warn('Error fetching services by ids', error);
+    return [];
+  }
+  return (data || []).map((s: any) => ({
+    id: s.id,
+    name: s.name,
+    description: s.description,
+    price: Number(s.price) || 0,
+  }));
+};
+

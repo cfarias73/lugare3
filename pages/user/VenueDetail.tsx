@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { getVenueById } from '../../src/services/venueService';
+import { getVenueById, getVenueServices, PublicVenueService } from '../../src/services/venueService';
 import { useUser } from '../../context/UserContext';
 import { Venue } from '../../types';
 
@@ -12,6 +12,8 @@ const VenueDetail: React.FC = () => {
   const [isSummaryExpanded, setIsSummaryExpanded] = useState(false);
   const [venue, setVenue] = useState<Venue | null>(null);
   const [loading, setLoading] = useState(true);
+  const [extras, setExtras] = useState<PublicVenueService[]>([]);
+  const [selectedExtras, setSelectedExtras] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (!id) return;
@@ -20,7 +22,28 @@ const VenueDetail: React.FC = () => {
       setVenue(v);
       setLoading(false);
     });
+    getVenueServices(id).then(setExtras).catch(() => setExtras([]));
   }, [id]);
+
+  const toggleExtra = (sid: string) => {
+    setSelectedExtras(prev => {
+      const next = new Set(prev);
+      if (next.has(sid)) next.delete(sid); else next.add(sid);
+      return next;
+    });
+  };
+
+  const goToBooking = () => {
+    if (!venue) return;
+    const ids = Array.from(selectedExtras);
+    const qs = ids.length ? `?services=${ids.join(',')}` : '';
+    navigate(`/user/booking/${venue.id}${qs}`);
+  };
+
+  const extrasTotal = extras
+    .filter(e => selectedExtras.has(e.id))
+    .reduce((sum, e) => sum + e.price, 0);
+
 
   const handleShare = async () => {
     if (!venue) return;
