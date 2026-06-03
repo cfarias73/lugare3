@@ -194,7 +194,59 @@ const VenueDetail: React.FC = () => {
             </div>
           </section>
 
+          {extras.length > 0 && (
+            <>
+              <hr className="border-slate-100 dark:border-slate-800"/>
+              <section>
+                <div className="flex items-baseline justify-between mb-4">
+                  <h2 className="text-lg font-bold font-display">Servicios opcionales</h2>
+                  <span className="text-[11px] text-slate-400 font-bold uppercase tracking-widest">Selecciona</span>
+                </div>
+                <div className="space-y-3">
+                  {extras.map((s) => {
+                    const checked = selectedExtras.has(s.id);
+                    return (
+                      <button
+                        key={s.id}
+                        onClick={() => toggleExtra(s.id)}
+                        className={`w-full text-left p-4 rounded-2xl border-2 transition-all ${
+                          checked
+                            ? 'border-primary bg-primary/5'
+                            : 'border-slate-100 dark:border-slate-800 bg-white dark:bg-surface-dark'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className={`w-6 h-6 rounded-md flex-shrink-0 flex items-center justify-center border-2 ${
+                              checked ? 'bg-primary border-primary text-white' : 'border-slate-300 dark:border-slate-600'
+                            }`}>
+                              {checked && <span className="material-icons-outlined text-[16px]">check</span>}
+                            </div>
+                            <div className="min-w-0">
+                              <p className="font-bold text-sm dark:text-white truncate">{s.name}</p>
+                              {s.description && (
+                                <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug line-clamp-2">{s.description}</p>
+                              )}
+                            </div>
+                          </div>
+                          <span className="font-bold text-primary text-sm flex-shrink-0">+${s.price.toLocaleString()}</span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+                {extrasTotal > 0 && (
+                  <div className="mt-4 flex justify-between items-center bg-orange-50 dark:bg-orange-900/10 px-4 py-3 rounded-xl border border-orange-100 dark:border-orange-800/30">
+                    <span className="text-xs font-bold text-primary uppercase tracking-widest">Extras seleccionados</span>
+                    <span className="font-bold text-primary">+${extrasTotal.toLocaleString()} MXN</span>
+                  </div>
+                )}
+              </section>
+            </>
+          )}
+
           <hr className="border-slate-100 dark:border-slate-800"/>
+
 
           <section>
             <h2 className="text-lg font-bold mb-4 font-display">Ubicación</h2>
