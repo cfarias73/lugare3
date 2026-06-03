@@ -140,11 +140,12 @@ const VenueDetail: React.FC = () => {
             <div className={`transition-all duration-500 ease-in-out overflow-hidden ${isSummaryExpanded ? 'max-h-[400px] opacity-100' : 'max-h-0 opacity-0'}`}>
               <div className="px-5 pb-6 pt-2 space-y-4 border-t border-orange-100/50 dark:border-orange-800/20">
                 <button
-                  onClick={() => navigate(`/user/booking/${venue.id}`)}
+                  onClick={goToBooking}
                   className="w-full py-3 bg-primary text-white text-sm font-bold rounded-xl shadow-lg shadow-primary/20"
                 >
                   Elegir fecha y horario
                 </button>
+
               </div>
             </div>
           </div>
