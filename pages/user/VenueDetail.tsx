@@ -284,11 +284,12 @@ const VenueDetail: React.FC = () => {
               <span className="material-icons-outlined">chat_bubble_outline</span>
             </button>
             <button
-              onClick={() => navigate(`/user/booking/${venue.id}`)}
+              onClick={goToBooking}
               className="bg-primary hover:bg-orange-600 text-white font-bold px-6 py-4 rounded-2xl shadow-lg shadow-primary/20 transition-all active:scale-[0.98]"
             >
               Reservar
             </button>
+
           </div>
         </div>
       </div>
