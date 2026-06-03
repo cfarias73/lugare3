@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { getVenueById } from '../../src/services/venueService';
+import { getVenueById, getVenueServices, PublicVenueService } from '../../src/services/venueService';
 import { useUser } from '../../context/UserContext';
 import { Venue } from '../../types';
 
@@ -12,6 +12,8 @@ const VenueDetail: React.FC = () => {
   const [isSummaryExpanded, setIsSummaryExpanded] = useState(false);
   const [venue, setVenue] = useState<Venue | null>(null);
   const [loading, setLoading] = useState(true);
+  const [extras, setExtras] = useState<PublicVenueService[]>([]);
+  const [selectedExtras, setSelectedExtras] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (!id) return;
@@ -20,7 +22,28 @@ const VenueDetail: React.FC = () => {
       setVenue(v);
       setLoading(false);
     });
+    getVenueServices(id).then(setExtras).catch(() => setExtras([]));
   }, [id]);
+
+  const toggleExtra = (sid: string) => {
+    setSelectedExtras(prev => {
+      const next = new Set(prev);
+      if (next.has(sid)) next.delete(sid); else next.add(sid);
+      return next;
+    });
+  };
+
+  const goToBooking = () => {
+    if (!venue) return;
+    const ids = Array.from(selectedExtras);
+    const qs = ids.length ? `?services=${ids.join(',')}` : '';
+    navigate(`/user/booking/${venue.id}${qs}`);
+  };
+
+  const extrasTotal = extras
+    .filter(e => selectedExtras.has(e.id))
+    .reduce((sum, e) => sum + e.price, 0);
+
 
   const handleShare = async () => {
     if (!venue) return;
@@ -117,11 +140,12 @@ const VenueDetail: React.FC = () => {
             <div className={`transition-all duration-500 ease-in-out overflow-hidden ${isSummaryExpanded ? 'max-h-[400px] opacity-100' : 'max-h-0 opacity-0'}`}>
               <div className="px-5 pb-6 pt-2 space-y-4 border-t border-orange-100/50 dark:border-orange-800/20">
                 <button
-                  onClick={() => navigate(`/user/booking/${venue.id}`)}
+                  onClick={goToBooking}
                   className="w-full py-3 bg-primary text-white text-sm font-bold rounded-xl shadow-lg shadow-primary/20"
                 >
                   Elegir fecha y horario
                 </button>
+
               </div>
             </div>
           </div>
@@ -171,7 +195,59 @@ const VenueDetail: React.FC = () => {
             </div>
           </section>
 
+          {extras.length > 0 && (
+            <>
+              <hr className="border-slate-100 dark:border-slate-800"/>
+              <section>
+                <div className="flex items-baseline justify-between mb-4">
+                  <h2 className="text-lg font-bold font-display">Servicios opcionales</h2>
+                  <span className="text-[11px] text-slate-400 font-bold uppercase tracking-widest">Selecciona</span>
+                </div>
+                <div className="space-y-3">
+                  {extras.map((s) => {
+                    const checked = selectedExtras.has(s.id);
+                    return (
+                      <button
+                        key={s.id}
+                        onClick={() => toggleExtra(s.id)}
+                        className={`w-full text-left p-4 rounded-2xl border-2 transition-all ${
+                          checked
+                            ? 'border-primary bg-primary/5'
+                            : 'border-slate-100 dark:border-slate-800 bg-white dark:bg-surface-dark'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className={`w-6 h-6 rounded-md flex-shrink-0 flex items-center justify-center border-2 ${
+                              checked ? 'bg-primary border-primary text-white' : 'border-slate-300 dark:border-slate-600'
+                            }`}>
+                              {checked && <span className="material-icons-outlined text-[16px]">check</span>}
+                            </div>
+                            <div className="min-w-0">
+                              <p className="font-bold text-sm dark:text-white truncate">{s.name}</p>
+                              {s.description && (
+                                <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug line-clamp-2">{s.description}</p>
+                              )}
+                            </div>
+                          </div>
+                          <span className="font-bold text-primary text-sm flex-shrink-0">+${s.price.toLocaleString()}</span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+                {extrasTotal > 0 && (
+                  <div className="mt-4 flex justify-between items-center bg-orange-50 dark:bg-orange-900/10 px-4 py-3 rounded-xl border border-orange-100 dark:border-orange-800/30">
+                    <span className="text-xs font-bold text-primary uppercase tracking-widest">Extras seleccionados</span>
+                    <span className="font-bold text-primary">+${extrasTotal.toLocaleString()} MXN</span>
+                  </div>
+                )}
+              </section>
+            </>
+          )}
+
           <hr className="border-slate-100 dark:border-slate-800"/>
+
 
           <section>
             <h2 className="text-lg font-bold mb-4 font-display">Ubicación</h2>
@@ -209,11 +285,12 @@ const VenueDetail: React.FC = () => {
               <span className="material-icons-outlined">chat_bubble_outline</span>
             </button>
             <button
-              onClick={() => navigate(`/user/booking/${venue.id}`)}
+              onClick={goToBooking}
               className="bg-primary hover:bg-orange-600 text-white font-bold px-6 py-4 rounded-2xl shadow-lg shadow-primary/20 transition-all active:scale-[0.98]"
             >
               Reservar
             </button>
+
           </div>
         </div>
       </div>
