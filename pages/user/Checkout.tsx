@@ -70,8 +70,11 @@ const Checkout: React.FC = () => {
           end_time: endTime,
           guest_count: guestCount,
           hours,
+          service_ids: serviceIds,
+          extras_total: extrasTotal,
           origin: window.location.origin,
         }),
+
       });
 
       const data = await res.json();
@@ -139,10 +142,24 @@ const Checkout: React.FC = () => {
               <span className="text-slate-600 dark:text-slate-400">Espacio (${venue.price_per_hour}/h × {hours}h)</span>
               <span className="font-medium">${subtotal.toLocaleString()}</span>
             </div>
+            {extras.length > 0 && (
+              <>
+                <div className="pt-2">
+                  <p className="text-[10px] uppercase tracking-wider text-slate-400 font-bold mb-2">Servicios extra</p>
+                  {extras.map((e) => (
+                    <div key={e.id} className="flex justify-between text-sm py-1">
+                      <span className="text-slate-600 dark:text-slate-400 truncate pr-2">{e.name}</span>
+                      <span className="font-medium flex-shrink-0">+${e.price.toLocaleString()}</span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
             <div className="flex justify-between text-sm">
               <span className="text-slate-600 dark:text-slate-400">Cargo por procesamiento</span>
               <span className="font-medium">${stripeFee.toLocaleString()}</span>
             </div>
+
             <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex justify-between">
               <span className="font-bold text-slate-800 dark:text-white">Total</span>
               <span className="font-bold text-primary text-lg font-display">${total.toLocaleString()} MXN</span>
