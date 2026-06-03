@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+
 import { MOCK_VENUES } from '../../constants';
 import { supabase } from '../../lib/supabaseClient';
 import { getBlockedDatesForMonth } from '../../src/services/availabilityService';
@@ -22,6 +23,9 @@ const toDateStr = (y: number, m: number, d: number) => `${y}-${pad(m + 1)}-${pad
 const BookingCalendar: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
+  const [searchParams] = useSearchParams();
+  const servicesParam = searchParams.get('services') || '';
+
   const today = new Date();
   const [year, setYear] = useState(today.getFullYear());
   const [month, setMonth] = useState(today.getMonth());
@@ -126,7 +130,9 @@ const BookingCalendar: React.FC = () => {
         hours: String(totalHours),
         guests: '10',
       });
+      if (servicesParam) params.set('services', servicesParam);
       navigate(`/user/checkout/${id}?${params.toString()}`);
+
     } else {
       alert('Por favor selecciona un día y un horario.');
     }
