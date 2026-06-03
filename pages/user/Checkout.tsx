@@ -3,6 +3,7 @@ import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { useUser } from '../../context/UserContext';
 import { toast } from 'sonner';
 import { supabase } from '../../lib/supabaseClient';
+import { getServicesByIds, PublicVenueService } from '../../src/services/venueService';
 
 const Checkout: React.FC = () => {
   const navigate = useNavigate();
@@ -12,6 +13,7 @@ const Checkout: React.FC = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [venue, setVenue] = useState<any>(null);
   const [settings, setSettings] = useState<{ commission_percent: number }>({ commission_percent: 10 });
+  const [extras, setExtras] = useState<PublicVenueService[]>([]);
 
   // Booking details (from query params or defaults)
   const params = new URLSearchParams(location.search);
@@ -20,6 +22,7 @@ const Checkout: React.FC = () => {
   const endTime = params.get('end') || '23:00:00';
   const hours = Number(params.get('hours') || 4);
   const guestCount = Number(params.get('guests') || 10);
+  const serviceIds = (params.get('services') || '').split(',').filter(Boolean);
 
   useEffect(() => {
     supabase.from('venues').select('*').eq('id', id).single().then(({ data }) => setVenue(data));
@@ -28,13 +31,20 @@ const Checkout: React.FC = () => {
     });
   }, [id]);
 
+  useEffect(() => {
+    if (serviceIds.length === 0) { setExtras([]); return; }
+    getServicesByIds(serviceIds).then(setExtras).catch(() => setExtras([]));
+  }, [params.get('services')]);
+
   if (!venue) {
     return <div className="p-6 text-center">Cargando...</div>;
   }
 
   const subtotal = venue.price_per_hour * hours;
-  const stripeFee = Math.round(subtotal * 0.036 + 3);
-  const total = subtotal + stripeFee;
+  const extrasTotal = extras.reduce((sum, e) => sum + e.price, 0);
+  const stripeFee = Math.round((subtotal + extrasTotal) * 0.036 + 3);
+  const total = subtotal + extrasTotal + stripeFee;
+
 
   const handlePayment = async () => {
     if (!user) {
