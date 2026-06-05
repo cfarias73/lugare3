@@ -12,6 +12,7 @@ import {
   unblockDate,
 } from '../../src/services/availabilityService';
 import { getProviderVenues } from '../../src/services/providerService';
+import BulkBlockDatesModal from '../../components/BulkBlockDatesModal';
 
 const MONTH_NAMES = [
   'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
@@ -36,6 +37,8 @@ const AvailabilityCalendar: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [venueName, setVenueName] = useState<string>('');
   const [venues, setVenues] = useState<Array<{ id: string; name: string }>>([]);
+  const [bulkOpen, setBulkOpen] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
 
   // Load provider venues for the selector
   useEffect(() => {
@@ -74,7 +77,7 @@ const AvailabilityCalendar: React.FC = () => {
       }
     });
     return () => { cancelled = true; };
-  }, [venueId, year, month]);
+  }, [venueId, year, month, reloadKey]);
 
   const daysInMonth = useMemo(() => new Date(year, month + 1, 0).getDate(), [year, month]);
   // Day-of-week of the 1st (0=Sunday). Convert to Monday-first offset.
