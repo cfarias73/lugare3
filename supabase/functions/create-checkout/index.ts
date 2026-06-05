@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Supabase Edge Function: create-checkout
 // Deploy con:  supabase functions deploy create-checkout
 //
