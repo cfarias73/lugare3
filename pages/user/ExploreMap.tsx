@@ -279,6 +279,14 @@ const ExploreMap: React.FC = () => {
           <div className="relative">
             <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
               <button
+                onClick={() => setOpenFilter(openFilter === 'category' ? null : 'category')}
+                className={chipClass(selectedCategory !== null)}
+              >
+                <span className="material-icons-round text-sm">category</span>
+                <span>{selectedCategory ? (categories.find(c => c.slug === selectedCategory)?.name || 'Categoría') : 'Categoría'}</span>
+                <span className="material-icons-round text-sm">expand_more</span>
+              </button>
+              <button
                 onClick={() => setOpenFilter(openFilter === 'price' ? null : 'price')}
                 className={chipClass(priceRange !== null || isCustomPriceActive)}
               >
