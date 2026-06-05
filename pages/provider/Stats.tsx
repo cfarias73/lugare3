@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import ProviderLayout from '../../components/ProviderLayout';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { useUser } from '../../context/UserContext';
-import { getProviderStats, ProviderStats } from '../../src/services/providerService';
+import { getProviderStats, ProviderStats, getProviderVenues } from '../../src/services/providerService';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { EmptyState } from '../../components/ui/EmptyState';
 
@@ -26,17 +26,26 @@ const Stats: React.FC = () => {
   const [refDate, setRefDate] = useState(() => new Date());
   const [stats, setStats] = useState<ProviderStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [venues, setVenues] = useState<{ id: string; name: string }[]>([]);
+  const [selectedVenueId, setSelectedVenueId] = useState<string>('all');
+
+  useEffect(() => {
+    if (!user) return;
+    getProviderVenues(user.id)
+      .then((vs: any[]) => setVenues((vs || []).map((v) => ({ id: v.id, name: v.name }))))
+      .catch(() => {});
+  }, [user]);
 
   const load = useCallback(async () => {
     if (!user) return;
     setLoading(true);
     try {
-      const s = await getProviderStats(user.id, refDate);
+      const s = await getProviderStats(user.id, refDate, selectedVenueId === 'all' ? null : selectedVenueId);
       setStats(s);
     } finally {
       setLoading(false);
     }
-  }, [user, refDate]);
+  }, [user, refDate, selectedVenueId]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -71,6 +80,27 @@ const Stats: React.FC = () => {
             <span className="material-icons-round">chevron_right</span>
           </button>
         </div>
+
+        {/* Venue filter */}
+        {venues.length > 0 && (
+          <div className="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-slate-50 dark:border-slate-700">
+            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block">Filtrar por espacio</label>
+            <div className="relative">
+              <select
+                value={selectedVenueId}
+                onChange={(e) => setSelectedVenueId(e.target.value)}
+                className="w-full appearance-none bg-slate-50 dark:bg-slate-900 border-none rounded-xl px-4 py-3 pr-10 text-sm font-bold text-slate-800 dark:text-white focus:ring-2 focus:ring-primary outline-none"
+              >
+                <option value="all">Todos mis espacios ({venues.length})</option>
+                {venues.map((v) => (
+                  <option key={v.id} value={v.id}>{v.name}</option>
+                ))}
+              </select>
+              <span className="material-icons-round absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">expand_more</span>
+            </div>
+          </div>
+        )}
+
 
         {loading || !stats ? (
           <div className="space-y-4">

@@ -363,7 +363,8 @@ const monthName = (d: Date) =>
 
 export const getProviderStats = async (
   providerId: string,
-  refDate: Date
+  refDate: Date,
+  venueId?: string | null
 ): Promise<ProviderStats> => {
   const from = new Date(refDate.getFullYear(), refDate.getMonth(), 1);
   const to = new Date(refDate.getFullYear(), refDate.getMonth() + 1, 1);
@@ -372,12 +373,14 @@ export const getProviderStats = async (
   // Wide window: 6 months back through current month for the trend chart
   const chartFrom = new Date(refDate.getFullYear(), refDate.getMonth() - 5, 1);
 
-  const { data, error } = await supabase
+  let query = supabase
     .from('bookings')
     .select('id, event_date, total_price, status, venues!inner(id, name, provider_id)')
     .eq('venues.provider_id', providerId)
     .gte('event_date', fmtDate(chartFrom))
     .lt('event_date', fmtDate(to));
+  if (venueId) query = query.eq('venues.id', venueId);
+  const { data, error } = await query;
   if (error) throw error;
   const all = data || [];
 
@@ -443,7 +446,8 @@ export const getProviderStats = async (
       .from('venues')
       .select('id')
       .eq('provider_id', providerId);
-    const ids = (venuesList || []).map((v: any) => v.id);
+    let ids = (venuesList || []).map((v: any) => v.id);
+    if (venueId) ids = ids.filter((id: string) => id === venueId);
     if (ids.length) {
       const { data: ev } = await supabase
         .from('analytics_events')
