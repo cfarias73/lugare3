@@ -219,7 +219,8 @@ const Profile: React.FC = () => {
                   disabled={!isEditing}
                   value={value as string}
                   onChange={(e) => setFormData({ ...formData, [key]: e.target.value })}
-                  className={`w-full p-2 rounded-lg border ${errors[key] ? 'border-red-500' : 'border-slate-200 dark:border-slate-700'} dark:bg-slate-800 dark:text-white disabled:bg-slate-50 dark:disabled:bg-slate-900/40`}
+                  placeholder={PLACEHOLDERS[key]}
+                  className={`w-full p-2 rounded-lg border ${errors[key] ? 'border-red-500' : 'border-slate-200 dark:border-slate-700'} dark:bg-slate-800 dark:text-white disabled:bg-slate-50 dark:disabled:bg-slate-900/40 placeholder:text-slate-300 dark:placeholder:text-slate-600`}
                 />
                 {errors[key] && <p className="text-red-500 text-xs mt-1">{errors[key]}</p>}
               </div>
