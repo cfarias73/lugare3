@@ -7,6 +7,7 @@ import { useUser } from '../../context/UserContext';
 import { createVenue, updateVenue, getVenueForEdit, deleteVenueImages } from '../../src/services/providerService';
 import { getCategories, Category } from '../../src/services/categoryService';
 import { validateSpaceName } from '../../src/utils/profanityFilter';
+import { AMENITIES } from '../../src/constants/amenities';
 
 const RULES = ['No mascotas', 'No fumar', 'Horarios de silencio', 'No fiestas'];
 
@@ -65,6 +66,7 @@ const CreateSpaceContent: React.FC = () => {
           minHours: v.min_hours?.toString() ?? '5',
           sizeSqm: v.size_sqm?.toString() ?? '',
           rules: v.rules ?? [],
+          amenities: Array.isArray(v.amenities) ? v.amenities : [],
         });
       })
       .catch((e) => {
@@ -164,6 +166,7 @@ const CreateSpaceContent: React.FC = () => {
         lat: data.lat ? Number(data.lat) : null,
         lng: data.lng ? Number(data.lng) : null,
         rules: data.rules,
+        amenities: data.amenities,
       };
       if (isEdit && venueId) {
         if (removedExistingIds.length > 0) {
@@ -226,6 +229,14 @@ const CreateSpaceContent: React.FC = () => {
       rules: data.rules.includes(rule)
         ? data.rules.filter(r => r !== rule)
         : [...data.rules, rule],
+    });
+  };
+
+  const toggleAmenity = (key: string) => {
+    updateData({
+      amenities: data.amenities.includes(key)
+        ? data.amenities.filter(a => a !== key)
+        : [...data.amenities, key],
     });
   };
 
@@ -345,6 +356,34 @@ const CreateSpaceContent: React.FC = () => {
                       <span className="text-xs font-medium text-slate-700 dark:text-slate-200">{rule}</span>
                     </label>
                   ))}
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Servicios incluidos en el espacio</label>
+                <p className="text-[11px] text-slate-400 leading-snug ml-1 mb-2">Selecciona todo lo que el espacio ofrece sin costo extra.</p>
+                <div className="grid grid-cols-2 gap-3">
+                  {AMENITIES.map((a) => {
+                    const checked = data.amenities.includes(a.key);
+                    return (
+                      <label
+                        key={a.key}
+                        className={`flex items-center gap-2 p-3 rounded-xl cursor-pointer border transition-all ${
+                          checked
+                            ? 'bg-primary/10 border-primary'
+                            : 'bg-slate-50 dark:bg-slate-800/50 border-transparent'
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          className="accent-primary"
+                          checked={checked}
+                          onChange={() => toggleAmenity(a.key)}
+                        />
+                        <span className="material-icons-outlined text-secondary text-[18px]">{a.icon}</span>
+                        <span className="text-xs font-medium text-slate-700 dark:text-slate-200">{a.label}</span>
+                      </label>
+                    );
+                  })}
                 </div>
               </div>
               <div className="space-y-2">

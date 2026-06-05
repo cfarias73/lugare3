@@ -19,6 +19,7 @@ export interface VenuePayload {
   lat?: number | null;
   lng?: number | null;
   rules?: string[];
+  amenities?: string[];
 }
 
 export interface CreateVenueData extends VenuePayload {

@@ -25,6 +25,7 @@ export interface CreateSpaceData {
   sizeSqm: string;
   // Reglas
   rules: string[];
+  amenities: string[];
 }
 
 interface CreateSpaceContextType {
@@ -56,6 +57,7 @@ const defaultData: CreateSpaceData = {
   minHours: '5',
   sizeSqm: '',
   rules: [],
+  amenities: [],
 };
 
 const CreateSpaceContext = createContext<CreateSpaceContextType | undefined>(undefined);
