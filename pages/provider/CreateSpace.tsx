@@ -71,9 +71,11 @@ const CreateSpaceContent: React.FC = () => {
 
   const validateStep1 = () => {
     const e: Record<string, string> = {};
-    if (!data.name.trim()) e.name = 'El nombre es requerido';
+    const nameError = validateSpaceName(data.name);
+    if (nameError) e.name = nameError;
     if (!data.capacity) e.capacity = 'La capacidad es requerida';
     if (!data.description.trim()) e.description = 'La descripción es requerida';
+    else if (data.description.trim().length > 1000) e.description = 'La descripción no puede exceder 1000 caracteres';
     if (!data.category) e.category = 'La categoría es requerida';
     setErrors(e);
     return Object.keys(e).length === 0;
