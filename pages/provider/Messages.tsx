@@ -22,6 +22,8 @@ const formatTime = (iso: string | null) => {
 
 const Messages: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const openWith = (location.state as any) as { openUserId?: string; openVenueId?: string } | null;
   const { user } = useUser();
   const [conversations, setConversations] = useState<ConversationRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -34,14 +36,34 @@ const Messages: React.FC = () => {
   const scrollRef = useRef<HTMLDivElement | null>(null);
 
   const load = useCallback(async () => {
-    if (!user) return;
+    if (!user) return [] as ConversationRow[];
     setLoading(true);
     const data = await listConversations(user.id);
     setConversations(data);
     setLoading(false);
+    return data;
   }, [user]);
 
   useEffect(() => { load(); }, [load]);
+
+  // Si llegamos desde "Reservas recibidas" con un huésped + espacio, abrir/crear esa conversación
+  useEffect(() => {
+    if (!user || !openWith?.openUserId || !openWith?.openVenueId) return;
+    (async () => {
+      const conv = await getOrCreateConversationByParticipants(
+        openWith.openUserId!,
+        user.id,
+        openWith.openVenueId!
+      );
+      if (conv) {
+        await load();
+        setActiveId(conv.id);
+        navigate(location.pathname, { replace: true });
+      } else {
+        toast.error('No se pudo abrir la conversación');
+      }
+    })();
+  }, [user, openWith?.openUserId, openWith?.openVenueId, load, navigate, location.pathname]);
 
   const activeConversation = useMemo(
     () => conversations.find((c) => c.id === activeId) || null,
