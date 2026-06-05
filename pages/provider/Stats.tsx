@@ -26,17 +26,26 @@ const Stats: React.FC = () => {
   const [refDate, setRefDate] = useState(() => new Date());
   const [stats, setStats] = useState<ProviderStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [venues, setVenues] = useState<{ id: string; name: string }[]>([]);
+  const [selectedVenueId, setSelectedVenueId] = useState<string>('all');
+
+  useEffect(() => {
+    if (!user) return;
+    getProviderVenues(user.id)
+      .then((vs: any[]) => setVenues((vs || []).map((v) => ({ id: v.id, name: v.name }))))
+      .catch(() => {});
+  }, [user]);
 
   const load = useCallback(async () => {
     if (!user) return;
     setLoading(true);
     try {
-      const s = await getProviderStats(user.id, refDate);
+      const s = await getProviderStats(user.id, refDate, selectedVenueId === 'all' ? null : selectedVenueId);
       setStats(s);
     } finally {
       setLoading(false);
     }
-  }, [user, refDate]);
+  }, [user, refDate, selectedVenueId]);
 
   useEffect(() => { load(); }, [load]);
 
