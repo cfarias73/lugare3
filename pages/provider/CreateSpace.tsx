@@ -6,6 +6,7 @@ import { ErrorMessage } from '../../components/ui/ErrorMessage';
 import { useUser } from '../../context/UserContext';
 import { createVenue, updateVenue, getVenueForEdit, deleteVenueImages } from '../../src/services/providerService';
 import { getCategories, Category } from '../../src/services/categoryService';
+import { validateSpaceName } from '../../src/utils/profanityFilter';
 
 const RULES = ['No mascotas', 'No fumar', 'Horarios de silencio', 'No fiestas'];
 
