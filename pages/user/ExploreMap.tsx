@@ -99,6 +99,7 @@ const ExploreMap: React.FC = () => {
       setVenues(data);
     };
     fetchVenues();
+    getCategories().then(setCategories).catch(() => {});
   }, []);
 
   // Fetch venues booked OR blocked on the selected date
