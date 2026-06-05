@@ -41,7 +41,19 @@ const Checkout: React.FC = () => {
     return <div className="p-6 text-center">Cargando...</div>;
   }
 
-  const subtotal = venue.price_per_hour * hours;
+  const usingFlexible = venue.base_price != null;
+  const breakdown = usingFlexible
+    ? calcVenuePricing({
+        basePrice: Number(venue.base_price) || 0,
+        baseCapacity: Number(venue.base_capacity) || 0,
+        includedHours: Number(venue.included_hours) || hours,
+        extraPersonPrice: Number(venue.extra_person_price) || 0,
+        extraHourPrice: Number(venue.extra_hour_price) || 0,
+        guests: guestCount,
+        hours,
+      })
+    : null;
+  const subtotal = breakdown ? breakdown.total : (Number(venue.price_per_hour) || 0) * hours;
   const extrasTotal = extras.reduce((sum, e) => sum + e.price, 0);
   const stripeFee = Math.round((subtotal + extrasTotal) * 0.036 + 3);
   const total = subtotal + extrasTotal + stripeFee;
