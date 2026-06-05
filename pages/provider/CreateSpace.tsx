@@ -319,41 +319,22 @@ const CreateSpaceContent: React.FC = () => {
                 </div>
                 <ErrorMessage message={errors.category} />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Capacidad</label>
-                  <input
-                    className={inputBase}
-                    type="number"
-                    min={1}
-                    step={1}
-                    placeholder="Personas"
-                    value={data.capacity}
-                    onKeyDown={(e) => { if (e.key === '-' || e.key === 'e' || e.key === '+') e.preventDefault(); }}
-                    onChange={(e) => {
-                      const v = e.target.value.replace(/[^0-9]/g, '');
-                      updateData({ capacity: v });
-                    }}
-                  />
-                  <ErrorMessage message={errors.capacity} />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Tamaño (m²)</label>
-                  <input
-                    className={inputBase}
-                    type="number"
-                    min={1}
-                    step={1}
-                    placeholder="Opcional"
-                    value={data.sizeSqm}
-                    onKeyDown={(e) => { if (e.key === '-' || e.key === 'e' || e.key === '+') e.preventDefault(); }}
-                    onChange={(e) => {
-                      const v = e.target.value.replace(/[^0-9]/g, '');
-                      updateData({ sizeSqm: v });
-                    }}
-                  />
-                  <ErrorMessage message={errors.sizeSqm} />
-                </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Tamaño (m²) — opcional</label>
+                <input
+                  className={inputBase}
+                  type="number"
+                  min={1}
+                  step={1}
+                  placeholder="Ej: 350"
+                  value={data.sizeSqm}
+                  onKeyDown={(e) => { if (e.key === '-' || e.key === 'e' || e.key === '+') e.preventDefault(); }}
+                  onChange={(e) => {
+                    const v = e.target.value.replace(/[^0-9]/g, '');
+                    updateData({ sizeSqm: v });
+                  }}
+                />
+                <ErrorMessage message={errors.sizeSqm} />
               </div>
               <div className="space-y-2">
                 <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Reglas de la casa</label>
