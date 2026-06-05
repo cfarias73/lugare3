@@ -18,6 +18,11 @@ export interface Venue {
   category: string;
   minHours?: number;
   extraHourPrice?: number;
+  basePrice?: number;
+  baseCapacity?: number;
+  maxCapacity?: number;
+  includedHours?: number;
+  extraPersonPrice?: number;
 }
 
 export interface Review {
