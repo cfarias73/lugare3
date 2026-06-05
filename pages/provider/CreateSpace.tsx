@@ -7,6 +7,7 @@ import { useUser } from '../../context/UserContext';
 import { createVenue, updateVenue, getVenueForEdit, deleteVenueImages } from '../../src/services/providerService';
 import { getCategories, Category } from '../../src/services/categoryService';
 import { validateSpaceName } from '../../src/utils/profanityFilter';
+import { AMENITIES } from '../../src/constants/amenities';
 
 const RULES = ['No mascotas', 'No fumar', 'Horarios de silencio', 'No fiestas'];
 
@@ -65,6 +66,7 @@ const CreateSpaceContent: React.FC = () => {
           minHours: v.min_hours?.toString() ?? '5',
           sizeSqm: v.size_sqm?.toString() ?? '',
           rules: v.rules ?? [],
+          amenities: Array.isArray(v.amenities) ? v.amenities : [],
         });
       })
       .catch((e) => {
@@ -164,6 +166,7 @@ const CreateSpaceContent: React.FC = () => {
         lat: data.lat ? Number(data.lat) : null,
         lng: data.lng ? Number(data.lng) : null,
         rules: data.rules,
+        amenities: data.amenities,
       };
       if (isEdit && venueId) {
         if (removedExistingIds.length > 0) {
@@ -226,6 +229,14 @@ const CreateSpaceContent: React.FC = () => {
       rules: data.rules.includes(rule)
         ? data.rules.filter(r => r !== rule)
         : [...data.rules, rule],
+    });
+  };
+
+  const toggleAmenity = (key: string) => {
+    updateData({
+      amenities: data.amenities.includes(key)
+        ? data.amenities.filter(a => a !== key)
+        : [...data.amenities, key],
     });
   };
 
