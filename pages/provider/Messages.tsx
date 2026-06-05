@@ -115,8 +115,8 @@ const Messages: React.FC = () => {
   // ============= CHAT VIEW =============
   if (activeConversation) {
     return (
-      <ProviderLayout>
-        <header className="sticky top-0 z-30 bg-white dark:bg-card-dark border-b border-slate-100 dark:border-slate-800">
+    <ProviderLayout hideLogout>
+      <header className="sticky top-0 z-30 bg-white dark:bg-card-dark border-b border-slate-100 dark:border-slate-800">
           <div className="flex items-center gap-3 px-3 py-3">
             <button onClick={() => setActiveId(null)} className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800">
               <span className="material-icons-outlined text-slate-700 dark:text-white">arrow_back</span>
