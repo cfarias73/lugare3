@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import ProviderLayout from '../../components/ProviderLayout';
 import { useUser } from '../../context/UserContext';
@@ -9,6 +9,7 @@ import {
   listConversations,
   getMessages,
   sendMessage,
+  getOrCreateConversationByParticipants,
   ConversationRow,
   MessageRow,
 } from '../../src/services/messageService';
