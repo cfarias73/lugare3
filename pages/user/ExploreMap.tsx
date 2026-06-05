@@ -65,6 +65,8 @@ const ExploreMap: React.FC = () => {
   const [unavailableVenueIds, setUnavailableVenueIds] = useState<Set<string>>(new Set());
   const [searching, setSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   const runSearch = React.useCallback(async (raw: string) => {
     const q = raw.trim();
