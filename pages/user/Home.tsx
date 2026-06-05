@@ -14,6 +14,10 @@ const Home: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [activeCategory, setActiveCategory] = useState<string>('all');
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedCity, setSelectedCity] = useState<string>('all');
+  const [cityPickerOpen, setCityPickerOpen] = useState(false);
+  const [citySearch, setCitySearch] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     const load = async () => {
@@ -26,10 +30,30 @@ const Home: React.FC = () => {
     load();
   }, []);
 
+  const cities = useMemo(() => {
+    const set = new Set<string>();
+    venues.forEach((v) => { if (v.city) set.add(v.city); });
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, [venues]);
+
+  const filteredCities = useMemo(() => {
+    const q = citySearch.trim().toLowerCase();
+    if (!q) return cities;
+    return cities.filter((c) => c.toLowerCase().includes(q));
+  }, [cities, citySearch]);
+
   const filteredVenues = useMemo(() => {
-    if (activeCategory === 'all') return venues;
-    return venues.filter((v) => (v as any).category === activeCategory);
-  }, [venues, activeCategory]);
+    const q = searchQuery.trim().toLowerCase();
+    return venues.filter((v) => {
+      if (activeCategory !== 'all' && (v as any).category !== activeCategory) return false;
+      if (selectedCity !== 'all' && v.city !== selectedCity) return false;
+      if (q) {
+        const hay = `${v.name} ${v.location || ''} ${v.city || ''}`.toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      return true;
+    });
+  }, [venues, activeCategory, selectedCity, searchQuery]);
 
   const nextBooking = bookings.length > 0 ? bookings[0] : null;
 
