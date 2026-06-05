@@ -393,43 +393,99 @@ const CreateSpaceContent: React.FC = () => {
               </div>
             </div>
             <div>
-              <h2 className="text-lg font-bold mb-6 dark:text-white font-display tracking-tight">Precio</h2>
+              <h2 className="text-lg font-bold mb-6 dark:text-white font-display tracking-tight">Precio y capacidad</h2>
               <div className="bg-white dark:bg-surface-dark border border-slate-100 dark:border-slate-800 rounded-[32px] p-8 shadow-sm space-y-6">
                 <div className="space-y-2">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Precio por hora (MXN)</label>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Precio base del paquete (MXN)</label>
                   <input
                     className={inputBase}
                     type="number"
                     min={1}
                     step={1}
-                    placeholder="500"
-                    value={data.pricePerHour}
+                    placeholder="Ej: 15000"
+                    value={data.basePrice}
                     onKeyDown={(e) => { if (e.key === '-' || e.key === 'e' || e.key === '+') e.preventDefault(); }}
                     onChange={(e) => {
                       const v = e.target.value.replace(/[^0-9.]/g, '');
-                      updateData({ pricePerHour: v });
+                      updateData({ basePrice: v });
                     }}
                   />
-                  <ErrorMessage message={errors.pricePerHour} />
+                  <ErrorMessage message={errors.basePrice} />
                 </div>
+
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Horas mínimas</label>
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Capacidad base</label>
                     <input
                       className={inputBase}
                       type="number"
                       min={1}
-                      max={24}
                       step={1}
-                      placeholder="4"
-                      value={data.minHours}
+                      placeholder="Ej: 150"
+                      value={data.baseCapacity}
                       onKeyDown={(e) => { if (e.key === '-' || e.key === 'e' || e.key === '+') e.preventDefault(); }}
                       onChange={(e) => {
                         const v = e.target.value.replace(/[^0-9]/g, '');
-                        updateData({ minHours: v });
+                        updateData({ baseCapacity: v });
                       }}
                     />
-                    <ErrorMessage message={errors.minHours} />
+                    <ErrorMessage message={errors.baseCapacity} />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Capacidad máxima</label>
+                    <input
+                      className={inputBase}
+                      type="number"
+                      min={1}
+                      step={1}
+                      placeholder="Ej: 250"
+                      value={data.maxCapacity}
+                      onKeyDown={(e) => { if (e.key === '-' || e.key === 'e' || e.key === '+') e.preventDefault(); }}
+                      onChange={(e) => {
+                        const v = e.target.value.replace(/[^0-9]/g, '');
+                        updateData({ maxCapacity: v });
+                      }}
+                    />
+                    <ErrorMessage message={errors.maxCapacity} />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Horas incluidas en el paquete</label>
+                  <input
+                    className={inputBase}
+                    type="number"
+                    min={1}
+                    max={24}
+                    step={1}
+                    placeholder="Ej: 5"
+                    value={data.includedHours}
+                    onKeyDown={(e) => { if (e.key === '-' || e.key === 'e' || e.key === '+') e.preventDefault(); }}
+                    onChange={(e) => {
+                      const v = e.target.value.replace(/[^0-9]/g, '');
+                      updateData({ includedHours: v });
+                    }}
+                  />
+                  <ErrorMessage message={errors.includedHours} />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Persona extra ($/persona/hora)</label>
+                    <input
+                      className={inputBase}
+                      type="number"
+                      min={0}
+                      step={1}
+                      placeholder="Ej: 20"
+                      value={data.extraPersonPrice}
+                      onKeyDown={(e) => { if (e.key === '-' || e.key === 'e' || e.key === '+') e.preventDefault(); }}
+                      onChange={(e) => {
+                        const v = e.target.value.replace(/[^0-9.]/g, '');
+                        updateData({ extraPersonPrice: v });
+                      }}
+                    />
+                    <ErrorMessage message={errors.extraPersonPrice} />
                   </div>
                   <div className="space-y-2">
                     <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Hora extra (MXN)</label>
@@ -438,7 +494,7 @@ const CreateSpaceContent: React.FC = () => {
                       type="number"
                       min={0}
                       step={1}
-                      placeholder="Igual al base"
+                      placeholder="Ej: 3000"
                       value={data.extraHourPrice}
                       onKeyDown={(e) => { if (e.key === '-' || e.key === 'e' || e.key === '+') e.preventDefault(); }}
                       onChange={(e) => {
@@ -448,6 +504,12 @@ const CreateSpaceContent: React.FC = () => {
                     />
                     <ErrorMessage message={errors.extraHourPrice} />
                   </div>
+                </div>
+
+                <div className="bg-orange-50 dark:bg-orange-900/10 border border-orange-100 dark:border-orange-900/30 rounded-2xl p-4 text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
+                  <p className="font-bold text-slate-800 dark:text-white mb-1">Ejemplo de cobro</p>
+                  <p>Si tu paquete es $15,000 / 150 personas / 5h, y persona extra $20 y hora extra $3,000:</p>
+                  <p className="mt-1">• 155 personas, 6 h → $15,000 + (5×$20×6) + $3,000 = <span className="font-bold">$18,600</span></p>
                 </div>
               </div>
             </div>
