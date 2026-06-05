@@ -27,12 +27,18 @@ const Profile: React.FC = () => {
   const [formData, setFormData] = useState(() => {
     const stored = localStorage.getItem('user_profile');
     return stored ? JSON.parse(stored) : {
-      name: 'María Fernández',
-      email: 'maria.fernandez@gmail.com',
-      phone: '+54 11 5678-9012',
-      location: 'Buenos Aires, Argentina',
+      name: '',
+      email: '',
+      phone: '',
+      location: '',
     };
   });
+  const PLACEHOLDERS: Record<string, string> = {
+    name: 'Ej. Juan Pérez',
+    email: 'Ej. juan.perez@gmail.com',
+    phone: 'Ej. +52 55 1234 5678',
+    location: 'Ej. Ciudad de México, México',
+  };
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [language, setLanguage] = useState<string>(() => localStorage.getItem('user_language') || 'Español');
   const [showLangModal, setShowLangModal] = useState(false);
