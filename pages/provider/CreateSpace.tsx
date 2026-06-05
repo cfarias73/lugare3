@@ -230,8 +230,24 @@ const CreateSpaceContent: React.FC = () => {
             <div className="bg-white dark:bg-surface-dark border border-slate-100 dark:border-slate-800 rounded-[32px] p-8 shadow-sm space-y-6">
               <div className="space-y-2">
                 <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Nombre del espacio</label>
-                <input className={inputBase} placeholder="Ej: Terraza Panorámica" value={data.name} onChange={(e) => updateData({ name: e.target.value })} />
-                <ErrorMessage message={errors.name} />
+                <input
+                  className={inputBase}
+                  placeholder="Ej: Terraza Panorámica"
+                  value={data.name}
+                  maxLength={60}
+                  onChange={(e) => {
+                    updateData({ name: e.target.value });
+                    if (errors.name) setErrors((p) => ({ ...p, name: '' }));
+                  }}
+                  onBlur={(e) => {
+                    const msg = validateSpaceName(e.target.value);
+                    if (msg) setErrors((p) => ({ ...p, name: msg }));
+                  }}
+                />
+                <div className="flex justify-between items-center">
+                  <ErrorMessage message={errors.name} />
+                  <span className="text-[10px] text-slate-400 ml-auto">{data.name.length}/60</span>
+                </div>
               </div>
               <div className="space-y-2">
                 <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Tipo de espacio</label>
