@@ -228,6 +228,15 @@ const ReceivedBookings: React.FC = () => {
                 </div>
               </div>
 
+              <button
+                onClick={() => navigate('/provider/messages', { state: { openUserId: booking.user_id, openVenueId: booking.venue_id } })}
+                className="w-full mb-3 py-2.5 rounded-xl border border-secondary text-secondary font-semibold text-sm hover:bg-secondary/5 transition-all flex items-center justify-center gap-2"
+              >
+                <span className="material-icons-outlined text-base">chat_bubble_outline</span>
+                Enviar mensaje al huésped
+              </button>
+
+
               {isPending && (
                 <div className="grid grid-cols-2 gap-3">
                   <button
