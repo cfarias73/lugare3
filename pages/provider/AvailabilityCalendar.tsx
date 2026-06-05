@@ -12,6 +12,7 @@ import {
   unblockDate,
 } from '../../src/services/availabilityService';
 import { getProviderVenues } from '../../src/services/providerService';
+import BulkBlockDatesModal from '../../components/BulkBlockDatesModal';
 
 const MONTH_NAMES = [
   'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
@@ -36,6 +37,8 @@ const AvailabilityCalendar: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [venueName, setVenueName] = useState<string>('');
   const [venues, setVenues] = useState<Array<{ id: string; name: string }>>([]);
+  const [bulkOpen, setBulkOpen] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
 
   // Load provider venues for the selector
   useEffect(() => {
@@ -74,7 +77,7 @@ const AvailabilityCalendar: React.FC = () => {
       }
     });
     return () => { cancelled = true; };
-  }, [venueId, year, month]);
+  }, [venueId, year, month, reloadKey]);
 
   const daysInMonth = useMemo(() => new Date(year, month + 1, 0).getDate(), [year, month]);
   // Day-of-week of the 1st (0=Sunday). Convert to Monday-first offset.
@@ -250,7 +253,25 @@ const AvailabilityCalendar: React.FC = () => {
         <p className="text-center text-[11px] text-slate-400 mt-6">
           Toca un día para bloquear o desbloquear.
         </p>
+
+        <button
+          onClick={() => {
+            if (!venueId) { toast.error('Selecciona primero un espacio'); return; }
+            setBulkOpen(true);
+          }}
+          className="mt-4 w-full py-3.5 rounded-2xl bg-slate-900 dark:bg-slate-700 text-white font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2 active:scale-[0.98] transition-all"
+        >
+          <span className="material-icons-outlined text-[18px]">event_busy</span>
+          Bloqueo por rango o recurrente
+        </button>
       </div>
+
+      <BulkBlockDatesModal
+        open={bulkOpen}
+        venueId={venueId}
+        onClose={() => setBulkOpen(false)}
+        onSaved={() => setReloadKey((k) => k + 1)}
+      />
     </div>
   );
 
