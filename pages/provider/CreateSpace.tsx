@@ -73,7 +73,15 @@ const CreateSpaceContent: React.FC = () => {
     const e: Record<string, string> = {};
     const nameError = validateSpaceName(data.name);
     if (nameError) e.name = nameError;
+    const cap = Number(data.capacity);
     if (!data.capacity) e.capacity = 'La capacidad es requerida';
+    else if (!Number.isFinite(cap) || cap <= 0) e.capacity = 'La capacidad debe ser mayor a 0';
+    else if (cap > 10000) e.capacity = 'La capacidad no puede exceder 10,000';
+    if (data.sizeSqm) {
+      const sz = Number(data.sizeSqm);
+      if (!Number.isFinite(sz) || sz <= 0) e.sizeSqm = 'El tamaño debe ser mayor a 0';
+      else if (sz > 100000) e.sizeSqm = 'El tamaño no puede exceder 100,000 m²';
+    }
     if (!data.description.trim()) e.description = 'La descripción es requerida';
     else if (data.description.trim().length > 1000) e.description = 'La descripción no puede exceder 1000 caracteres';
     if (!data.category) e.category = 'La categoría es requerida';
@@ -85,8 +93,16 @@ const CreateSpaceContent: React.FC = () => {
     const e: Record<string, string> = {};
     if (!data.address.trim()) e.address = 'La dirección es requerida';
     if (!data.city.trim()) e.city = 'La ciudad es requerida';
-    if (!data.pricePerHour || Number(data.pricePerHour) <= 0) e.pricePerHour = 'Ingresa un precio válido';
-    if (!data.minHours || Number(data.minHours) < 1) e.minHours = 'Mínimo 1 hora';
+    const price = Number(data.pricePerHour);
+    if (!data.pricePerHour || !Number.isFinite(price) || price <= 0) e.pricePerHour = 'Ingresa un precio válido (mayor a 0)';
+    else if (price > 1000000) e.pricePerHour = 'El precio no puede exceder $1,000,000';
+    const minH = Number(data.minHours);
+    if (!data.minHours || !Number.isFinite(minH) || minH < 1) e.minHours = 'Mínimo 1 hora';
+    else if (minH > 24) e.minHours = 'Máximo 24 horas';
+    if (data.extraHourPrice) {
+      const eh = Number(data.extraHourPrice);
+      if (!Number.isFinite(eh) || eh < 0) e.extraHourPrice = 'El precio por hora extra no puede ser negativo';
+    }
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -277,12 +293,37 @@ const CreateSpaceContent: React.FC = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Capacidad</label>
-                  <input className={inputBase} type="number" placeholder="Personas" value={data.capacity} onChange={(e) => updateData({ capacity: e.target.value })} />
+                  <input
+                    className={inputBase}
+                    type="number"
+                    min={1}
+                    step={1}
+                    placeholder="Personas"
+                    value={data.capacity}
+                    onKeyDown={(e) => { if (e.key === '-' || e.key === 'e' || e.key === '+') e.preventDefault(); }}
+                    onChange={(e) => {
+                      const v = e.target.value.replace(/[^0-9]/g, '');
+                      updateData({ capacity: v });
+                    }}
+                  />
                   <ErrorMessage message={errors.capacity} />
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Tamaño (m²)</label>
-                  <input className={inputBase} type="number" placeholder="Opcional" value={data.sizeSqm} onChange={(e) => updateData({ sizeSqm: e.target.value })} />
+                  <input
+                    className={inputBase}
+                    type="number"
+                    min={1}
+                    step={1}
+                    placeholder="Opcional"
+                    value={data.sizeSqm}
+                    onKeyDown={(e) => { if (e.key === '-' || e.key === 'e' || e.key === '+') e.preventDefault(); }}
+                    onChange={(e) => {
+                      const v = e.target.value.replace(/[^0-9]/g, '');
+                      updateData({ sizeSqm: v });
+                    }}
+                  />
+                  <ErrorMessage message={errors.sizeSqm} />
                 </div>
               </div>
               <div className="space-y-2">
@@ -346,18 +387,56 @@ const CreateSpaceContent: React.FC = () => {
               <div className="bg-white dark:bg-surface-dark border border-slate-100 dark:border-slate-800 rounded-[32px] p-8 shadow-sm space-y-6">
                 <div className="space-y-2">
                   <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Precio por hora (MXN)</label>
-                  <input className={inputBase} type="number" placeholder="500" value={data.pricePerHour} onChange={(e) => updateData({ pricePerHour: e.target.value })} />
+                  <input
+                    className={inputBase}
+                    type="number"
+                    min={1}
+                    step={1}
+                    placeholder="500"
+                    value={data.pricePerHour}
+                    onKeyDown={(e) => { if (e.key === '-' || e.key === 'e' || e.key === '+') e.preventDefault(); }}
+                    onChange={(e) => {
+                      const v = e.target.value.replace(/[^0-9.]/g, '');
+                      updateData({ pricePerHour: v });
+                    }}
+                  />
                   <ErrorMessage message={errors.pricePerHour} />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Horas mínimas</label>
-                    <input className={inputBase} type="number" placeholder="4" value={data.minHours} onChange={(e) => updateData({ minHours: e.target.value })} />
+                    <input
+                      className={inputBase}
+                      type="number"
+                      min={1}
+                      max={24}
+                      step={1}
+                      placeholder="4"
+                      value={data.minHours}
+                      onKeyDown={(e) => { if (e.key === '-' || e.key === 'e' || e.key === '+') e.preventDefault(); }}
+                      onChange={(e) => {
+                        const v = e.target.value.replace(/[^0-9]/g, '');
+                        updateData({ minHours: v });
+                      }}
+                    />
                     <ErrorMessage message={errors.minHours} />
                   </div>
                   <div className="space-y-2">
                     <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Hora extra (MXN)</label>
-                    <input className={inputBase} type="number" placeholder="Igual al base" value={data.extraHourPrice} onChange={(e) => updateData({ extraHourPrice: e.target.value })} />
+                    <input
+                      className={inputBase}
+                      type="number"
+                      min={0}
+                      step={1}
+                      placeholder="Igual al base"
+                      value={data.extraHourPrice}
+                      onKeyDown={(e) => { if (e.key === '-' || e.key === 'e' || e.key === '+') e.preventDefault(); }}
+                      onChange={(e) => {
+                        const v = e.target.value.replace(/[^0-9.]/g, '');
+                        updateData({ extraHourPrice: v });
+                      }}
+                    />
+                    <ErrorMessage message={errors.extraHourPrice} />
                   </div>
                 </div>
               </div>
