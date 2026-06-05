@@ -171,18 +171,84 @@ const Home: React.FC = () => {
           </section>
         )}
 
+        {/* City Selector */}
+        <div className="relative">
+          <button
+            onClick={() => setCityPickerOpen((o) => !o)}
+            className="w-full flex items-center justify-between gap-2 bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-700 rounded-2xl px-4 py-3 shadow-sm hover:border-primary/40 transition-colors"
+          >
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="material-icons-outlined text-primary">place</span>
+              <div className="text-left min-w-0">
+                <p className="text-[10px] uppercase tracking-widest font-bold text-slate-400 leading-none mb-0.5">Ciudad</p>
+                <p className="text-sm font-bold text-slate-800 dark:text-white truncate">
+                  {selectedCity === 'all' ? 'Todas las ciudades' : selectedCity}
+                </p>
+              </div>
+            </div>
+            <span className={`material-icons-outlined text-slate-500 transition-transform ${cityPickerOpen ? 'rotate-180' : ''}`}>expand_more</span>
+          </button>
+          {cityPickerOpen && (
+            <div className="absolute z-50 mt-2 left-0 right-0 bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl p-3 max-h-80 overflow-hidden flex flex-col">
+              <div className="relative mb-2">
+                <span className="material-icons-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">search</span>
+                <input
+                  autoFocus
+                  value={citySearch}
+                  onChange={(e) => setCitySearch(e.target.value)}
+                  placeholder="Buscar ciudad..."
+                  className="w-full pl-10 pr-3 py-2 text-sm bg-slate-100 dark:bg-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-primary/40 dark:text-white"
+                />
+              </div>
+              <div className="overflow-y-auto -mx-1 px-1">
+                <button
+                  onClick={() => { setSelectedCity('all'); setCityPickerOpen(false); setCitySearch(''); }}
+                  className={`w-full text-left px-3 py-2.5 rounded-xl text-sm flex items-center justify-between ${selectedCity === 'all' ? 'bg-primary/10 text-primary font-bold' : 'hover:bg-slate-50 dark:hover:bg-slate-800 dark:text-white'}`}
+                >
+                  Todas las ciudades
+                  {selectedCity === 'all' && <span className="material-icons-outlined text-base">check</span>}
+                </button>
+                {filteredCities.length === 0 ? (
+                  <p className="text-xs text-slate-400 px-3 py-3">Sin coincidencias</p>
+                ) : filteredCities.map((c) => (
+                  <button
+                    key={c}
+                    onClick={() => { setSelectedCity(c); setCityPickerOpen(false); setCitySearch(''); }}
+                    className={`w-full text-left px-3 py-2.5 rounded-xl text-sm flex items-center justify-between ${selectedCity === c ? 'bg-primary/10 text-primary font-bold' : 'hover:bg-slate-50 dark:hover:bg-slate-800 dark:text-white'}`}
+                  >
+                    {c}
+                    {selectedCity === c && <span className="material-icons-outlined text-base">check</span>}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
         {/* Search Bar */}
         <div className="flex gap-3">
           <div className="relative flex-grow">
             <span className="material-icons-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">search</span>
-            <input 
-              className="w-full pl-12 pr-12 py-3.5 bg-slate-100 dark:bg-slate-800 border-none rounded-2xl text-sm focus:ring-2 focus:ring-primary focus:bg-white transition-all dark:text-white" 
-              placeholder="Buscar espacios, ubicaciones..." 
+            <input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-12 pr-12 py-3.5 bg-slate-100 dark:bg-slate-800 border-none rounded-2xl text-sm focus:ring-2 focus:ring-primary focus:bg-white transition-all dark:text-white"
+              placeholder="Buscar espacios, ubicaciones..."
               type="text"
             />
-            <span className="material-icons-outlined absolute right-4 top-1/2 -translate-y-1/2 text-primary cursor-pointer">tune</span>
+            {searchQuery ? (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-primary"
+                aria-label="Limpiar búsqueda"
+              >
+                <span className="material-icons-outlined">close</span>
+              </button>
+            ) : (
+              <span className="material-icons-outlined absolute right-4 top-1/2 -translate-y-1/2 text-primary cursor-pointer">tune</span>
+            )}
           </div>
-          <button 
+          <button
             onClick={() => navigate('/user/explore')}
             className="bg-slate-100 dark:bg-slate-800 p-3.5 rounded-2xl flex items-center justify-center hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
           >
