@@ -33,6 +33,7 @@ const BookingCalendar: React.FC = () => {
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [selectedSlot, setSelectedSlot] = useState<'morning' | 'afternoon' | 'night' | null>(null);
   const [extraHours, setExtraHours] = useState<number>(0);
+  const [guests, setGuests] = useState<number>(0);
   const [venue, setVenue] = useState<any>(MOCK_VENUES[0]);
   const [blockedDates, setBlockedDates] = useState<Set<string>>(new Set());
   const [bookedDates, setBookedDates] = useState<Set<string>>(new Set());
