@@ -137,7 +137,7 @@ const BookingCalendar: React.FC = () => {
         start: slot.start,
         end: newEnd,
         hours: String(totalHours),
-        guests: '10',
+        guests: String(guests || venue.baseCapacity || 10),
       });
       if (servicesParam) params.set('services', servicesParam);
       navigate(`/user/checkout/${id}?${params.toString()}`);
@@ -149,9 +149,21 @@ const BookingCalendar: React.FC = () => {
 
   const extraPrice = Number(venue.extraHourPrice ?? venue.price) || 0;
   const slotHours = selectedSlot ? SLOT_TIMES[selectedSlot].hours : 0;
-  const estimatedTotal = selectedSlot
-    ? venue.price * slotHours + extraPrice * extraHours
-    : venue.price * 5;
+  const usingFlexible = venue.basePrice != null;
+  const flexibleBreakdown = usingFlexible && selectedSlot
+    ? calcVenuePricing({
+        basePrice: venue.basePrice,
+        baseCapacity: venue.baseCapacity || 0,
+        includedHours: venue.includedHours || slotHours,
+        extraPersonPrice: venue.extraPersonPrice || 0,
+        extraHourPrice: venue.extraHourPrice || 0,
+        guests: guests || venue.baseCapacity || 0,
+        hours: slotHours + extraHours,
+      })
+    : null;
+  const estimatedTotal = flexibleBreakdown
+    ? flexibleBreakdown.total
+    : (selectedSlot ? venue.price * slotHours + extraPrice * extraHours : venue.price * 5);
 
   return (
     <div className="bg-background-light dark:bg-background-dark text-slate-800 dark:text-slate-100 min-h-screen max-w-md mx-auto flex flex-col transition-colors">
