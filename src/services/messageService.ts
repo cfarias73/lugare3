@@ -110,6 +110,37 @@ export const getOrCreateConversation = async (
   return hydrated;
 };
 
+// Permite que el anfitrión (provider) inicie una conversación con un huésped concreto
+// para un espacio determinado (p. ej. desde una reserva recibida).
+export const getOrCreateConversationByParticipants = async (
+  userId: string,
+  providerId: string,
+  venueId: string
+): Promise<ConversationRow | null> => {
+  const existing = await supabase
+    .from('conversations')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('provider_id', providerId)
+    .eq('venue_id', venueId)
+    .maybeSingle();
+  if (existing.data) {
+    const [hydrated] = await hydrateConversations([existing.data]);
+    return hydrated;
+  }
+  const { data, error } = await supabase
+    .from('conversations')
+    .insert({ user_id: userId, provider_id: providerId, venue_id: venueId })
+    .select('*')
+    .single();
+  if (error) {
+    console.error('Create conversation (by participants) error', error);
+    return null;
+  }
+  const [hydrated] = await hydrateConversations([data]);
+  return hydrated;
+};
+
 export const getMessages = async (conversationId: string): Promise<MessageRow[]> => {
   const { data, error } = await supabase
     .from('messages')
