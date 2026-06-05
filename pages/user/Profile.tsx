@@ -204,8 +204,8 @@ const Profile: React.FC = () => {
             </button>
           )}
           <div className="mt-4 text-center">
-            <h2 className="text-xl font-semibold text-slate-800 dark:text-white">{formData.name}</h2>
-            <p className="text-slate-500 dark:text-slate-400 text-sm">{formData.email}</p>
+            <h2 className="text-xl font-semibold text-slate-800 dark:text-white">{formData.name || 'Tu nombre'}</h2>
+            <p className="text-slate-500 dark:text-slate-400 text-sm">{formData.email || 'tu@correo.com'}</p>
           </div>
         </section>
 
