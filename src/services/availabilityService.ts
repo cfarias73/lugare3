@@ -45,6 +45,66 @@ export const unblockDate = async (venueId: string, dateStr: string) => {
   if (error) throw error;
 };
 
+/** Inserta muchos días bloqueados de una sola vez (ignora duplicados). */
+export const bulkBlockDates = async (venueId: string, dates: string[]) => {
+  if (dates.length === 0) return { inserted: 0 };
+  const unique = Array.from(new Set(dates));
+  const rows = unique.map((d) => ({ venue_id: venueId, blocked_date: d }));
+  // Si la tabla tiene unique(venue_id, blocked_date) los duplicados se ignoran.
+  const { error } = await supabase
+    .from('venue_blocked_dates')
+    .upsert(rows, { onConflict: 'venue_id,blocked_date', ignoreDuplicates: true });
+  if (error) throw error;
+  return { inserted: unique.length };
+};
+
+/** Devuelve fechas con reservas confirmadas/completadas en un rango arbitrario. */
+export const getBookedDatesInRange = async (
+  venueId: string,
+  startStr: string,
+  endStr: string
+): Promise<Set<string>> => {
+  const { data, error } = await supabase
+    .from('bookings')
+    .select('event_date, status')
+    .eq('venue_id', venueId)
+    .in('status', ['confirmed', 'completed'])
+    .gte('event_date', startStr)
+    .lte('event_date', endStr);
+  if (error) {
+    console.warn('Error fetching booked dates range', error);
+    return new Set();
+  }
+  return new Set((data || []).map((r: any) => r.event_date));
+};
+
+/** Genera todas las fechas YYYY-MM-DD entre dos fechas inclusive. */
+export const enumerateDates = (startStr: string, endStr: string): string[] => {
+  const out: string[] = [];
+  const [sy, sm, sd] = startStr.split('-').map(Number);
+  const [ey, em, ed] = endStr.split('-').map(Number);
+  const cur = new Date(sy, sm - 1, sd);
+  const end = new Date(ey, em - 1, ed);
+  while (cur <= end) {
+    out.push(toDateStr(cur));
+    cur.setDate(cur.getDate() + 1);
+  }
+  return out;
+};
+
+/** Genera fechas dentro de un rango que caigan en los weekdays dados (0=Domingo..6=Sábado). */
+export const enumerateRecurringDates = (
+  startStr: string,
+  endStr: string,
+  weekdays: number[]
+): string[] => {
+  const set = new Set(weekdays);
+  return enumerateDates(startStr, endStr).filter((d) => {
+    const [y, m, day] = d.split('-').map(Number);
+    return set.has(new Date(y, m - 1, day).getDay());
+  });
+};
+
 /** Returns Set of venue_ids that are blocked on the given date. */
 export const getVenuesBlockedOnDate = async (dateStr: string): Promise<Set<string>> => {
   const { data, error } = await supabase
