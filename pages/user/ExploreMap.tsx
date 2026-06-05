@@ -3,6 +3,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../../components/Layout';
 import { getVenues } from '../../src/services/venueService';
+import { getCategories, Category } from '../../src/services/categoryService';
 import { supabase } from '../../lib/supabaseClient';
 import { Venue } from '../../types';
 import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet';
@@ -64,6 +65,8 @@ const ExploreMap: React.FC = () => {
   const [unavailableVenueIds, setUnavailableVenueIds] = useState<Set<string>>(new Set());
   const [searching, setSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   const runSearch = React.useCallback(async (raw: string) => {
     const q = raw.trim();
@@ -96,6 +99,7 @@ const ExploreMap: React.FC = () => {
       setVenues(data);
     };
     fetchVenues();
+    getCategories().then(setCategories).catch(() => {});
   }, []);
 
   // Fetch venues booked OR blocked on the selected date
@@ -179,14 +183,19 @@ const ExploreMap: React.FC = () => {
       if (minCapacity !== '' && venue.capacity < Number(minCapacity)) return false;
       if (minRating != null && (venue.rating || 0) < minRating) return false;
       if (dateFilter && unavailableVenueIds.has(venue.id)) return false;
+      if (selectedCategory) {
+        const cat = categories.find(c => c.slug === selectedCategory);
+        const vCat = (venue.category || '').toLowerCase();
+        if (vCat !== selectedCategory.toLowerCase() && (!cat || vCat !== cat.name.toLowerCase())) return false;
+      }
       return true;
     });
-  }, [venues, searchQuery, priceRange, customMinPrice, customMaxPrice, minCapacity, minRating, dateFilter, unavailableVenueIds]);
+  }, [venues, searchQuery, priceRange, customMinPrice, customMaxPrice, minCapacity, minRating, dateFilter, unavailableVenueIds, selectedCategory, categories]);
 
 
   const isCustomPriceActive = !priceRange && (customMinPrice !== '' || customMaxPrice !== '');
   const activeFilterCount =
-    (priceRange || isCustomPriceActive ? 1 : 0) + (minCapacity !== '' ? 1 : 0) + (dateFilter ? 1 : 0) + (minRating != null ? 1 : 0);
+    (priceRange || isCustomPriceActive ? 1 : 0) + (minCapacity !== '' ? 1 : 0) + (dateFilter ? 1 : 0) + (minRating != null ? 1 : 0) + (selectedCategory ? 1 : 0);
 
   const clearAllFilters = () => {
     setPriceRange(null);
@@ -195,6 +204,7 @@ const ExploreMap: React.FC = () => {
     setMinCapacity('');
     setDateFilter('');
     setMinRating(null);
+    setSelectedCategory(null);
     setOpenFilter(null);
   };
 
@@ -268,6 +278,14 @@ const ExploreMap: React.FC = () => {
 
           <div className="relative">
             <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
+              <button
+                onClick={() => setOpenFilter(openFilter === 'category' ? null : 'category')}
+                className={chipClass(selectedCategory !== null)}
+              >
+                <span className="material-icons-round text-sm">category</span>
+                <span>{selectedCategory ? (categories.find(c => c.slug === selectedCategory)?.name || 'Categoría') : 'Categoría'}</span>
+                <span className="material-icons-round text-sm">expand_more</span>
+              </button>
               <button
                 onClick={() => setOpenFilter(openFilter === 'price' ? null : 'price')}
                 className={chipClass(priceRange !== null || isCustomPriceActive)}
@@ -413,6 +431,23 @@ const ExploreMap: React.FC = () => {
                       >
                         <span className="material-icons-round text-amber-400 text-sm">star</span>
                         {r}+ estrellas
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {openFilter === 'category' && (
+                  <div className="flex flex-col gap-1 max-h-72 overflow-y-auto">
+                    {categories.length === 0 && (
+                      <span className="px-3 py-2 text-sm text-slate-500">Sin categorías disponibles</span>
+                    )}
+                    {categories.map((c) => (
+                      <button
+                        key={c.id}
+                        onClick={() => { setSelectedCategory(selectedCategory === c.slug ? null : c.slug); setOpenFilter(null); }}
+                        className={`flex items-center gap-2 text-left px-3 py-2 rounded-xl text-sm font-medium transition-colors ${selectedCategory === c.slug ? 'bg-primary/10 text-primary' : 'hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200'}`}
+                      >
+                        <span className="material-icons-round text-sm">{c.icon || 'place'}</span>
+                        {c.name}
                       </button>
                     ))}
                   </div>
