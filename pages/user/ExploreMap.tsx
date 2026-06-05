@@ -435,6 +435,23 @@ const ExploreMap: React.FC = () => {
                     ))}
                   </div>
                 )}
+                {openFilter === 'category' && (
+                  <div className="flex flex-col gap-1 max-h-72 overflow-y-auto">
+                    {categories.length === 0 && (
+                      <span className="px-3 py-2 text-sm text-slate-500">Sin categorías disponibles</span>
+                    )}
+                    {categories.map((c) => (
+                      <button
+                        key={c.id}
+                        onClick={() => { setSelectedCategory(selectedCategory === c.slug ? null : c.slug); setOpenFilter(null); }}
+                        className={`flex items-center gap-2 text-left px-3 py-2 rounded-xl text-sm font-medium transition-colors ${selectedCategory === c.slug ? 'bg-primary/10 text-primary' : 'hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200'}`}
+                      >
+                        <span className="material-icons-round text-sm">{c.icon || 'place'}</span>
+                        {c.name}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
           </div>
