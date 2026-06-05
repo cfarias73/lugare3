@@ -4,6 +4,7 @@ import { useUser } from '../../context/UserContext';
 import { toast } from 'sonner';
 import { supabase } from '../../lib/supabaseClient';
 import { getServicesByIds, PublicVenueService } from '../../src/services/venueService';
+import { calcVenuePricing } from '../../src/utils/pricing';
 
 const Checkout: React.FC = () => {
   const navigate = useNavigate();
