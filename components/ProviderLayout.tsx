@@ -8,7 +8,7 @@ interface ProviderLayoutProps {
   hideLogout?: boolean;
 }
 
-const ProviderLayout: React.FC<ProviderLayoutProps> = ({ children }) => {
+const ProviderLayout: React.FC<ProviderLayoutProps> = ({ children, hideLogout }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { logout } = useUser();
