@@ -183,14 +183,19 @@ const ExploreMap: React.FC = () => {
       if (minCapacity !== '' && venue.capacity < Number(minCapacity)) return false;
       if (minRating != null && (venue.rating || 0) < minRating) return false;
       if (dateFilter && unavailableVenueIds.has(venue.id)) return false;
+      if (selectedCategory) {
+        const cat = categories.find(c => c.slug === selectedCategory);
+        const vCat = (venue.category || '').toLowerCase();
+        if (vCat !== selectedCategory.toLowerCase() && (!cat || vCat !== cat.name.toLowerCase())) return false;
+      }
       return true;
     });
-  }, [venues, searchQuery, priceRange, customMinPrice, customMaxPrice, minCapacity, minRating, dateFilter, unavailableVenueIds]);
+  }, [venues, searchQuery, priceRange, customMinPrice, customMaxPrice, minCapacity, minRating, dateFilter, unavailableVenueIds, selectedCategory, categories]);
 
 
   const isCustomPriceActive = !priceRange && (customMinPrice !== '' || customMaxPrice !== '');
   const activeFilterCount =
-    (priceRange || isCustomPriceActive ? 1 : 0) + (minCapacity !== '' ? 1 : 0) + (dateFilter ? 1 : 0) + (minRating != null ? 1 : 0);
+    (priceRange || isCustomPriceActive ? 1 : 0) + (minCapacity !== '' ? 1 : 0) + (dateFilter ? 1 : 0) + (minRating != null ? 1 : 0) + (selectedCategory ? 1 : 0);
 
   const clearAllFilters = () => {
     setPriceRange(null);
@@ -199,6 +204,7 @@ const ExploreMap: React.FC = () => {
     setMinCapacity('');
     setDateFilter('');
     setMinRating(null);
+    setSelectedCategory(null);
     setOpenFilter(null);
   };
 
