@@ -446,7 +446,8 @@ export const getProviderStats = async (
       .from('venues')
       .select('id')
       .eq('provider_id', providerId);
-    const ids = (venuesList || []).map((v: any) => v.id);
+    let ids = (venuesList || []).map((v: any) => v.id);
+    if (venueId) ids = ids.filter((id: string) => id === venueId);
     if (ids.length) {
       const { data: ev } = await supabase
         .from('analytics_events')
