@@ -27,12 +27,18 @@ const Profile: React.FC = () => {
   const [formData, setFormData] = useState(() => {
     const stored = localStorage.getItem('user_profile');
     return stored ? JSON.parse(stored) : {
-      name: 'María Fernández',
-      email: 'maria.fernandez@gmail.com',
-      phone: '+54 11 5678-9012',
-      location: 'Buenos Aires, Argentina',
+      name: '',
+      email: '',
+      phone: '',
+      location: '',
     };
   });
+  const PLACEHOLDERS: Record<string, string> = {
+    name: 'Ej. Juan Pérez',
+    email: 'Ej. juan.perez@gmail.com',
+    phone: 'Ej. +52 55 1234 5678',
+    location: 'Ej. Ciudad de México, México',
+  };
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [language, setLanguage] = useState<string>(() => localStorage.getItem('user_language') || 'Español');
   const [showLangModal, setShowLangModal] = useState(false);
@@ -198,8 +204,8 @@ const Profile: React.FC = () => {
             </button>
           )}
           <div className="mt-4 text-center">
-            <h2 className="text-xl font-semibold text-slate-800 dark:text-white">{formData.name}</h2>
-            <p className="text-slate-500 dark:text-slate-400 text-sm">{formData.email}</p>
+            <h2 className="text-xl font-semibold text-slate-800 dark:text-white">{formData.name || 'Tu nombre'}</h2>
+            <p className="text-slate-500 dark:text-slate-400 text-sm">{formData.email || 'tu@correo.com'}</p>
           </div>
         </section>
 
@@ -213,7 +219,8 @@ const Profile: React.FC = () => {
                   disabled={!isEditing}
                   value={value as string}
                   onChange={(e) => setFormData({ ...formData, [key]: e.target.value })}
-                  className={`w-full p-2 rounded-lg border ${errors[key] ? 'border-red-500' : 'border-slate-200 dark:border-slate-700'} dark:bg-slate-800 dark:text-white disabled:bg-slate-50 dark:disabled:bg-slate-900/40`}
+                  placeholder={PLACEHOLDERS[key]}
+                  className={`w-full p-2 rounded-lg border ${errors[key] ? 'border-red-500' : 'border-slate-200 dark:border-slate-700'} dark:bg-slate-800 dark:text-white disabled:bg-slate-50 dark:disabled:bg-slate-900/40 placeholder:text-slate-300 dark:placeholder:text-slate-600`}
                 />
                 {errors[key] && <p className="text-red-500 text-xs mt-1">{errors[key]}</p>}
               </div>
