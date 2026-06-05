@@ -151,10 +151,31 @@ const Checkout: React.FC = () => {
         <div className="bg-white dark:bg-surface-dark rounded-2xl p-5 shadow-sm border border-slate-100 dark:border-slate-800">
           <h4 className="font-bold mb-4 text-[10px] uppercase tracking-wider text-slate-400">Resumen</h4>
           <div className="space-y-3">
-            <div className="flex justify-between text-sm">
-              <span className="text-slate-600 dark:text-slate-400">Espacio (${venue.price_per_hour}/h × {hours}h)</span>
-              <span className="font-medium">${subtotal.toLocaleString()}</span>
-            </div>
+            {breakdown ? (
+              <>
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-600 dark:text-slate-400">Paquete base ({venue.base_capacity} pers · {venue.included_hours}h)</span>
+                  <span className="font-medium">${breakdown.basePrice.toLocaleString()}</span>
+                </div>
+                {breakdown.extraPeopleCost > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-slate-600 dark:text-slate-400">Personas extra ({breakdown.extraPeople} × {hours}h)</span>
+                    <span className="font-medium">+${breakdown.extraPeopleCost.toLocaleString()}</span>
+                  </div>
+                )}
+                {breakdown.extraHoursCost > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-slate-600 dark:text-slate-400">Horas extra ({breakdown.extraHours})</span>
+                    <span className="font-medium">+${breakdown.extraHoursCost.toLocaleString()}</span>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="flex justify-between text-sm">
+                <span className="text-slate-600 dark:text-slate-400">Espacio (${venue.price_per_hour}/h × {hours}h)</span>
+                <span className="font-medium">${subtotal.toLocaleString()}</span>
+              </div>
+            )}
             {extras.length > 0 && (
               <>
                 <div className="pt-2">
