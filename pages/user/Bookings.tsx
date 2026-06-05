@@ -217,6 +217,13 @@ const Bookings: React.FC = () => {
                         </button>
                       )}
                       <button
+                        onClick={() => navigate('/user/messages', { state: { openVenueId: booking.venueId } })}
+                        className="bg-[#12B2C1] hover:bg-cyan-600 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-colors flex items-center gap-1"
+                      >
+                        <span className="material-icons-outlined text-base">chat_bubble_outline</span>
+                        Mensaje
+                      </button>
+                      <button
                         onClick={() => navigate('/user/invitations/create')}
                         className="bg-[#5EB962] hover:bg-green-600 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-colors"
                       >
