@@ -5,6 +5,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { MOCK_VENUES } from '../../constants';
 import { supabase } from '../../lib/supabaseClient';
 import { getBlockedDatesForMonth } from '../../src/services/availabilityService';
+import { calcVenuePricing } from '../../src/utils/pricing';
 
 const SLOT_TIMES = {
   morning: { start: '08:00:00', end: '13:00:00', hours: 5 },
@@ -32,6 +33,7 @@ const BookingCalendar: React.FC = () => {
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [selectedSlot, setSelectedSlot] = useState<'morning' | 'afternoon' | 'night' | null>(null);
   const [extraHours, setExtraHours] = useState<number>(0);
+  const [guests, setGuests] = useState<number>(0);
   const [venue, setVenue] = useState<any>(MOCK_VENUES[0]);
   const [blockedDates, setBlockedDates] = useState<Set<string>>(new Set());
   const [bookedDates, setBookedDates] = useState<Set<string>>(new Set());
@@ -52,7 +54,7 @@ const BookingCalendar: React.FC = () => {
       .single()
       .then(({ data }) => {
         if (data) {
-          setVenue({
+          const mapped = {
             id: data.id,
             name: data.name,
             location: data.location || data.city,
@@ -61,7 +63,14 @@ const BookingCalendar: React.FC = () => {
             rating: data.rating || 0,
             reviewsCount: data.reviews_count || 0,
             extraHourPrice: data.extra_hour_price != null ? Number(data.extra_hour_price) : Number(data.price_per_hour) || 0,
-          });
+            basePrice: data.base_price != null ? Number(data.base_price) : null,
+            baseCapacity: data.base_capacity != null ? Number(data.base_capacity) : null,
+            maxCapacity: data.max_capacity != null ? Number(data.max_capacity) : (data.capacity ?? null),
+            includedHours: data.included_hours != null ? Number(data.included_hours) : (Number(data.min_hours) || 5),
+            extraPersonPrice: data.extra_person_price != null ? Number(data.extra_person_price) : 0,
+          };
+          setVenue(mapped);
+          if (mapped.baseCapacity) setGuests(mapped.baseCapacity);
         }
       });
   }, [id, isUuid]);
@@ -128,7 +137,7 @@ const BookingCalendar: React.FC = () => {
         start: slot.start,
         end: newEnd,
         hours: String(totalHours),
-        guests: '10',
+        guests: String(guests || venue.baseCapacity || 10),
       });
       if (servicesParam) params.set('services', servicesParam);
       navigate(`/user/checkout/${id}?${params.toString()}`);
@@ -140,9 +149,21 @@ const BookingCalendar: React.FC = () => {
 
   const extraPrice = Number(venue.extraHourPrice ?? venue.price) || 0;
   const slotHours = selectedSlot ? SLOT_TIMES[selectedSlot].hours : 0;
-  const estimatedTotal = selectedSlot
-    ? venue.price * slotHours + extraPrice * extraHours
-    : venue.price * 5;
+  const usingFlexible = venue.basePrice != null;
+  const flexibleBreakdown = usingFlexible && selectedSlot
+    ? calcVenuePricing({
+        basePrice: venue.basePrice,
+        baseCapacity: venue.baseCapacity || 0,
+        includedHours: venue.includedHours || slotHours,
+        extraPersonPrice: venue.extraPersonPrice || 0,
+        extraHourPrice: venue.extraHourPrice || 0,
+        guests: guests || venue.baseCapacity || 0,
+        hours: slotHours + extraHours,
+      })
+    : null;
+  const estimatedTotal = flexibleBreakdown
+    ? flexibleBreakdown.total
+    : (selectedSlot ? venue.price * slotHours + extraPrice * extraHours : venue.price * 5);
 
   return (
     <div className="bg-background-light dark:bg-background-dark text-slate-800 dark:text-slate-100 min-h-screen max-w-md mx-auto flex flex-col transition-colors">
@@ -281,23 +302,84 @@ const BookingCalendar: React.FC = () => {
         )}
 
 
+        {selectedSlot && (
+          <section className="mt-6 px-4 animate-in fade-in slide-in-from-bottom-4">
+            <div className="bg-white dark:bg-surface-dark p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
+              <div className="flex items-start justify-between mb-3">
+                <div>
+                  <h4 className="text-sm font-bold">Número de invitados</h4>
+                  <p className="text-[11px] text-slate-500 mt-0.5">
+                    {usingFlexible
+                      ? `Incluye ${venue.baseCapacity} personas. Persona extra: $${(venue.extraPersonPrice || 0).toLocaleString()}/persona/hora. Máx: ${venue.maxCapacity}.`
+                      : 'Selecciona la cantidad de personas'}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setGuests(Math.max(1, guests - 1))}
+                    className="w-9 h-9 rounded-full border border-slate-200 dark:border-slate-700 flex items-center justify-center"
+                  >
+                    <span className="material-icons-round text-[18px]">remove</span>
+                  </button>
+                  <span className="w-10 text-center font-bold">{guests}</span>
+                  <button
+                    type="button"
+                    onClick={() => setGuests(Math.min(venue.maxCapacity || 9999, guests + 1))}
+                    className="w-9 h-9 rounded-full border border-slate-200 dark:border-slate-700 flex items-center justify-center"
+                  >
+                    <span className="material-icons-round text-[18px]">add</span>
+                  </button>
+                </div>
+              </div>
+              {flexibleBreakdown && flexibleBreakdown.extraPeople > 0 && (
+                <div className="flex justify-between text-xs text-slate-600 dark:text-slate-300 pt-3 border-t border-slate-100 dark:border-slate-800">
+                  <span>{flexibleBreakdown.extraPeople} personas extra × {slotHours + extraHours}h</span>
+                  <span className="font-semibold">+${flexibleBreakdown.extraPeopleCost.toLocaleString()}</span>
+                </div>
+              )}
+            </div>
+          </section>
+        )}
+
         <section className="mt-8 px-4 py-6 bg-slate-50 dark:bg-slate-900/40">
           <div className="bg-white dark:bg-surface-dark p-5 rounded-3xl shadow-sm space-y-4">
-            <h4 className="text-sm font-bold uppercase tracking-wider text-slate-400">Tarifas dinámicas</h4>
-            <div className="space-y-3">
-              <div className="flex justify-between text-sm">
-                <span className="text-slate-600 dark:text-slate-300">Tarifa base</span>
-                <span className="font-semibold">${venue.price}/hora</span>
+            <h4 className="text-sm font-bold uppercase tracking-wider text-slate-400">Desglose estimado</h4>
+            {flexibleBreakdown ? (
+              <div className="space-y-3 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-slate-600 dark:text-slate-300">Paquete base ({venue.baseCapacity} pers · {venue.includedHours}h)</span>
+                  <span className="font-semibold">${flexibleBreakdown.basePrice.toLocaleString()}</span>
+                </div>
+                {flexibleBreakdown.extraPeopleCost > 0 && (
+                  <div className="flex justify-between">
+                    <span className="text-slate-600 dark:text-slate-300">Personas extra ({flexibleBreakdown.extraPeople})</span>
+                    <span className="font-semibold">+${flexibleBreakdown.extraPeopleCost.toLocaleString()}</span>
+                  </div>
+                )}
+                {flexibleBreakdown.extraHoursCost > 0 && (
+                  <div className="flex justify-between">
+                    <span className="text-slate-600 dark:text-slate-300">Horas extra ({flexibleBreakdown.extraHours})</span>
+                    <span className="font-semibold">+${flexibleBreakdown.extraHoursCost.toLocaleString()}</span>
+                  </div>
+                )}
+                <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center">
+                  <span className="font-bold text-sm">Total estimado</span>
+                  <span className="font-bold text-lg text-primary">${flexibleBreakdown.total.toLocaleString()}</span>
+                </div>
               </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-slate-600 dark:text-slate-300">Impuestos</span>
-                <span className="font-semibold">${Math.round(venue.price * 0.16)}</span>
+            ) : (
+              <div className="space-y-3 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-slate-600 dark:text-slate-300">Tarifa base</span>
+                  <span className="font-semibold">${venue.price}/hora</span>
+                </div>
+                <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center">
+                  <span className="font-bold text-sm">Total estimado</span>
+                  <span className="font-bold text-lg text-primary">${estimatedTotal.toLocaleString()}</span>
+                </div>
               </div>
-              <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center">
-                <span className="font-bold text-sm">Total por hora</span>
-                <span className="font-bold text-lg text-primary">${venue.price + Math.round(venue.price * 0.16)}</span>
-              </div>
-            </div>
+            )}
           </div>
         </section>
       </main>

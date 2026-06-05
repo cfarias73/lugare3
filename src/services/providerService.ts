@@ -4,13 +4,18 @@ export interface VenuePayload {
   name: string;
   description: string;
   category: string;
-  location: string; // dirección
+  location: string;
   city: string;
   capacity: number;
   size_sqm: number;
   price_per_hour: number;
   min_hours?: number;
   extra_hour_price?: number;
+  base_price?: number;
+  base_capacity?: number;
+  max_capacity?: number;
+  included_hours?: number;
+  extra_person_price?: number;
   lat?: number | null;
   lng?: number | null;
   rules?: string[];

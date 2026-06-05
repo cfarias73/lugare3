@@ -4,6 +4,7 @@ import { useUser } from '../../context/UserContext';
 import { toast } from 'sonner';
 import { supabase } from '../../lib/supabaseClient';
 import { getServicesByIds, PublicVenueService } from '../../src/services/venueService';
+import { calcVenuePricing } from '../../src/utils/pricing';
 
 const Checkout: React.FC = () => {
   const navigate = useNavigate();
@@ -40,7 +41,19 @@ const Checkout: React.FC = () => {
     return <div className="p-6 text-center">Cargando...</div>;
   }
 
-  const subtotal = venue.price_per_hour * hours;
+  const usingFlexible = venue.base_price != null;
+  const breakdown = usingFlexible
+    ? calcVenuePricing({
+        basePrice: Number(venue.base_price) || 0,
+        baseCapacity: Number(venue.base_capacity) || 0,
+        includedHours: Number(venue.included_hours) || hours,
+        extraPersonPrice: Number(venue.extra_person_price) || 0,
+        extraHourPrice: Number(venue.extra_hour_price) || 0,
+        guests: guestCount,
+        hours,
+      })
+    : null;
+  const subtotal = breakdown ? breakdown.total : (Number(venue.price_per_hour) || 0) * hours;
   const extrasTotal = extras.reduce((sum, e) => sum + e.price, 0);
   const stripeFee = Math.round((subtotal + extrasTotal) * 0.036 + 3);
   const total = subtotal + extrasTotal + stripeFee;
@@ -138,10 +151,31 @@ const Checkout: React.FC = () => {
         <div className="bg-white dark:bg-surface-dark rounded-2xl p-5 shadow-sm border border-slate-100 dark:border-slate-800">
           <h4 className="font-bold mb-4 text-[10px] uppercase tracking-wider text-slate-400">Resumen</h4>
           <div className="space-y-3">
-            <div className="flex justify-between text-sm">
-              <span className="text-slate-600 dark:text-slate-400">Espacio (${venue.price_per_hour}/h × {hours}h)</span>
-              <span className="font-medium">${subtotal.toLocaleString()}</span>
-            </div>
+            {breakdown ? (
+              <>
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-600 dark:text-slate-400">Paquete base ({venue.base_capacity} pers · {venue.included_hours}h)</span>
+                  <span className="font-medium">${breakdown.basePrice.toLocaleString()}</span>
+                </div>
+                {breakdown.extraPeopleCost > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-slate-600 dark:text-slate-400">Personas extra ({breakdown.extraPeople} × {hours}h)</span>
+                    <span className="font-medium">+${breakdown.extraPeopleCost.toLocaleString()}</span>
+                  </div>
+                )}
+                {breakdown.extraHoursCost > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-slate-600 dark:text-slate-400">Horas extra ({breakdown.extraHours})</span>
+                    <span className="font-medium">+${breakdown.extraHoursCost.toLocaleString()}</span>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="flex justify-between text-sm">
+                <span className="text-slate-600 dark:text-slate-400">Espacio (${venue.price_per_hour}/h × {hours}h)</span>
+                <span className="font-medium">${subtotal.toLocaleString()}</span>
+              </div>
+            )}
             {extras.length > 0 && (
               <>
                 <div className="pt-2">

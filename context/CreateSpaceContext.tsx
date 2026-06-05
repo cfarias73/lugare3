@@ -3,7 +3,7 @@ import React, { createContext, useContext, useState, ReactNode } from 'react';
 export interface CreateSpaceData {
   name: string;
   type: string;
-  capacity: string;
+  capacity: string; // legado = max_capacity
   description: string;
   images: string[];
   category: string;
@@ -12,10 +12,16 @@ export interface CreateSpaceData {
   city: string;
   lat: string;
   lng: string;
-  // Precio
+  // Precios flexibles
+  basePrice: string;
+  baseCapacity: string;
+  maxCapacity: string;
+  includedHours: string;
+  extraPersonPrice: string;
+  extraHourPrice: string;
+  // Compatibilidad
   pricePerHour: string;
   minHours: string;
-  extraHourPrice: string;
   sizeSqm: string;
   // Reglas
   rules: string[];
@@ -40,9 +46,14 @@ const defaultData: CreateSpaceData = {
   city: 'CDMX',
   lat: '',
   lng: '',
-  pricePerHour: '',
-  minHours: '4',
+  basePrice: '',
+  baseCapacity: '',
+  maxCapacity: '',
+  includedHours: '5',
+  extraPersonPrice: '',
   extraHourPrice: '',
+  pricePerHour: '',
+  minHours: '5',
   sizeSqm: '',
   rules: [],
 };

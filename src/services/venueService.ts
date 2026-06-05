@@ -24,6 +24,11 @@ const mapVenue = (v: any): Venue => ({
   category: v.category,
   minHours: Number(v.min_hours) > 0 ? Number(v.min_hours) : 4,
   extraHourPrice: v.extra_hour_price != null ? Number(v.extra_hour_price) : Number(v.price_per_hour) || 0,
+  basePrice: v.base_price != null ? Number(v.base_price) : undefined,
+  baseCapacity: v.base_capacity != null ? Number(v.base_capacity) : undefined,
+  maxCapacity: v.max_capacity != null ? Number(v.max_capacity) : undefined,
+  includedHours: v.included_hours != null ? Number(v.included_hours) : undefined,
+  extraPersonPrice: v.extra_person_price != null ? Number(v.extra_person_price) : 0,
 });
 
 export const getVenues = async (): Promise<Venue[]> => {
