@@ -5,9 +5,10 @@ import { useUser } from '../context/UserContext';
 
 interface ProviderLayoutProps {
   children: React.ReactNode;
+  hideLogout?: boolean;
 }
 
-const ProviderLayout: React.FC<ProviderLayoutProps> = ({ children }) => {
+const ProviderLayout: React.FC<ProviderLayoutProps> = ({ children, hideLogout }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { logout } = useUser();
@@ -21,9 +22,11 @@ const ProviderLayout: React.FC<ProviderLayoutProps> = ({ children }) => {
 
   return (
     <div className="flex flex-col min-h-screen bg-background-light dark:bg-background-dark max-w-md mx-auto shadow-2xl relative transition-colors overflow-hidden border-x border-slate-100 dark:border-slate-800">
-      <header className="absolute top-4 right-4 z-50">
-        <button onClick={handleLogout} className="bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">Salir</button>
-      </header>
+      {!hideLogout && (
+        <header className="absolute top-4 right-4 z-50">
+          <button onClick={handleLogout} className="bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">Salir</button>
+        </header>
+      )}
       <main className="flex-1 pb-24 overflow-y-auto no-scrollbar">
         {children}
       </main>
