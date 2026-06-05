@@ -54,7 +54,7 @@ const BookingCalendar: React.FC = () => {
       .single()
       .then(({ data }) => {
         if (data) {
-          setVenue({
+          const mapped = {
             id: data.id,
             name: data.name,
             location: data.location || data.city,
@@ -63,7 +63,14 @@ const BookingCalendar: React.FC = () => {
             rating: data.rating || 0,
             reviewsCount: data.reviews_count || 0,
             extraHourPrice: data.extra_hour_price != null ? Number(data.extra_hour_price) : Number(data.price_per_hour) || 0,
-          });
+            basePrice: data.base_price != null ? Number(data.base_price) : null,
+            baseCapacity: data.base_capacity != null ? Number(data.base_capacity) : null,
+            maxCapacity: data.max_capacity != null ? Number(data.max_capacity) : (data.capacity ?? null),
+            includedHours: data.included_hours != null ? Number(data.included_hours) : (Number(data.min_hours) || 5),
+            extraPersonPrice: data.extra_person_price != null ? Number(data.extra_person_price) : 0,
+          };
+          setVenue(mapped);
+          if (mapped.baseCapacity) setGuests(mapped.baseCapacity);
         }
       });
   }, [id, isUuid]);
