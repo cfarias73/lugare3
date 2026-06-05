@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import ProviderLayout from '../../components/ProviderLayout';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { useUser } from '../../context/UserContext';
-import { getProviderStats, ProviderStats } from '../../src/services/providerService';
+import { getProviderStats, ProviderStats, getProviderVenues } from '../../src/services/providerService';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { EmptyState } from '../../components/ui/EmptyState';
 
