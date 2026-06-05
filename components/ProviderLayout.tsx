@@ -5,6 +5,7 @@ import { useUser } from '../context/UserContext';
 
 interface ProviderLayoutProps {
   children: React.ReactNode;
+  hideLogout?: boolean;
 }
 
 const ProviderLayout: React.FC<ProviderLayoutProps> = ({ children }) => {
