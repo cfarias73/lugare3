@@ -376,7 +376,7 @@ const Home: React.FC = () => {
             <button className="text-secondary font-semibold text-sm">Ver todos</button>
           </div>
           <div className="flex overflow-x-auto no-scrollbar gap-5 -mx-5 px-5 pb-4 snap-x snap-mandatory">
-            {venues.slice().reverse().map((venue) => (
+            {filteredVenues.slice().reverse().map((venue) => (
               <div 
                 key={`rec-${venue.id}`} 
                 onClick={() => navigate(`/user/venue/${venue.id}`)}
