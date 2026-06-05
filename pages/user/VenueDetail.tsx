@@ -4,6 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { getVenueById, getVenueServices, PublicVenueService } from '../../src/services/venueService';
 import { useUser } from '../../context/UserContext';
 import { Venue } from '../../types';
+import { getAmenity } from '../../src/constants/amenities';
 
 const VenueDetail: React.FC = () => {
   const navigate = useNavigate();
@@ -186,13 +187,24 @@ const VenueDetail: React.FC = () => {
 
           <section>
             <h2 className="text-lg font-bold mb-4 font-display">Servicios incluidos</h2>
-            <div className="flex flex-wrap gap-2">
-              {['WiFi', 'Aire acondicionado', 'Equipo de sonido', 'Catering', 'Estacionamiento'].map((svc, i) => (
-                <span key={i} className="inline-flex items-center gap-1.5 px-3 py-2 bg-slate-100 dark:bg-slate-800 rounded-full text-sm">
-                  <span className="material-icons-outlined text-secondary text-[18px]">check_circle</span> {svc}
-                </span>
-              ))}
-            </div>
+            {venue.amenities && venue.amenities.length > 0 ? (
+              <div className="grid grid-cols-2 gap-2">
+                {venue.amenities.map((key) => {
+                  const a = getAmenity(key);
+                  return (
+                    <div
+                      key={key}
+                      className="flex items-center gap-2 px-3 py-2.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl"
+                    >
+                      <span className="material-icons-outlined text-secondary text-[20px]">{a.icon}</span>
+                      <span className="text-[13px] font-medium text-slate-700 dark:text-slate-200 truncate">{a.label}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="text-sm text-slate-400">El anfitrión no ha especificado servicios incluidos.</p>
+            )}
           </section>
 
           {extras.length > 0 && (
