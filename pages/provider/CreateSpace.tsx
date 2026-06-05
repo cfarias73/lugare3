@@ -359,6 +359,34 @@ const CreateSpaceContent: React.FC = () => {
                 </div>
               </div>
               <div className="space-y-2">
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Servicios incluidos en el espacio</label>
+                <p className="text-[11px] text-slate-400 leading-snug ml-1 mb-2">Selecciona todo lo que el espacio ofrece sin costo extra.</p>
+                <div className="grid grid-cols-2 gap-3">
+                  {AMENITIES.map((a) => {
+                    const checked = data.amenities.includes(a.key);
+                    return (
+                      <label
+                        key={a.key}
+                        className={`flex items-center gap-2 p-3 rounded-xl cursor-pointer border transition-all ${
+                          checked
+                            ? 'bg-primary/10 border-primary'
+                            : 'bg-slate-50 dark:bg-slate-800/50 border-transparent'
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          className="accent-primary"
+                          checked={checked}
+                          onChange={() => toggleAmenity(a.key)}
+                        />
+                        <span className="material-icons-outlined text-secondary text-[18px]">{a.icon}</span>
+                        <span className="text-xs font-medium text-slate-700 dark:text-slate-200">{a.label}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+              <div className="space-y-2">
                 <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Descripción detallada</label>
                 <textarea
                   className={`${inputBase} resize-none`}
