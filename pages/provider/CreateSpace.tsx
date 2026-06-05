@@ -6,6 +6,7 @@ import { ErrorMessage } from '../../components/ui/ErrorMessage';
 import { useUser } from '../../context/UserContext';
 import { createVenue, updateVenue, getVenueForEdit, deleteVenueImages } from '../../src/services/providerService';
 import { getCategories, Category } from '../../src/services/categoryService';
+import { validateSpaceName } from '../../src/utils/profanityFilter';
 
 const RULES = ['No mascotas', 'No fumar', 'Horarios de silencio', 'No fiestas'];
 
@@ -70,9 +71,11 @@ const CreateSpaceContent: React.FC = () => {
 
   const validateStep1 = () => {
     const e: Record<string, string> = {};
-    if (!data.name.trim()) e.name = 'El nombre es requerido';
+    const nameError = validateSpaceName(data.name);
+    if (nameError) e.name = nameError;
     if (!data.capacity) e.capacity = 'La capacidad es requerida';
     if (!data.description.trim()) e.description = 'La descripción es requerida';
+    else if (data.description.trim().length > 1000) e.description = 'La descripción no puede exceder 1000 caracteres';
     if (!data.category) e.category = 'La categoría es requerida';
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -227,8 +230,24 @@ const CreateSpaceContent: React.FC = () => {
             <div className="bg-white dark:bg-surface-dark border border-slate-100 dark:border-slate-800 rounded-[32px] p-8 shadow-sm space-y-6">
               <div className="space-y-2">
                 <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Nombre del espacio</label>
-                <input className={inputBase} placeholder="Ej: Terraza Panorámica" value={data.name} onChange={(e) => updateData({ name: e.target.value })} />
-                <ErrorMessage message={errors.name} />
+                <input
+                  className={inputBase}
+                  placeholder="Ej: Terraza Panorámica"
+                  value={data.name}
+                  maxLength={60}
+                  onChange={(e) => {
+                    updateData({ name: e.target.value });
+                    if (errors.name) setErrors((p) => ({ ...p, name: '' }));
+                  }}
+                  onBlur={(e) => {
+                    const msg = validateSpaceName(e.target.value);
+                    if (msg) setErrors((p) => ({ ...p, name: msg }));
+                  }}
+                />
+                <div className="flex justify-between items-center">
+                  <ErrorMessage message={errors.name} />
+                  <span className="text-[10px] text-slate-400 ml-auto">{data.name.length}/60</span>
+                </div>
               </div>
               <div className="space-y-2">
                 <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Tipo de espacio</label>
