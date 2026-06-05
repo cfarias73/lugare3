@@ -23,6 +23,7 @@ export interface Venue {
   maxCapacity?: number;
   includedHours?: number;
   extraPersonPrice?: number;
+  amenities?: string[];
 }
 
 export interface Review {
