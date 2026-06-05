@@ -5,6 +5,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { MOCK_VENUES } from '../../constants';
 import { supabase } from '../../lib/supabaseClient';
 import { getBlockedDatesForMonth } from '../../src/services/availabilityService';
+import { calcVenuePricing } from '../../src/utils/pricing';
 
 const SLOT_TIMES = {
   morning: { start: '08:00:00', end: '13:00:00', hours: 5 },
