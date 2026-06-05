@@ -78,10 +78,6 @@ const CreateSpaceContent: React.FC = () => {
     const e: Record<string, string> = {};
     const nameError = validateSpaceName(data.name);
     if (nameError) e.name = nameError;
-    const cap = Number(data.capacity);
-    if (!data.capacity) e.capacity = 'La capacidad es requerida';
-    else if (!Number.isFinite(cap) || cap <= 0) e.capacity = 'La capacidad debe ser mayor a 0';
-    else if (cap > 10000) e.capacity = 'La capacidad no puede exceder 10,000';
     if (data.sizeSqm) {
       const sz = Number(data.sizeSqm);
       if (!Number.isFinite(sz) || sz <= 0) e.sizeSqm = 'El tamaño debe ser mayor a 0';
@@ -98,16 +94,30 @@ const CreateSpaceContent: React.FC = () => {
     const e: Record<string, string> = {};
     if (!data.address.trim()) e.address = 'La dirección es requerida';
     if (!data.city.trim()) e.city = 'La ciudad es requerida';
-    const price = Number(data.pricePerHour);
-    if (!data.pricePerHour || !Number.isFinite(price) || price <= 0) e.pricePerHour = 'Ingresa un precio válido (mayor a 0)';
-    else if (price > 1000000) e.pricePerHour = 'El precio no puede exceder $1,000,000';
-    const minH = Number(data.minHours);
-    if (!data.minHours || !Number.isFinite(minH) || minH < 1) e.minHours = 'Mínimo 1 hora';
-    else if (minH > 24) e.minHours = 'Máximo 24 horas';
-    if (data.extraHourPrice) {
-      const eh = Number(data.extraHourPrice);
-      if (!Number.isFinite(eh) || eh < 0) e.extraHourPrice = 'El precio por hora extra no puede ser negativo';
-    }
+
+    const basePrice = Number(data.basePrice);
+    if (!data.basePrice || !Number.isFinite(basePrice) || basePrice <= 0) e.basePrice = 'Ingresa el precio base';
+    else if (basePrice > 10000000) e.basePrice = 'Precio demasiado alto';
+
+    const baseCap = Number(data.baseCapacity);
+    if (!data.baseCapacity || !Number.isFinite(baseCap) || baseCap <= 0) e.baseCapacity = 'Capacidad base requerida';
+    else if (baseCap > 10000) e.baseCapacity = 'No puede exceder 10,000';
+
+    const maxCap = Number(data.maxCapacity);
+    if (!data.maxCapacity || !Number.isFinite(maxCap) || maxCap <= 0) e.maxCapacity = 'Capacidad máxima requerida';
+    else if (maxCap < baseCap) e.maxCapacity = 'Debe ser mayor o igual a la base';
+    else if (maxCap > 10000) e.maxCapacity = 'No puede exceder 10,000';
+
+    const incH = Number(data.includedHours);
+    if (!data.includedHours || !Number.isFinite(incH) || incH < 1) e.includedHours = 'Mínimo 1 hora';
+    else if (incH > 24) e.includedHours = 'Máximo 24 horas';
+
+    const ep = Number(data.extraPersonPrice);
+    if (data.extraPersonPrice && (!Number.isFinite(ep) || ep < 0)) e.extraPersonPrice = 'No puede ser negativo';
+
+    const eh = Number(data.extraHourPrice);
+    if (!data.extraHourPrice || !Number.isFinite(eh) || eh < 0) e.extraHourPrice = 'Ingresa el costo por hora extra';
+
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -126,17 +136,31 @@ const CreateSpaceContent: React.FC = () => {
     }
     setLoading(true);
     try {
+      const basePrice = Number(data.basePrice);
+      const includedHours = Number(data.includedHours) || 5;
+      const baseCapacity = Number(data.baseCapacity);
+      const maxCapacity = Number(data.maxCapacity);
+      const extraPersonPrice = data.extraPersonPrice ? Number(data.extraPersonPrice) : 0;
+      const extraHourPrice = Number(data.extraHourPrice);
+
       const payload = {
         name: data.name.trim(),
         description: data.description.trim(),
         category: data.category,
         location: data.address.trim(),
         city: data.city.trim(),
-        capacity: parseInt(data.capacity) || 0,
+        capacity: maxCapacity,
         size_sqm: data.sizeSqm ? parseInt(data.sizeSqm) : 0,
-        price_per_hour: Number(data.pricePerHour),
-        min_hours: Number(data.minHours) || 4,
-        extra_hour_price: data.extraHourPrice ? Number(data.extraHourPrice) : Number(data.pricePerHour),
+        // Legado (mantenido para compatibilidad con flujos existentes)
+        price_per_hour: Math.round(basePrice / includedHours),
+        min_hours: includedHours,
+        extra_hour_price: extraHourPrice,
+        // Nuevo modelo flexible
+        base_price: basePrice,
+        base_capacity: baseCapacity,
+        max_capacity: maxCapacity,
+        included_hours: includedHours,
+        extra_person_price: extraPersonPrice,
         lat: data.lat ? Number(data.lat) : null,
         lng: data.lng ? Number(data.lng) : null,
         rules: data.rules,
