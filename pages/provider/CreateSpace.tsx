@@ -306,20 +306,6 @@ const CreateSpaceContent: React.FC = () => {
                 </div>
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Tipo de espacio</label>
-                <div className="relative">
-                  <select className={`${inputBase} appearance-none`} value={data.type} onChange={(e) => updateData({ type: e.target.value })}>
-                    <option>Jardín</option>
-                    <option>Salón</option>
-                    <option>Terraza</option>
-                    <option>Roof Garden</option>
-                    <option>Casa</option>
-                    <option>Quinta</option>
-                  </select>
-                  <span className="material-icons-outlined absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">expand_more</span>
-                </div>
-              </div>
-              <div className="space-y-2">
                 <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Categoría</label>
                 <div className="relative">
                   <select className={`${inputBase} appearance-none`} value={data.category} onChange={(e) => updateData({ category: e.target.value })}>
