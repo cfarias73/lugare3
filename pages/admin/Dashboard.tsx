@@ -1,15 +1,21 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import AdminLayout from '../../components/AdminLayout';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { motion } from 'motion/react';
+import { getAdminStats } from '../../src/services/adminService';
+import { toast } from 'sonner';
 
 const AdminDashboard: React.FC = () => {
+  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
+  const [stats, setStats] = useState({ userCount: 0, providerCount: 0, bookingCount: 0, todayBookings: 0, revenue: 0 });
 
   useEffect(() => {
-    // Simulate data fetch
-    const timer = setTimeout(() => setIsLoading(false), 1500);
-    return () => clearTimeout(timer);
+    getAdminStats()
+      .then((s) => setStats(s as any))
+      .catch((e) => toast.error(e.message || 'Error cargando estadísticas'))
+      .finally(() => setIsLoading(false));
   }, []);
 
   if (isLoading) {
@@ -19,76 +25,67 @@ const AdminDashboard: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-32 rounded-2xl" />)}
         </div>
-        <Skeleton className="h-64 w-full rounded-2xl" />
       </AdminLayout>
     );
   }
 
-  const stats = [
-    { label: 'Usuarios', value: '1,284', icon: 'people' },
-    { label: 'Anfitriones', value: '342', icon: 'storefront' },
-    { label: 'Reservas Hoy', value: '56', icon: 'event' },
-    { label: 'Ingresos', value: '$124,500', icon: 'payments' },
+  const cards = [
+    { label: 'Usuarios', value: stats.userCount.toLocaleString(), icon: 'people', path: '/admin/users' },
+    { label: 'Anfitriones', value: stats.providerCount.toLocaleString(), icon: 'storefront', path: '/admin/hosts' },
+    { label: 'Reservas Hoy', value: stats.todayBookings.toLocaleString(), icon: 'event', path: '/admin/bookings' },
+    { label: 'Ingresos (completadas)', value: `$${stats.revenue.toLocaleString()}`, icon: 'payments', path: '/admin/bookings' },
+  ];
+
+  const quickActions = [
+    { label: 'Revisar espacios pendientes', path: '/admin/spaces', icon: 'pending_actions' },
+    { label: 'Gestionar categorías', path: '/admin/categories', icon: 'category' },
+    { label: 'Ver todas las reservas', path: '/admin/bookings', icon: 'event_note' },
+    { label: 'Configuración de plataforma', path: '/admin/settings', icon: 'settings' },
   ];
 
   return (
     <AdminLayout>
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="space-y-8"
-      >
-        <header className="flex justify-between items-center mb-10">
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
+        <header className="mb-6">
           <h1 className="text-4xl font-bold font-display dark:text-white">Dashboard</h1>
-          <button className="bg-primary text-white px-8 py-4 rounded-2xl font-bold shadow-lg shadow-primary/20 hover:bg-orange-600 transition-all">
-            Exportar Reporte
-          </button>
+          <p className="text-slate-500 mt-2">Resumen general de la plataforma</p>
         </header>
 
-        <section className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-8">
-          {stats.map((stat) => (
-            <div key={stat.label} className="bg-white dark:bg-surface-dark p-8 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800">
-              <div className="w-16 h-16 bg-orange-50 dark:bg-orange-900/20 rounded-3xl flex items-center justify-center text-primary mb-6">
-                <span className="material-icons-round text-3xl">{stat.icon}</span>
+        <section className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+          {cards.map((stat) => (
+            <button
+              key={stat.label}
+              onClick={() => navigate(stat.path)}
+              className="text-left bg-white dark:bg-surface-dark p-8 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 hover:border-primary hover:shadow-md transition-all"
+            >
+              <div className="w-14 h-14 bg-orange-50 dark:bg-orange-900/20 rounded-2xl flex items-center justify-center text-primary mb-4">
+                <span className="material-icons-round text-2xl">{stat.icon}</span>
               </div>
-              <p className="text-sm text-slate-500 font-bold uppercase tracking-widest">{stat.label}</p>
-              <p className="text-4xl font-bold dark:text-white mt-2">{stat.value}</p>
-            </div>
+              <p className="text-xs text-slate-500 font-bold uppercase tracking-widest">{stat.label}</p>
+              <p className="text-3xl font-bold dark:text-white mt-2">{stat.value}</p>
+            </button>
           ))}
         </section>
 
-        <section className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-          <div className="xl:col-span-2 bg-white dark:bg-surface-dark p-10 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800">
-            <h3 className="text-2xl font-bold mb-8 dark:text-white">Actividad Reciente</h3>
-            <div className="space-y-6">
-              {[1, 2, 3, 4, 5].map((i) => (
-                <div key={i} className="flex items-center justify-between p-6 bg-slate-50 dark:bg-slate-800 rounded-3xl hover:bg-slate-100 transition-colors">
-                  <div className="flex items-center gap-6">
-                    <div className="w-14 h-14 rounded-full bg-slate-200 dark:bg-slate-700" />
-                    <div>
-                      <p className="font-bold text-lg dark:text-white">Nuevo usuario registrado</p>
-                      <p className="text-sm text-slate-500">Hace 5 minutos · ID: #12345</p>
-                    </div>
-                  </div>
-                  <button className="text-primary font-bold">Ver detalles</button>
-                </div>
-              ))}
-            </div>
+        <section className="bg-white dark:bg-surface-dark p-8 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800">
+          <h3 className="text-xl font-bold mb-6 dark:text-white">Acciones rápidas</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {quickActions.map((a) => (
+              <button
+                key={a.path}
+                onClick={() => navigate(a.path)}
+                className="flex items-center gap-4 p-5 rounded-2xl bg-slate-50 dark:bg-slate-800 font-bold hover:bg-slate-100 dark:hover:bg-slate-700 transition-all text-left"
+              >
+                <span className="material-icons-round text-primary">{a.icon}</span>
+                <span className="dark:text-white">{a.label}</span>
+              </button>
+            ))}
           </div>
-          <div className="bg-white dark:bg-surface-dark p-10 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800">
-            <h3 className="text-2xl font-bold mb-8 dark:text-white">Acciones Rápidas</h3>
-            <div className="space-y-4">
-              <button className="w-full text-left p-6 rounded-2xl bg-slate-50 dark:bg-slate-800 font-bold hover:bg-slate-100 dark:hover:bg-slate-700 transition-all">
-                Aprobar nuevo anfitrión
-              </button>
-              <button className="w-full text-left p-6 rounded-2xl bg-slate-50 dark:bg-slate-800 font-bold hover:bg-slate-100 dark:hover:bg-slate-700 transition-all">
-                Gestionar disputas pendientes
-              </button>
-              <button className="w-full text-left p-6 rounded-2xl bg-slate-50 dark:bg-slate-800 font-bold hover:bg-slate-100 dark:hover:bg-slate-700 transition-all">
-                Ver reportes financieros
-              </button>
-            </div>
-          </div>
+        </section>
+
+        <section className="bg-white dark:bg-surface-dark p-8 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800">
+          <h3 className="text-xl font-bold mb-2 dark:text-white">Totales globales</h3>
+          <p className="text-sm text-slate-500">Reservas totales: <strong className="dark:text-white">{stats.bookingCount.toLocaleString()}</strong></p>
         </section>
       </motion.div>
     </AdminLayout>
