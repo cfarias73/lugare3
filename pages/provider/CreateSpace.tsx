@@ -397,10 +397,24 @@ const CreateSpaceContent: React.FC = () => {
                   <input className={inputBase} placeholder="Calle, número, colonia" value={data.address} onChange={(e) => updateData({ address: e.target.value })} />
                   <ErrorMessage message={errors.address} />
                 </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Ciudad</label>
-                  <input className={inputBase} placeholder="CDMX" value={data.city} onChange={(e) => updateData({ city: e.target.value })} />
-                  <ErrorMessage message={errors.city} />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Ciudad</label>
+                    <input className={inputBase} placeholder="CDMX" value={data.city} onChange={(e) => updateData({ city: e.target.value })} />
+                    <ErrorMessage message={errors.city} />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Código postal</label>
+                    <input
+                      className={inputBase}
+                      inputMode="numeric"
+                      maxLength={10}
+                      placeholder="06700"
+                      value={data.postalCode}
+                      onChange={(e) => updateData({ postalCode: e.target.value.replace(/[^0-9]/g, '') })}
+                    />
+                    <ErrorMessage message={errors.postalCode} />
+                  </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
