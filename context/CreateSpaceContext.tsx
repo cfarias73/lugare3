@@ -10,6 +10,7 @@ export interface CreateSpaceData {
   // Ubicación
   address: string;
   city: string;
+  postalCode: string;
   lat: string;
   lng: string;
   // Precios flexibles
@@ -45,6 +46,7 @@ const defaultData: CreateSpaceData = {
   category: '',
   address: '',
   city: 'CDMX',
+  postalCode: '',
   lat: '',
   lng: '',
   basePrice: '',

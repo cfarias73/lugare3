@@ -6,6 +6,7 @@ export interface VenuePayload {
   category: string;
   location: string;
   city: string;
+  postal_code?: string | null;
   capacity: number;
   size_sqm: number;
   price_per_hour: number;
