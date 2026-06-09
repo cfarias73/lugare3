@@ -54,6 +54,7 @@ const CreateSpaceContent: React.FC = () => {
           category: v.category ?? '',
           address: v.location ?? '',
           city: v.city ?? 'CDMX',
+          postalCode: v.postal_code ?? '',
           lat: v.lat?.toString() ?? '',
           lng: v.lng?.toString() ?? '',
           basePrice: v.base_price?.toString() ?? '',
