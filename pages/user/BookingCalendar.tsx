@@ -142,6 +142,14 @@ const BookingCalendar: React.FC = () => {
     }
   };
 
+  if (!venue) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-slate-500">
+        Cargando espacio...
+      </div>
+    );
+  }
+
   const extraPrice = Number(venue.extraHourPrice ?? venue.price) || 0;
   const slotHours = selectedSlot ? SLOT_TIMES[selectedSlot].hours : 0;
   const usingFlexible = venue.basePrice != null;
