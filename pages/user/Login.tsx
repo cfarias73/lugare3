@@ -49,6 +49,14 @@ const Login: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-white dark:bg-background-dark transition-colors duration-200">
+      <button
+        onClick={() => navigate('/')}
+        className="fixed top-4 left-4 z-50 flex items-center gap-1 px-4 py-2 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-sm font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors shadow-sm"
+        aria-label="Volver al inicio"
+      >
+        <span className="material-icons-round text-lg">arrow_back</span>
+        Inicio
+      </button>
       <div className="w-full max-w-[400px] flex flex-col items-center space-y-8">
         <div className="flex flex-col items-center space-y-4">
           <div className="relative w-24 h-24">
