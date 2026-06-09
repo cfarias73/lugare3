@@ -152,6 +152,7 @@ const CreateSpaceContent: React.FC = () => {
         category: data.category,
         location: data.address.trim(),
         city: data.city.trim(),
+        postal_code: data.postalCode.trim() || null,
         capacity: maxCapacity,
         size_sqm: data.sizeSqm ? parseInt(data.sizeSqm) : 0,
         // Legado (mantenido para compatibilidad con flujos existentes)
