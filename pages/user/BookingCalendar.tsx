@@ -41,12 +41,7 @@ const BookingCalendar: React.FC = () => {
   const isUuid = id ? /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id) : false;
 
   useEffect(() => {
-    if (!id) return;
-    if (!isUuid) {
-      const mock = MOCK_VENUES.find(v => v.id === id);
-      if (mock) setVenue(mock);
-      return;
-    }
+    if (!id || !isUuid) return;
     supabase
       .from('venues')
       .select('*, venue_images(image_url)')
@@ -58,7 +53,7 @@ const BookingCalendar: React.FC = () => {
             id: data.id,
             name: data.name,
             location: data.location || data.city,
-            image: data.venue_images?.[0]?.image_url || MOCK_VENUES[0].image,
+            image: data.venue_images?.[0]?.image_url || PLACEHOLDER_IMAGE,
             price: Number(data.price_per_hour) || 0,
             rating: data.rating || 0,
             reviewsCount: data.reviews_count || 0,
