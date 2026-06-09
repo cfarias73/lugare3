@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
-import { MOCK_VENUES } from '../../constants';
+const PLACEHOLDER_IMAGE = 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?w=800';
 import { supabase } from '../../lib/supabaseClient';
 import { getBlockedDatesForMonth } from '../../src/services/availabilityService';
 import { calcVenuePricing } from '../../src/utils/pricing';
@@ -34,19 +34,14 @@ const BookingCalendar: React.FC = () => {
   const [selectedSlot, setSelectedSlot] = useState<'morning' | 'afternoon' | 'night' | null>(null);
   const [extraHours, setExtraHours] = useState<number>(0);
   const [guests, setGuests] = useState<number>(0);
-  const [venue, setVenue] = useState<any>(MOCK_VENUES[0]);
+  const [venue, setVenue] = useState<any>(null);
   const [blockedDates, setBlockedDates] = useState<Set<string>>(new Set());
   const [bookedDates, setBookedDates] = useState<Set<string>>(new Set());
 
   const isUuid = id ? /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id) : false;
 
   useEffect(() => {
-    if (!id) return;
-    if (!isUuid) {
-      const mock = MOCK_VENUES.find(v => v.id === id);
-      if (mock) setVenue(mock);
-      return;
-    }
+    if (!id || !isUuid) return;
     supabase
       .from('venues')
       .select('*, venue_images(image_url)')
@@ -58,7 +53,7 @@ const BookingCalendar: React.FC = () => {
             id: data.id,
             name: data.name,
             location: data.location || data.city,
-            image: data.venue_images?.[0]?.image_url || MOCK_VENUES[0].image,
+            image: data.venue_images?.[0]?.image_url || PLACEHOLDER_IMAGE,
             price: Number(data.price_per_hour) || 0,
             rating: data.rating || 0,
             reviewsCount: data.reviews_count || 0,
@@ -146,6 +141,14 @@ const BookingCalendar: React.FC = () => {
       alert('Por favor selecciona un día y un horario.');
     }
   };
+
+  if (!venue) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-slate-500">
+        Cargando espacio...
+      </div>
+    );
+  }
 
   const extraPrice = Number(venue.extraHourPrice ?? venue.price) || 0;
   const slotHours = selectedSlot ? SLOT_TIMES[selectedSlot].hours : 0;
