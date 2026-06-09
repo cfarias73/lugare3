@@ -1,20 +1,40 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import AdminLayout from '../../components/AdminLayout';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { EmptyState } from '../../components/ui/EmptyState';
-import { MOCK_HOSTS } from '../../constants/adminConstants';
+import { getAllHosts } from '../../src/services/adminService';
+import { toast } from 'sonner';
 
 const Hosts: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
+  const [hosts, setHosts] = useState<any[]>([]);
+  const [q, setQ] = useState('');
 
   useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), 1000);
-    return () => clearTimeout(timer);
+    getAllHosts()
+      .then(setHosts)
+      .catch((e) => toast.error(e.message || 'Error cargando anfitriones'))
+      .finally(() => setIsLoading(false));
   }, []);
+
+  const filtered = hosts.filter(
+    (h) =>
+      !q ||
+      (h.name || '').toLowerCase().includes(q.toLowerCase()) ||
+      (h.email || '').toLowerCase().includes(q.toLowerCase())
+  );
 
   return (
     <AdminLayout>
-      <h1 className="text-2xl font-bold mb-6 dark:text-white">Gestión de Anfitriones</h1>
+      <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+        <h1 className="text-2xl font-bold dark:text-white">Gestión de Anfitriones ({hosts.length})</h1>
+        <input
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder="Buscar..."
+          className="px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-xl dark:bg-slate-800 dark:text-white text-sm w-72"
+        />
+      </div>
       <div className="bg-white dark:bg-surface-dark rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden">
         <table className="w-full text-left">
           <thead className="bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-xs uppercase tracking-widest">
@@ -22,7 +42,7 @@ const Hosts: React.FC = () => {
               <th className="p-4">Nombre</th>
               <th className="p-4">Email</th>
               <th className="p-4">Espacios</th>
-              <th className="p-4">Rating</th>
+              <th className="p-4">Fecha de registro</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -32,22 +52,22 @@ const Hosts: React.FC = () => {
                   <td className="p-4"><Skeleton className="h-4 w-32" /></td>
                   <td className="p-4"><Skeleton className="h-4 w-48" /></td>
                   <td className="p-4"><Skeleton className="h-4 w-16" /></td>
-                  <td className="p-4"><Skeleton className="h-4 w-12" /></td>
+                  <td className="p-4"><Skeleton className="h-4 w-24" /></td>
                 </tr>
               ))
-            ) : MOCK_HOSTS.length === 0 ? (
+            ) : filtered.length === 0 ? (
               <tr>
                 <td colSpan={4} className="p-8">
-                  <EmptyState title="No hay anfitriones" description="Aún no hay anfitriones registrados en la plataforma." icon="storefront" />
+                  <EmptyState title="No hay anfitriones" description="Aún no hay anfitriones registrados." icon="storefront" />
                 </td>
               </tr>
             ) : (
-              MOCK_HOSTS.map((host) => (
+              filtered.map((host) => (
                 <tr key={host.id} className="text-sm dark:text-slate-300">
-                  <td className="p-4">{host.name}</td>
+                  <td className="p-4 font-medium">{host.name || '—'}</td>
                   <td className="p-4">{host.email}</td>
                   <td className="p-4">{host.spaces}</td>
-                  <td className="p-4">{host.rating}</td>
+                  <td className="p-4 text-slate-500">{host.created_at ? new Date(host.created_at).toLocaleDateString() : '—'}</td>
                 </tr>
               ))
             )}
