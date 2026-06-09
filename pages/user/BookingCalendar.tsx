@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
-import { MOCK_VENUES } from '../../constants';
+const PLACEHOLDER_IMAGE = 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?w=800';
 import { supabase } from '../../lib/supabaseClient';
 import { getBlockedDatesForMonth } from '../../src/services/availabilityService';
 import { calcVenuePricing } from '../../src/utils/pricing';
