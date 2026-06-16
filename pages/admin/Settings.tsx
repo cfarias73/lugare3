@@ -66,13 +66,38 @@ const Settings: React.FC = () => {
               <span className="ml-2 text-2xl font-bold text-primary">%</span>
             </div>
 
-            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 rounded-xl p-4 text-sm text-blue-700 dark:text-blue-400">
-              <strong>Ejemplo:</strong> Una reserva de $1,000 MXN generaría:
-              <ul className="mt-2 ml-4 list-disc">
-                <li>Comisión plataforma: ${(1000 * commission / 100).toFixed(2)}</li>
-                <li>Pago al host: ${(1000 - 1000 * commission / 100).toFixed(2)}</li>
-              </ul>
-            </div>
+            {(() => {
+              const reserva = 1000;
+              const GATEWAY_PERCENT = 3.6; // Stripe MX estándar
+              const GATEWAY_FIXED = 3; // MXN por transacción
+              const IVA = 0.16; // IVA sobre comisiones de pasarela en MX
+              const comisionPlataforma = reserva * commission / 100;
+              const comisionPasarela = (reserva * GATEWAY_PERCENT / 100) + GATEWAY_FIXED;
+              const ivaPasarela = comisionPasarela * IVA;
+              const totalPasarela = comisionPasarela + ivaPasarela;
+              const netoPlataforma = comisionPlataforma - totalPasarela;
+              const pagoHost = reserva - comisionPlataforma;
+              return (
+                <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 rounded-xl p-4 text-sm text-blue-700 dark:text-blue-400">
+                  <strong>Ejemplo:</strong> Una reserva de $1,000 MXN generaría:
+                  <ul className="mt-2 ml-4 list-disc space-y-1">
+                    <li>Comisión plataforma ({commission}%): <strong>${comisionPlataforma.toFixed(2)}</strong></li>
+                    <li>Pago al host ({(100 - commission).toFixed(1)}%): <strong>${pagoHost.toFixed(2)}</strong></li>
+                    <li>
+                      Comisión pasarela de pago ({GATEWAY_PERCENT}% + ${GATEWAY_FIXED} MXN + IVA):
+                      <strong> ${totalPasarela.toFixed(2)}</strong>
+                    </li>
+                    <li>
+                      Ingreso neto de la plataforma (después de pasarela):
+                      <strong className={netoPlataforma < 0 ? 'text-red-600' : ''}> ${netoPlataforma.toFixed(2)}</strong>
+                    </li>
+                  </ul>
+                  <p className="mt-3 text-xs text-blue-600/80 dark:text-blue-300/80">
+                    * Tarifas de referencia basadas en Stripe México (3.6% + $3 MXN + IVA). Ajustar al contrato vigente con tu pasarela.
+                  </p>
+                </div>
+              );
+            })()}
 
             <button
               onClick={handleSave}
