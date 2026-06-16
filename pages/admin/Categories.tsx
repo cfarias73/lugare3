@@ -216,6 +216,11 @@ const Categories: React.FC = () => {
                     </td>
                     <td className="p-4 font-bold">{c.name}</td>
                     <td className="p-4 text-slate-500">{c.slug}</td>
+                    <td className="p-4">
+                      <span className="inline-flex items-center justify-center min-w-[2rem] px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold">
+                        {counts[c.slug] || 0}
+                      </span>
+                    </td>
                     <td className="p-4">{c.sort_order}</td>
                     <td className="p-4">
                       <span
