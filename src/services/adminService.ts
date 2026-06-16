@@ -39,6 +39,16 @@ export const deleteUserProfile = async (userId: string) => {
   if (error) throw error;
 };
 
+export const updateHostName = async (hostId: string, name: string) => {
+  const { error } = await supabase.from('profiles').update({ name }).eq('id', hostId);
+  if (error) throw error;
+};
+
+export const deleteHostProfile = async (hostId: string) => {
+  const { error } = await supabase.from('profiles').delete().eq('id', hostId);
+  if (error) throw error;
+};
+
 export const getAllHosts = async () => {
   const { data, error } = await supabase
     .from('profiles')
