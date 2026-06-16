@@ -25,7 +25,12 @@ const Categories: React.FC = () => {
   const fetch = async () => {
     setLoading(true);
     try {
-      setItems(await getAllCategories());
+      const [categories, venueCounts] = await Promise.all([
+        getAllCategories(),
+        getCategoryVenueCounts(),
+      ]);
+      setItems(categories);
+      setCounts(venueCounts);
     } catch (e: any) {
       toast.error(e.message || 'Error cargando categorías');
     } finally {
