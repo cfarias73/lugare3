@@ -191,7 +191,7 @@ const Categories: React.FC = () => {
               {loading ? (
                 [1, 2, 3].map((i) => (
                   <tr key={i}>
-                    {Array.from({ length: 6 }).map((_, j) => (
+                    {Array.from({ length: 7 }).map((_, j) => (
                       <td key={j} className="p-4">
                         <Skeleton className="h-4 w-20" />
                       </td>
