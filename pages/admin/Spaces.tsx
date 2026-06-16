@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import AdminLayout from '../../components/AdminLayout';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { getPendingVenues, approveVenue, rejectVenue, getAllVenuesAdmin } from '../../src/services/adminService';
 import { toast } from 'sonner';
 
-type Tab = 'pending' | 'all';
+type StatusFilter = 'all' | 'pending' | 'approved' | 'rejected';
+type DateFilter = 'all' | 'today' | 'week' | 'month';
 
 const statusStyle: Record<string, string> = {
   pending: 'bg-yellow-100 text-yellow-700',
@@ -13,10 +14,25 @@ const statusStyle: Record<string, string> = {
   rejected: 'bg-red-100 text-red-700',
 };
 
+const statusLabel: Record<string, string> = {
+  pending: 'Pendiente',
+  approved: 'Aprobado',
+  rejected: 'Rechazado',
+};
+
+const formatCategory = (slug?: string) => {
+  if (!slug) return '—';
+  return slug.replace(/-/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase());
+};
+
 const Spaces: React.FC = () => {
-  const [tab, setTab] = useState<Tab>('pending');
+  const [tab, setTab] = useState<StatusFilter>('pending');
   const [isLoading, setIsLoading] = useState(true);
   const [venues, setVenues] = useState<any[]>([]);
+  const [q, setQ] = useState('');
+  const [dateFilter, setDateFilter] = useState<DateFilter>('all');
+  const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const [cityFilter, setCityFilter] = useState<string>('all');
 
   const fetchVenues = async () => {
     setIsLoading(true);
@@ -31,6 +47,40 @@ const Spaces: React.FC = () => {
   };
 
   useEffect(() => { fetchVenues(); }, [tab]);
+
+  const categories = useMemo(
+    () => Array.from(new Set(venues.map((v) => v.category).filter(Boolean))).sort(),
+    [venues]
+  );
+
+  const cities = useMemo(
+    () => Array.from(new Set(venues.map((v) => v.city).filter(Boolean))).sort(),
+    [venues]
+  );
+
+  const filtered = useMemo(() => {
+    const now = Date.now();
+    const ranges: Record<DateFilter, number> = {
+      all: 0,
+      today: 24 * 60 * 60 * 1000,
+      week: 7 * 24 * 60 * 60 * 1000,
+      month: 30 * 24 * 60 * 60 * 1000,
+    };
+    return venues.filter((venue) => {
+      const matchesQ =
+        !q ||
+        (venue.name || '').toLowerCase().includes(q.toLowerCase()) ||
+        (venue.profiles?.name || '').toLowerCase().includes(q.toLowerCase()) ||
+        (venue.profiles?.email || '').toLowerCase().includes(q.toLowerCase());
+      if (!matchesQ) return false;
+      if (tab !== 'all' && venue.status !== tab) return false;
+      if (categoryFilter !== 'all' && venue.category !== categoryFilter) return false;
+      if (cityFilter !== 'all' && venue.city !== cityFilter) return false;
+      if (dateFilter === 'all') return true;
+      if (!venue.created_at) return false;
+      return now - new Date(venue.created_at).getTime() <= ranges[dateFilter];
+    });
+  }, [venues, q, tab, dateFilter, categoryFilter, cityFilter]);
 
   const handleApprove = async (id: string) => {
     try {
@@ -56,10 +106,13 @@ const Spaces: React.FC = () => {
 
   return (
     <AdminLayout>
-      <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
-        <h1 className="text-2xl font-bold dark:text-white">Gestión de Espacios</h1>
+      <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+        <h1 className="text-2xl font-bold dark:text-white">Gestión de Espacios ({filtered.length})</h1>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-3 mb-6">
         <div className="flex gap-2 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
-          {(['pending', 'all'] as Tab[]).map((t) => (
+          {(['pending', 'approved', 'rejected', 'all'] as StatusFilter[]).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -67,10 +120,49 @@ const Spaces: React.FC = () => {
                 tab === t ? 'bg-white dark:bg-slate-700 text-primary shadow-sm' : 'text-slate-500'
               }`}
             >
-              {t === 'pending' ? 'Pendientes' : 'Todos'}
+              {t === 'pending' && 'Pendientes'}
+              {t === 'approved' && 'Aprobados'}
+              {t === 'rejected' && 'Rechazados'}
+              {t === 'all' && 'Todos'}
             </button>
           ))}
         </div>
+        <select
+          value={dateFilter}
+          onChange={(e) => setDateFilter(e.target.value as DateFilter)}
+          className="px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-xl dark:bg-slate-800 dark:text-white text-sm"
+        >
+          <option value="all">Todas las fechas</option>
+          <option value="today">Hoy</option>
+          <option value="week">Últimos 7 días</option>
+          <option value="month">Últimos 30 días</option>
+        </select>
+        <select
+          value={categoryFilter}
+          onChange={(e) => setCategoryFilter(e.target.value)}
+          className="px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-xl dark:bg-slate-800 dark:text-white text-sm"
+        >
+          <option value="all">Todas las categorías</option>
+          {categories.map((c) => (
+            <option key={c} value={c}>{formatCategory(c)}</option>
+          ))}
+        </select>
+        <select
+          value={cityFilter}
+          onChange={(e) => setCityFilter(e.target.value)}
+          className="px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-xl dark:bg-slate-800 dark:text-white text-sm"
+        >
+          <option value="all">Todas las ciudades</option>
+          {cities.map((c) => (
+            <option key={c} value={c}>{c}</option>
+          ))}
+        </select>
+        <input
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder="Buscar espacio o anfitrión..."
+          className="px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-xl dark:bg-slate-800 dark:text-white text-sm w-full md:w-72"
+        />
       </div>
 
       <div className="bg-white dark:bg-surface-dark rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden">
@@ -79,7 +171,10 @@ const Spaces: React.FC = () => {
             <tr>
               <th className="p-4">Nombre</th>
               <th className="p-4">Anfitrión</th>
-              {tab === 'all' && <th className="p-4">Estado</th>}
+              <th className="p-4">Categoría</th>
+              <th className="p-4">Ciudad</th>
+              <th className="p-4">Estado</th>
+              <th className="p-4">Registro</th>
               <th className="p-4">Acciones</th>
             </tr>
           </thead>
@@ -87,34 +182,40 @@ const Spaces: React.FC = () => {
             {isLoading ? (
               [1, 2, 3].map((i) => (
                 <tr key={i}>
-                  <td className="p-4"><Skeleton className="h-4 w-48" /></td>
+                  <td className="p-4"><Skeleton className="h-4 w-40" /></td>
                   <td className="p-4"><Skeleton className="h-4 w-32" /></td>
-                  {tab === 'all' && <td className="p-4"><Skeleton className="h-4 w-16" /></td>}
+                  <td className="p-4"><Skeleton className="h-4 w-24" /></td>
+                  <td className="p-4"><Skeleton className="h-4 w-24" /></td>
+                  <td className="p-4"><Skeleton className="h-4 w-16" /></td>
+                  <td className="p-4"><Skeleton className="h-4 w-20" /></td>
                   <td className="p-4"><Skeleton className="h-4 w-24" /></td>
                 </tr>
               ))
-            ) : venues.length === 0 ? (
+            ) : filtered.length === 0 ? (
               <tr>
-                <td colSpan={tab === 'all' ? 4 : 3} className="p-8">
+                <td colSpan={7} className="p-8">
                   <EmptyState
                     title={tab === 'pending' ? 'No hay espacios pendientes' : 'No hay espacios'}
-                    description="Todo está al día."
+                    description="No se encontraron espacios con los filtros aplicados."
                     icon="check_circle"
                   />
                 </td>
               </tr>
             ) : (
-              venues.map((venue) => (
+              filtered.map((venue) => (
                 <tr key={venue.id} className="text-sm dark:text-slate-300">
                   <td className="p-4 font-medium">{venue.name}</td>
                   <td className="p-4">{venue.profiles?.name || venue.profiles?.email || 'N/A'}</td>
-                  {tab === 'all' && (
-                    <td className="p-4">
-                      <span className={`text-xs font-bold px-2 py-1 rounded-full ${statusStyle[venue.status] || 'bg-slate-100 text-slate-600'}`}>
-                        {venue.status}
-                      </span>
-                    </td>
-                  )}
+                  <td className="p-4">{formatCategory(venue.category)}</td>
+                  <td className="p-4">{venue.city || '—'}</td>
+                  <td className="p-4">
+                    <span className={`text-xs font-bold px-2 py-1 rounded-full ${statusStyle[venue.status] || 'bg-slate-100 text-slate-600'}`}>
+                      {statusLabel[venue.status] || venue.status}
+                    </span>
+                  </td>
+                  <td className="p-4 text-slate-500">
+                    {venue.created_at ? new Date(venue.created_at).toLocaleDateString() : '—'}
+                  </td>
                   <td className="p-4 space-x-3">
                     {venue.status !== 'approved' && (
                       <button
