@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import {
   Category,
   getAllCategories,
+  getCategoryVenueCounts,
   createCategory,
   updateCategory,
   deleteCategory,
@@ -15,6 +16,7 @@ const emptyForm = { slug: '', name: '', icon: 'category', sort_order: 0, is_acti
 
 const Categories: React.FC = () => {
   const [items, setItems] = useState<Category[]>([]);
+  const [counts, setCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<Omit<Category, 'id'>>(emptyForm);
@@ -23,7 +25,12 @@ const Categories: React.FC = () => {
   const fetch = async () => {
     setLoading(true);
     try {
-      setItems(await getAllCategories());
+      const [categories, venueCounts] = await Promise.all([
+        getAllCategories(),
+        getCategoryVenueCounts(),
+      ]);
+      setItems(categories);
+      setCounts(venueCounts);
     } catch (e: any) {
       toast.error(e.message || 'Error cargando categorías');
     } finally {
@@ -174,6 +181,7 @@ const Categories: React.FC = () => {
                 <th className="p-4">Icono</th>
                 <th className="p-4">Nombre</th>
                 <th className="p-4">Slug</th>
+                <th className="p-4">Espacios</th>
                 <th className="p-4">Orden</th>
                 <th className="p-4">Estado</th>
                 <th className="p-4">Acciones</th>
@@ -183,7 +191,7 @@ const Categories: React.FC = () => {
               {loading ? (
                 [1, 2, 3].map((i) => (
                   <tr key={i}>
-                    {Array.from({ length: 6 }).map((_, j) => (
+                    {Array.from({ length: 7 }).map((_, j) => (
                       <td key={j} className="p-4">
                         <Skeleton className="h-4 w-20" />
                       </td>
@@ -192,7 +200,7 @@ const Categories: React.FC = () => {
                 ))
               ) : items.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="p-8">
+                  <td colSpan={7} className="p-8">
                     <EmptyState
                       title="No hay categorías"
                       description="Crea la primera categoría desde el formulario."
@@ -208,6 +216,11 @@ const Categories: React.FC = () => {
                     </td>
                     <td className="p-4 font-bold">{c.name}</td>
                     <td className="p-4 text-slate-500">{c.slug}</td>
+                    <td className="p-4">
+                      <span className="inline-flex items-center justify-center min-w-[2rem] px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold">
+                        {counts[c.slug] || 0}
+                      </span>
+                    </td>
                     <td className="p-4">{c.sort_order}</td>
                     <td className="p-4">
                       <span
