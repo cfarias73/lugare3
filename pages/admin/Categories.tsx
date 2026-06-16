@@ -181,6 +181,7 @@ const Categories: React.FC = () => {
                 <th className="p-4">Icono</th>
                 <th className="p-4">Nombre</th>
                 <th className="p-4">Slug</th>
+                <th className="p-4">Espacios</th>
                 <th className="p-4">Orden</th>
                 <th className="p-4">Estado</th>
                 <th className="p-4">Acciones</th>
