@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import {
   Category,
   getAllCategories,
+  getCategoryVenueCounts,
   createCategory,
   updateCategory,
   deleteCategory,
