@@ -16,6 +16,7 @@ const emptyForm = { slug: '', name: '', icon: 'category', sort_order: 0, is_acti
 
 const Categories: React.FC = () => {
   const [items, setItems] = useState<Category[]>([]);
+  const [counts, setCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<Omit<Category, 'id'>>(emptyForm);
