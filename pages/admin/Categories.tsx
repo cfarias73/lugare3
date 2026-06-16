@@ -200,7 +200,7 @@ const Categories: React.FC = () => {
                 ))
               ) : items.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="p-8">
+                  <td colSpan={7} className="p-8">
                     <EmptyState
                       title="No hay categorías"
                       description="Crea la primera categoría desde el formulario."
