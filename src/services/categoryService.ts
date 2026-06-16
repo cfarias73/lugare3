@@ -57,3 +57,14 @@ export const deleteCategory = async (id: string) => {
   const { error } = await supabase.from('categories').delete().eq('id', id);
   if (error) throw error;
 };
+
+export const getCategoryVenueCounts = async (): Promise<Record<string, number>> => {
+  const { data, error } = await supabase.from('venues').select('category');
+  if (error) throw error;
+  const counts: Record<string, number> = {};
+  for (const v of (data || []) as { category?: string }[]) {
+    if (!v.category) continue;
+    counts[v.category] = (counts[v.category] || 0) + 1;
+  }
+  return counts;
+};
