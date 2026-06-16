@@ -93,7 +93,7 @@ export const cancelBooking = async (bookingId: string) => {
 export const getAllVenuesAdmin = async () => {
   const { data, error } = await supabase
     .from('venues')
-    .select('id, name, status, city, profiles(name, email)')
+    .select('id, name, status, city, category, created_at, profiles(name, email)')
     .order('created_at', { ascending: false });
   if (error) throw error;
   return data || [];
