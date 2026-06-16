@@ -59,6 +59,7 @@ import AdminBookings from './pages/admin/Bookings';
 import AdminDisputes from './pages/admin/Disputes';
 import AdminSettings from './pages/admin/Settings';
 import AdminCategories from './pages/admin/Categories';
+import AdminFinance from './pages/admin/Finance';
 
 const App: React.FC = () => {
   return (
@@ -116,6 +117,7 @@ const App: React.FC = () => {
         <Route path="/admin/disputes" element={<ProtectedRoute allowedRole="admin"><RouteWrapper><AdminDisputes /></RouteWrapper></ProtectedRoute>} />
         <Route path="/admin/settings" element={<ProtectedRoute allowedRole="admin"><RouteWrapper><AdminSettings /></RouteWrapper></ProtectedRoute>} />
         <Route path="/admin/categories" element={<ProtectedRoute allowedRole="admin"><RouteWrapper><AdminCategories /></RouteWrapper></ProtectedRoute>} />
+        <Route path="/admin/finance" element={<ProtectedRoute allowedRole="admin"><RouteWrapper><AdminFinance /></RouteWrapper></ProtectedRoute>} />
 
         {/* Redirects */}
         <Route path="*" element={<Navigate to="/" replace />} />

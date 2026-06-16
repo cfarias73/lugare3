@@ -33,7 +33,7 @@ const AdminDashboard: React.FC = () => {
     { label: 'Usuarios', value: stats.userCount.toLocaleString(), icon: 'people', path: '/admin/users' },
     { label: 'Anfitriones', value: stats.providerCount.toLocaleString(), icon: 'storefront', path: '/admin/hosts' },
     { label: 'Reservas Hoy', value: stats.todayBookings.toLocaleString(), icon: 'event', path: '/admin/bookings' },
-    { label: 'Ingresos (completadas)', value: `$${stats.revenue.toLocaleString()}`, icon: 'payments', path: '/admin/bookings' },
+    { label: 'Ingresos (completadas)', value: `$${stats.revenue.toLocaleString()}`, icon: 'payments', path: '/admin/finance' },
   ];
 
   const quickActions = [

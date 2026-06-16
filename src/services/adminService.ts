@@ -152,3 +152,19 @@ export const rejectVenue = async (venueId: string, reason?: string) => {
     }
   }
 };
+
+// Tasas configurables (porcentaje)
+export const COMMISSION_RATES = {
+  platform: 0.10,  // 10% comisión Lugare
+  gateway: 0.035,  // 3.5% comisión pasarela (Stripe estándar)
+};
+
+export const getFinanceData = async () => {
+  const { data, error } = await supabase
+    .from('bookings')
+    .select('id, event_date, status, total_price, venues(name, category)')
+    .eq('status', 'completed')
+    .order('event_date', { ascending: false });
+  if (error) throw error;
+  return data || [];
+};

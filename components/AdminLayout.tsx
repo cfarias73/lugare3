@@ -19,6 +19,7 @@ const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     { name: 'Espacios', path: '/admin/spaces' },
     { name: 'Categorías', path: '/admin/categories' },
     { name: 'Reservas', path: '/admin/bookings' },
+    { name: 'Finanzas', path: '/admin/finance' },
     { name: 'Disputas', path: '/admin/disputes' },
     { name: 'Configuración', path: '/admin/settings' },
   ];
