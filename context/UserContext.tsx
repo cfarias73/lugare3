@@ -105,7 +105,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signUp = async (email: string, password: string, name: string, role: 'user' | 'provider') => {
     const redirectUrl = `${window.location.origin}/`;
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -113,8 +113,23 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         data: { name, role },
       },
     });
+
+    // Best-effort: persist the chosen role to user_roles so future logins and
+    // admin listings see the user as an anfitrión. If RLS blocks the insert
+    // (no self-insert policy), we silently fall back to user_metadata.role
+    // in resolveRole().
+    const newUserId = data?.user?.id;
+    if (!error && newUserId) {
+      try {
+        await supabase.from('user_roles').insert({ user_id: newUserId, role });
+      } catch (e) {
+        console.warn('[signUp] could not write user_roles row', e);
+      }
+    }
+
     return { error };
   };
+
 
   const logout = async () => {
     await supabase.auth.signOut();
