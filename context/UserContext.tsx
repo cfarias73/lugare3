@@ -21,23 +21,28 @@ interface UserContextType {
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 // Resolve role from user_roles table (admin > provider > user precedence)
-const resolveRole = async (userId: string): Promise<'user' | 'provider' | 'admin'> => {
+const resolveRole = async (sessionUser: any): Promise<'user' | 'provider' | 'admin'> => {
   const { data, error } = await supabase
     .from('user_roles')
     .select('role')
-    .eq('user_id', userId);
+    .eq('user_id', sessionUser.id);
 
-  if (error || !data || data.length === 0) return 'user';
-  const roles = data.map((r: any) => r.role);
+  const roles: string[] = !error && data ? data.map((r: any) => r.role) : [];
   if (roles.includes('admin')) return 'admin';
   if (roles.includes('provider')) return 'provider';
+  if (roles.includes('user')) return 'user';
+
+  // Fallback: no row in user_roles yet (e.g. trigger missing).
+  // Trust the role chosen at signup, but NEVER auto-grant admin from metadata.
+  const metaRole = sessionUser.user_metadata?.role;
+  if (metaRole === 'provider') return 'provider';
   return 'user';
 };
 
 const hydrateUser = async (sessionUser: any): Promise<User> => {
   const [{ data: profile }, role] = await Promise.all([
     supabase.from('profiles').select('name').eq('id', sessionUser.id).single(),
-    resolveRole(sessionUser.id),
+    resolveRole(sessionUser),
   ]);
 
   return {
@@ -48,6 +53,7 @@ const hydrateUser = async (sessionUser: any): Promise<User> => {
     role,
   };
 };
+
 
 export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -99,7 +105,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signUp = async (email: string, password: string, name: string, role: 'user' | 'provider') => {
     const redirectUrl = `${window.location.origin}/`;
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -107,8 +113,23 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         data: { name, role },
       },
     });
+
+    // Best-effort: persist the chosen role to user_roles so future logins and
+    // admin listings see the user as an anfitrión. If RLS blocks the insert
+    // (no self-insert policy), we silently fall back to user_metadata.role
+    // in resolveRole().
+    const newUserId = data?.user?.id;
+    if (!error && newUserId) {
+      try {
+        await supabase.from('user_roles').insert({ user_id: newUserId, role });
+      } catch (e) {
+        console.warn('[signUp] could not write user_roles row', e);
+      }
+    }
+
     return { error };
   };
+
 
   const logout = async () => {
     await supabase.auth.signOut();
