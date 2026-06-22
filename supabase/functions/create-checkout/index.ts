@@ -109,12 +109,18 @@ serve(async (req) => {
     }
 
     // 2) Calcular subtotal del venue (flexible si está disponible)
+    // El fallback de includedHours debe coincidir con el del calendario y el checkout
+    // del cliente (min_hours || 5) para garantizar consistencia en el precio.
     let venueSubtotal: number;
     if (venue.base_price != null) {
+      const includedHoursResolved =
+        venue.included_hours != null
+          ? Number(venue.included_hours)
+          : Number(venue.min_hours) || 5;
       venueSubtotal = calcVenueTotal({
         basePrice: Number(venue.base_price) || 0,
         baseCapacity: Number(venue.base_capacity) || 0,
-        includedHours: Number(venue.included_hours) || hrs,
+        includedHours: includedHoursResolved,
         extraPersonPrice: Number(venue.extra_person_price) || 0,
         extraHourPrice: Number(venue.extra_hour_price) || 0,
         guests,
