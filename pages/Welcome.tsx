@@ -196,20 +196,32 @@ const Welcome: React.FC = () => {
           {/* Hero visual */}
           <div className="relative h-[420px] sm:h-[520px] hidden md:block">
             <div className="absolute inset-0 grid grid-cols-6 grid-rows-6 gap-4">
-              <div className="col-span-4 row-span-4 col-start-2 row-start-1 rounded-[2rem] bg-gradient-to-br from-primary to-orange-500 shadow-2xl shadow-primary/30 p-8 flex items-end">
-                <div className="text-white">
-                  <p className="text-xs uppercase tracking-widest opacity-80">Destacado</p>
+              <div
+                className="col-span-4 row-span-4 col-start-2 row-start-1 rounded-[2rem] shadow-2xl shadow-primary/30 p-8 flex items-end bg-cover bg-center relative overflow-hidden"
+                style={{ backgroundImage: `url(${STOCK.hacienda})` }}
+              >
+                <div className="absolute inset-0 bg-gradient-to-tr from-primary/85 via-primary/55 to-transparent" />
+                <div className="relative text-white">
+                  <p className="text-xs uppercase tracking-widest opacity-90">Destacado</p>
                   <p className="font-display text-2xl font-bold leading-tight">Hacienda San Mateo</p>
                   <p className="text-sm opacity-90">Cap. 250 · jardín y salón</p>
                 </div>
               </div>
-              <div className="col-span-3 row-span-2 col-start-1 row-start-5 rounded-3xl bg-secondary/90 shadow-xl shadow-secondary/30 p-5 flex flex-col justify-between text-white">
-                <span className="material-icons-round text-3xl">park</span>
-                <p className="font-bold leading-tight">Jardines al aire libre</p>
+              <div
+                className="col-span-3 row-span-2 col-start-1 row-start-5 rounded-3xl shadow-xl shadow-secondary/30 p-5 flex flex-col justify-between text-white bg-cover bg-center relative overflow-hidden"
+                style={{ backgroundImage: `url(${STOCK.jardin})` }}
+              >
+                <div className="absolute inset-0 bg-gradient-to-br from-secondary/80 to-secondary/40" />
+                <span className="material-icons-round text-3xl relative">park</span>
+                <p className="font-bold leading-tight relative">Jardines al aire libre</p>
               </div>
-              <div className="col-span-3 row-span-2 col-start-4 row-start-5 rounded-3xl bg-slate-900 dark:bg-slate-800 shadow-xl p-5 flex flex-col justify-between text-white">
-                <span className="material-icons-round text-3xl">deck</span>
-                <p className="font-bold leading-tight">Terrazas con vista</p>
+              <div
+                className="col-span-3 row-span-2 col-start-4 row-start-5 rounded-3xl shadow-xl p-5 flex flex-col justify-between text-white bg-cover bg-center relative overflow-hidden"
+                style={{ backgroundImage: `url(${STOCK.terraza})` }}
+              >
+                <div className="absolute inset-0 bg-gradient-to-br from-slate-900/85 to-slate-900/40" />
+                <span className="material-icons-round text-3xl relative">deck</span>
+                <p className="font-bold leading-tight relative">Terrazas con vista</p>
               </div>
             </div>
           </div>
