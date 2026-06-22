@@ -162,7 +162,7 @@ const Checkout: React.FC = () => {
             {breakdown ? (
               <>
                 <div className="flex justify-between text-sm">
-                  <span className="text-slate-600 dark:text-slate-400">Paquete base ({venue.base_capacity} pers · {venue.included_hours}h)</span>
+                  <span className="text-slate-600 dark:text-slate-400">Paquete base ({baseCapacityResolved} pers · {includedHoursResolved}h)</span>
                   <span className="font-medium">${breakdown.basePrice.toLocaleString()}</span>
                 </div>
                 {breakdown.extraPeopleCost > 0 && (
