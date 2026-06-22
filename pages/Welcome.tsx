@@ -244,13 +244,21 @@ const Welcome: React.FC = () => {
               <button
                 key={c.label}
                 onClick={() => navigate('/user/login')}
-                className="group bg-white dark:bg-surface-dark border border-slate-100 dark:border-slate-800 rounded-3xl p-6 text-left hover:border-primary hover:shadow-xl hover:shadow-primary/10 hover:-translate-y-1 active:scale-95 transition-all"
+                className="group bg-white dark:bg-surface-dark border border-slate-100 dark:border-slate-800 rounded-3xl overflow-hidden text-left hover:border-primary hover:shadow-xl hover:shadow-primary/10 hover:-translate-y-1 active:scale-95 transition-all"
               >
-                <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mb-4 group-hover:bg-primary group-hover:text-white transition-colors">
-                  <span className="material-icons-round">{c.icon}</span>
+                <div
+                  className="relative h-28 bg-cover bg-center"
+                  style={{ backgroundImage: `url(${c.img})` }}
+                >
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+                  <div className="absolute bottom-2 left-2 w-9 h-9 rounded-xl bg-white/95 text-primary flex items-center justify-center shadow-md group-hover:bg-primary group-hover:text-white transition-colors">
+                    <span className="material-icons-round text-base">{c.icon}</span>
+                  </div>
                 </div>
-                <p className="font-bold text-slate-900 dark:text-white">{c.label}</p>
-                <p className="text-xs text-slate-500 mt-1">Ver disponibles →</p>
+                <div className="p-4">
+                  <p className="font-bold text-slate-900 dark:text-white">{c.label}</p>
+                  <p className="text-xs text-slate-500 mt-1">Ver disponibles →</p>
+                </div>
               </button>
             ))}
           </div>
