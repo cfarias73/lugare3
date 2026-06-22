@@ -42,11 +42,19 @@ const Checkout: React.FC = () => {
   }
 
   const usingFlexible = venue.base_price != null;
+  // IMPORTANTE: el fallback debe coincidir con el del calendario (min_hours || 5)
+  // para evitar inconsistencias de precio entre pantallas.
+  const includedHoursResolved =
+    venue.included_hours != null
+      ? Number(venue.included_hours)
+      : Number(venue.min_hours) || 5;
+  const baseCapacityResolved =
+    venue.base_capacity != null ? Number(venue.base_capacity) : 0;
   const breakdown = usingFlexible
     ? calcVenuePricing({
         basePrice: Number(venue.base_price) || 0,
-        baseCapacity: Number(venue.base_capacity) || 0,
-        includedHours: Number(venue.included_hours) || hours,
+        baseCapacity: baseCapacityResolved,
+        includedHours: includedHoursResolved,
         extraPersonPrice: Number(venue.extra_person_price) || 0,
         extraHourPrice: Number(venue.extra_hour_price) || 0,
         guests: guestCount,
@@ -154,7 +162,7 @@ const Checkout: React.FC = () => {
             {breakdown ? (
               <>
                 <div className="flex justify-between text-sm">
-                  <span className="text-slate-600 dark:text-slate-400">Paquete base ({venue.base_capacity} pers · {venue.included_hours}h)</span>
+                  <span className="text-slate-600 dark:text-slate-400">Paquete base ({baseCapacityResolved} pers · {includedHoursResolved}h)</span>
                   <span className="font-medium">${breakdown.basePrice.toLocaleString()}</span>
                 </div>
                 {breakdown.extraPeopleCost > 0 && (
