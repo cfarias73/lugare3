@@ -46,12 +46,19 @@ const Welcome: React.FC = () => {
   const navigate = useNavigate();
   const [logoError, setLogoError] = useState(false);
 
+  // Imágenes de stock (Unsplash CDN) — placeholder hasta tener imágenes reales.
+  const STOCK = {
+    hacienda:  'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&w=1200&q=80',
+    jardin:    'https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?auto=format&fit=crop&w=900&q=80',
+    terraza:   'https://images.unsplash.com/photo-1505873242700-f289a29e1e0f?auto=format&fit=crop&w=900&q=80',
+  };
+
   const categories = [
-    { icon: 'deck',       label: 'Terrazas' },
-    { icon: 'villa',      label: 'Quintas' },
-    { icon: 'meeting_room', label: 'Salones' },
-    { icon: 'park',       label: 'Jardines' },
-    { icon: 'cottage',    label: 'Haciendas' },
+    { icon: 'deck',         label: 'Terrazas',  img: 'https://images.unsplash.com/photo-1505873242700-f289a29e1e0f?auto=format&fit=crop&w=600&q=70' },
+    { icon: 'villa',        label: 'Quintas',   img: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=600&q=70' },
+    { icon: 'meeting_room', label: 'Salones',   img: 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&w=600&q=70' },
+    { icon: 'park',         label: 'Jardines',  img: 'https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?auto=format&fit=crop&w=600&q=70' },
+    { icon: 'cottage',      label: 'Haciendas', img: 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=600&q=70' },
   ];
 
   const features = [
@@ -189,20 +196,32 @@ const Welcome: React.FC = () => {
           {/* Hero visual */}
           <div className="relative h-[420px] sm:h-[520px] hidden md:block">
             <div className="absolute inset-0 grid grid-cols-6 grid-rows-6 gap-4">
-              <div className="col-span-4 row-span-4 col-start-2 row-start-1 rounded-[2rem] bg-gradient-to-br from-primary to-orange-500 shadow-2xl shadow-primary/30 p-8 flex items-end">
-                <div className="text-white">
-                  <p className="text-xs uppercase tracking-widest opacity-80">Destacado</p>
+              <div
+                className="col-span-4 row-span-4 col-start-2 row-start-1 rounded-[2rem] shadow-2xl shadow-primary/30 p-8 flex items-end bg-cover bg-center relative overflow-hidden"
+                style={{ backgroundImage: `url(${STOCK.hacienda})` }}
+              >
+                <div className="absolute inset-0 bg-gradient-to-tr from-primary/85 via-primary/55 to-transparent" />
+                <div className="relative text-white">
+                  <p className="text-xs uppercase tracking-widest opacity-90">Destacado</p>
                   <p className="font-display text-2xl font-bold leading-tight">Hacienda San Mateo</p>
                   <p className="text-sm opacity-90">Cap. 250 · jardín y salón</p>
                 </div>
               </div>
-              <div className="col-span-3 row-span-2 col-start-1 row-start-5 rounded-3xl bg-secondary/90 shadow-xl shadow-secondary/30 p-5 flex flex-col justify-between text-white">
-                <span className="material-icons-round text-3xl">park</span>
-                <p className="font-bold leading-tight">Jardines al aire libre</p>
+              <div
+                className="col-span-3 row-span-2 col-start-1 row-start-5 rounded-3xl shadow-xl shadow-secondary/30 p-5 flex flex-col justify-between text-white bg-cover bg-center relative overflow-hidden"
+                style={{ backgroundImage: `url(${STOCK.jardin})` }}
+              >
+                <div className="absolute inset-0 bg-gradient-to-br from-secondary/80 to-secondary/40" />
+                <span className="material-icons-round text-3xl relative">park</span>
+                <p className="font-bold leading-tight relative">Jardines al aire libre</p>
               </div>
-              <div className="col-span-3 row-span-2 col-start-4 row-start-5 rounded-3xl bg-slate-900 dark:bg-slate-800 shadow-xl p-5 flex flex-col justify-between text-white">
-                <span className="material-icons-round text-3xl">deck</span>
-                <p className="font-bold leading-tight">Terrazas con vista</p>
+              <div
+                className="col-span-3 row-span-2 col-start-4 row-start-5 rounded-3xl shadow-xl p-5 flex flex-col justify-between text-white bg-cover bg-center relative overflow-hidden"
+                style={{ backgroundImage: `url(${STOCK.terraza})` }}
+              >
+                <div className="absolute inset-0 bg-gradient-to-br from-slate-900/85 to-slate-900/40" />
+                <span className="material-icons-round text-3xl relative">deck</span>
+                <p className="font-bold leading-tight relative">Terrazas con vista</p>
               </div>
             </div>
           </div>
@@ -225,13 +244,21 @@ const Welcome: React.FC = () => {
               <button
                 key={c.label}
                 onClick={() => navigate('/user/login')}
-                className="group bg-white dark:bg-surface-dark border border-slate-100 dark:border-slate-800 rounded-3xl p-6 text-left hover:border-primary hover:shadow-xl hover:shadow-primary/10 hover:-translate-y-1 active:scale-95 transition-all"
+                className="group bg-white dark:bg-surface-dark border border-slate-100 dark:border-slate-800 rounded-3xl overflow-hidden text-left hover:border-primary hover:shadow-xl hover:shadow-primary/10 hover:-translate-y-1 active:scale-95 transition-all"
               >
-                <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mb-4 group-hover:bg-primary group-hover:text-white transition-colors">
-                  <span className="material-icons-round">{c.icon}</span>
+                <div
+                  className="relative h-28 bg-cover bg-center"
+                  style={{ backgroundImage: `url(${c.img})` }}
+                >
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+                  <div className="absolute bottom-2 left-2 w-9 h-9 rounded-xl bg-white/95 text-primary flex items-center justify-center shadow-md group-hover:bg-primary group-hover:text-white transition-colors">
+                    <span className="material-icons-round text-base">{c.icon}</span>
+                  </div>
                 </div>
-                <p className="font-bold text-slate-900 dark:text-white">{c.label}</p>
-                <p className="text-xs text-slate-500 mt-1">Ver disponibles →</p>
+                <div className="p-4">
+                  <p className="font-bold text-slate-900 dark:text-white">{c.label}</p>
+                  <p className="text-xs text-slate-500 mt-1">Ver disponibles →</p>
+                </div>
               </button>
             ))}
           </div>
