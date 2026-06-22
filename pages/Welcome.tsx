@@ -46,12 +46,19 @@ const Welcome: React.FC = () => {
   const navigate = useNavigate();
   const [logoError, setLogoError] = useState(false);
 
+  // Imágenes de stock (Unsplash CDN) — placeholder hasta tener imágenes reales.
+  const STOCK = {
+    hacienda:  'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&w=1200&q=80',
+    jardin:    'https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?auto=format&fit=crop&w=900&q=80',
+    terraza:   'https://images.unsplash.com/photo-1505873242700-f289a29e1e0f?auto=format&fit=crop&w=900&q=80',
+  };
+
   const categories = [
-    { icon: 'deck',       label: 'Terrazas' },
-    { icon: 'villa',      label: 'Quintas' },
-    { icon: 'meeting_room', label: 'Salones' },
-    { icon: 'park',       label: 'Jardines' },
-    { icon: 'cottage',    label: 'Haciendas' },
+    { icon: 'deck',         label: 'Terrazas',  img: 'https://images.unsplash.com/photo-1505873242700-f289a29e1e0f?auto=format&fit=crop&w=600&q=70' },
+    { icon: 'villa',        label: 'Quintas',   img: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=600&q=70' },
+    { icon: 'meeting_room', label: 'Salones',   img: 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&w=600&q=70' },
+    { icon: 'park',         label: 'Jardines',  img: 'https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?auto=format&fit=crop&w=600&q=70' },
+    { icon: 'cottage',      label: 'Haciendas', img: 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=600&q=70' },
   ];
 
   const features = [
