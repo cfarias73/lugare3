@@ -151,6 +151,9 @@ const Welcome: React.FC = () => {
             <a href="#anfitriones" className="hover:text-primary transition-colors">
               Anfitriones
             </a>
+            <a href="#testimonios" className="hover:text-primary transition-colors">
+              Testimonios
+            </a>
             <a href="#precios" className="hover:text-primary transition-colors">
               Precios
             </a>
