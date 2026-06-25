@@ -332,7 +332,98 @@ const Welcome: React.FC = () => {
         </div>
       </section>
 
+      {/* ============ TESTIMONIOS ============ */}
+      <section id="testimonios" className="py-16 sm:py-24 bg-slate-50 dark:bg-slate-900/40">
+        <div className="max-w-6xl mx-auto px-5 sm:px-8">
+          <div className="text-center max-w-2xl mx-auto mb-12">
+            <p className="text-primary text-sm font-bold uppercase tracking-widest mb-2">Testimonios</p>
+            <h2 className="text-3xl sm:text-4xl font-display font-bold tracking-tight mb-3">
+              Lo que dicen quienes ya viven Lugare
+            </h2>
+            <p className="text-slate-600 dark:text-slate-300">
+              Huéspedes y anfitriones que ya celebraron, rentaron o publicaron en la plataforma.
+            </p>
+          </div>
+
+          {/* Métricas de confianza */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12 max-w-4xl mx-auto">
+            {[
+              { value: "4.9", label: "Calificación promedio", icon: "star" },
+              { value: "+1,200", label: "Eventos celebrados", icon: "celebration" },
+              { value: "+350", label: "Espacios publicados", icon: "apartment" },
+              { value: "98%", label: "Recomiendan Lugare", icon: "thumb_up" },
+            ].map((m) => (
+              <div key={m.label} className="bg-white dark:bg-surface-dark border border-slate-100 dark:border-slate-800 rounded-2xl p-5 text-center">
+                <div className="w-10 h-10 mx-auto rounded-xl bg-primary/10 text-primary flex items-center justify-center mb-2">
+                  <span className="material-icons-round text-lg">{m.icon}</span>
+                </div>
+                <p className="font-display font-bold text-2xl">{m.value}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{m.label}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Cards de testimonios */}
+          <div className="grid md:grid-cols-3 gap-5">
+            {[
+              {
+                quote: "Encontré la terraza perfecta para mi boda en menos de una hora. El proceso fue clarísimo y el anfitrión súper atento.",
+                name: "Mariana López",
+                role: "Huésped · CDMX",
+                avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80",
+                rating: 5,
+              },
+              {
+                quote: "Renté mi quinta los fines de semana y ya tengo ingresos constantes. Lugare se encarga de los cobros y el calendario.",
+                name: "Carlos Méndez",
+                role: "Anfitrión · Querétaro",
+                avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=80",
+                rating: 5,
+              },
+              {
+                quote: "La invitación digital y la lista de invitados nos ahorraron muchísimo tiempo. Todo en un mismo lugar.",
+                name: "Andrea Ruiz",
+                role: "Huésped · Monterrey",
+                avatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=200&q=80",
+                rating: 5,
+              },
+            ].map((t) => (
+              <div
+                key={t.name}
+                className="bg-white dark:bg-surface-dark border border-slate-100 dark:border-slate-800 rounded-3xl p-6 flex flex-col"
+              >
+                <div className="flex gap-0.5 text-amber-400 mb-3">
+                  {Array.from({ length: t.rating }).map((_, i) => (
+                    <span key={i} className="material-icons-round text-base">star</span>
+                  ))}
+                </div>
+                <p className="text-slate-700 dark:text-slate-200 leading-relaxed mb-5 flex-1">
+                  “{t.quote}”
+                </p>
+                <div className="flex items-center gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+                  <img
+                    src={t.avatar}
+                    alt={t.name}
+                    className="w-11 h-11 rounded-full object-cover"
+                    loading="lazy"
+                  />
+                  <div>
+                    <p className="font-bold text-sm">{t.name}</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">{t.role}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <p className="text-center text-xs text-slate-400 dark:text-slate-500 mt-8">
+            Testimonios representativos durante la fase beta de la plataforma.
+          </p>
+        </div>
+      </section>
+
       {/* ============ ANFITRIONES ============ */}
+
       <section
         id="anfitriones"
         className="py-16 sm:py-24 bg-gradient-to-br from-slate-900 via-slate-900 to-slate-800 text-white"
