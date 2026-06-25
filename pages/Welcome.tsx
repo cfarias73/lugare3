@@ -408,20 +408,82 @@ const Welcome: React.FC = () => {
       </section>
 
       {/* ============ FOOTER ============ */}
-      <footer className="border-t border-slate-100 dark:border-slate-800 py-10">
-        <div className="max-w-6xl mx-auto px-5 sm:px-8 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-          <Logo />
-          <p className="text-xs text-slate-400 dark:text-slate-600 font-medium">
-            © 2026 Lugare. Todos los derechos reservados.
-          </p>
-          <button
-            onClick={() => navigate("/admin/login")}
-            className="text-[10px] text-slate-300 dark:text-slate-700 hover:text-slate-500 transition-colors uppercase tracking-widest"
-          >
-            Acceso administrador
-          </button>
+      <footer className="border-t border-slate-100 dark:border-slate-800 py-12 bg-slate-50/50 dark:bg-slate-900/30">
+        <div className="max-w-6xl mx-auto px-5 sm:px-8">
+          {/* Top: Brand + Links + Social */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-10">
+            {/* Brand */}
+            <div className="md:col-span-1">
+              <Logo />
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-3 leading-relaxed">
+                La plataforma para descubrir y rentar espacios únicos para tus eventos.
+              </p>
+            </div>
+
+            {/* Links: Explorar */}
+            <div>
+              <h4 className="font-display font-bold text-sm text-slate-800 dark:text-slate-200 mb-3">Explorar</h4>
+              <ul className="space-y-2 text-sm text-slate-500 dark:text-slate-400">
+                <li><button onClick={() => navigate("/login")} className="hover:text-primary transition-colors">Buscar espacios</button></li>
+                <li><button onClick={() => navigate("/provider/login")} className="hover:text-primary transition-colors">Publica tu espacio</button></li>
+                <li><button onClick={() => navigate("/login")} className="hover:text-primary transition-colors">Crear cuenta</button></li>
+              </ul>
+            </div>
+
+            {/* Links: Soporte */}
+            <div>
+              <h4 className="font-display font-bold text-sm text-slate-800 dark:text-slate-200 mb-3">Soporte</h4>
+              <ul className="space-y-2 text-sm text-slate-500 dark:text-slate-400">
+                <li><a href="#" className="hover:text-primary transition-colors">Centro de ayuda</a></li>
+                <li><a href="#" className="hover:text-primary transition-colors">Términos y condiciones</a></li>
+                <li><a href="#" className="hover:text-primary transition-colors">Política de privacidad</a></li>
+              </ul>
+            </div>
+
+            {/* Social */}
+            <div>
+              <h4 className="font-display font-bold text-sm text-slate-800 dark:text-slate-200 mb-3">Síguenos</h4>
+              <div className="flex items-center gap-3">
+                {[
+                  { name: "Facebook", icon: "M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v6.95c5.05-.5 9-4.76 9-9.95z" },
+                  { name: "Instagram", icon: "M12 2.2c3.2 0 3.58.01 4.85.07 1.17.05 1.8.25 2.23.41.56.22.96.48 1.38.9.42.42.68.82.9 1.38.16.42.36 1.06.41 2.23.06 1.27.07 1.65.07 4.85s-.01 3.58-.07 4.85c-.05 1.17-.25 1.8-.41 2.23-.22.56-.48.96-.9 1.38-.42.42-.82.68-1.38.9-.42.16-1.06.36-2.23.41-1.27.06-1.65.07-4.85.07s-3.58-.01-4.85-.07c-1.17-.05-1.8-.25-2.23-.41a3.71 3.71 0 01-1.38-.9 3.71 3.71 0 01-.9-1.38c-.16-.42-.36-1.06-.41-2.23C2.21 15.58 2.2 15.2 2.2 12s.01-3.58.07-4.85c.05-1.17.25-1.8.41-2.23.22-.56.48-.96.9-1.38.42-.42.82-.68 1.38-.9.42-.16 1.06-.36 2.23-.41C8.42 2.21 8.8 2.2 12 2.2zm0 5.8a4 4 0 100 8 4 4 0 000-8zm0 6.6a2.6 2.6 0 110-5.2 2.6 2.6 0 010 5.2zm5.1-6.76a.94.94 0 11-1.88 0 .94.94 0 011.88 0z" },
+                  { name: "X (Twitter)", icon: "M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" },
+                  { name: "TikTok", icon: "M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-5.2 1.74 2.89 2.89 0 012.31-4.64 2.93 2.93 0 01.88.13V9.4a6.84 6.84 0 00-1-.05A6.33 6.33 0 005.8 20.1a6.34 6.34 0 0010.86-4.43V8.5a8.16 8.16 0 004.77 1.52V6.69z" },
+                ].map((s) => (
+                  <a
+                    key={s.name}
+                    href="#"
+                    aria-label={s.name}
+                    title={`${s.name} (próximamente)`}
+                    className="w-9 h-9 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-500 hover:text-primary hover:border-primary transition-colors"
+                  >
+                    <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+                      <path d={s.icon} />
+                    </svg>
+                  </a>
+                ))}
+              </div>
+              <p className="text-[10px] text-slate-400 dark:text-slate-600 mt-3">
+                Enlaces próximamente
+              </p>
+            </div>
+          </div>
+
+          {/* Bottom: Copyright + Admin */}
+          <div className="border-t border-slate-200 dark:border-slate-800 pt-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <p className="text-xs text-slate-400 dark:text-slate-600 font-medium">
+              © 2026 Lugare. Todos los derechos reservados.
+            </p>
+            <button
+              onClick={() => navigate("/admin/login")}
+              className="text-[10px] text-slate-300 dark:text-slate-700 hover:text-slate-500 transition-colors uppercase tracking-widest"
+            >
+              Acceso administrador
+            </button>
+          </div>
         </div>
       </footer>
+
     </div>
   );
 };
