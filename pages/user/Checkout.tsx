@@ -27,7 +27,7 @@ const Checkout: React.FC = () => {
   // Snapshot enviado por el calendario (fuente de verdad si está disponible)
   const snapshotSubtotal = params.get('subtotal') ? Number(params.get('subtotal')) : null;
   const snapshotExtraHours = params.get('extra_hours') ? Number(params.get('extra_hours')) : null;
-  const slotHoursParam = params.get('slot_hours') ? Number(params.get('slot_hours')) : null;
+  void (params.get('slot_hours')); // reservado para futuro desglose detallado
 
   useEffect(() => {
     supabase.from('venues').select('*').eq('id', id).single().then(({ data }) => setVenue(data));
