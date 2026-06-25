@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 /**
  * Landing page de Lugare.
@@ -48,53 +48,73 @@ const Welcome: React.FC = () => {
 
   // Imágenes de stock (Unsplash CDN) — placeholder hasta tener imágenes reales.
   const STOCK = {
-    hacienda:  'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&w=1200&q=80',
-    jardin:    'https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?auto=format&fit=crop&w=900&q=80',
-    terraza:   'https://images.unsplash.com/photo-1505873242700-f289a29e1e0f?auto=format&fit=crop&w=900&q=80',
+    hacienda: "https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&w=1200&q=80",
+    jardin: "https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?auto=format&fit=crop&w=900&q=80",
+    terraza: "https://images.unsplash.com/photo-1505873242700-f289a29e1e0f?auto=format&fit=crop&w=900&q=80",
   };
 
   const categories = [
-    { icon: 'deck',         label: 'Terrazas',  img: 'https://images.unsplash.com/photo-1505873242700-f289a29e1e0f?auto=format&fit=crop&w=600&q=70' },
-    { icon: 'villa',        label: 'Quintas',   img: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=600&q=70' },
-    { icon: 'meeting_room', label: 'Salones',   img: 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&w=600&q=70' },
-    { icon: 'park',         label: 'Jardines',  img: 'https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?auto=format&fit=crop&w=600&q=70' },
-    { icon: 'cottage',      label: 'Haciendas', img: 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=600&q=70' },
+    {
+      icon: "deck",
+      label: "Terrazas",
+      img: "https://images.unsplash.com/photo-1505873242700-f289a29e1e0f?auto=format&fit=crop&w=600&q=70",
+    },
+    {
+      icon: "villa",
+      label: "Quintas",
+      img: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=600&q=70",
+    },
+    {
+      icon: "meeting_room",
+      label: "Salones",
+      img: "https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&w=600&q=70",
+    },
+    {
+      icon: "park",
+      label: "Jardines",
+      img: "https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?auto=format&fit=crop&w=600&q=70",
+    },
+    {
+      icon: "cottage",
+      label: "Haciendas",
+      img: "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=600&q=70",
+    },
   ];
 
   const features = [
     {
-      icon: 'search',
-      title: 'Encuentra el lugar perfecto',
-      desc: 'Explora terrazas, quintas, salones, jardines y haciendas con filtros y mapa interactivo.',
+      icon: "search",
+      title: "Encuentra el lugar perfecto",
+      desc: "Explora terrazas, quintas, salones, jardines y haciendas con filtros y mapa interactivo.",
     },
     {
-      icon: 'event_available',
-      title: 'Reserva en minutos',
-      desc: 'Disponibilidad en tiempo real, calendario claro y pago seguro con confirmación inmediata.',
+      icon: "event_available",
+      title: "Reserva en minutos",
+      desc: "Disponibilidad en tiempo real, calendario claro y pago seguro con confirmación inmediata.",
     },
     {
-      icon: 'mail',
-      title: 'Invita a tus invitados',
-      desc: 'Crea invitaciones digitales, agrega tu lista y compártela con un solo enlace.',
+      icon: "mail",
+      title: "Invita a tus invitados",
+      desc: "Crea invitaciones digitales, agrega tu lista y compártela con un solo enlace.",
     },
     {
-      icon: 'verified_user',
-      title: 'Anfitriones verificados',
-      desc: 'Cada espacio es revisado por nuestro equipo. Tu evento, en buenas manos.',
+      icon: "verified_user",
+      title: "Anfitriones verificados",
+      desc: "Cada espacio es revisado por nuestro equipo. Tu evento, en buenas manos.",
     },
   ];
 
   const hostBenefits = [
-    { icon: 'trending_up', text: 'Aumenta tus ingresos rentando tu espacio' },
-    { icon: 'calendar_month', text: 'Controla disponibilidad y bloqueos por fechas' },
-    { icon: 'payments', text: 'Cobros automáticos por pasarela segura' },
-    { icon: 'insights', text: 'Estadísticas y reportes en tiempo real' },
+    { icon: "trending_up", text: "Aumenta tus ingresos rentando tu espacio" },
+    { icon: "calendar_month", text: "Controla disponibilidad y bloqueos por fechas" },
+    { icon: "payments", text: "Cobros automáticos por pasarela segura" },
+    { icon: "insights", text: "Estadísticas y reportes en tiempo real" },
   ];
 
   const steps = [
-    { n: '01', title: 'Explora', desc: 'Busca por categoría, ciudad o fecha.' },
-    { n: '02', title: 'Reserva', desc: 'Elige día y horario, paga en línea.' },
-    { n: '03', title: 'Disfruta', desc: 'Llega, celebra y califica tu experiencia.' },
+    { n: "01", title: "Explora", desc: "Busca por categoría, ciudad o fecha." },
+    { n: "02", title: "Reserva", desc: "Elige día y horario, paga en línea." },
+    { n: "03", title: "Disfruta", desc: "Llega, celebra y califica tu experiencia." },
   ];
 
   const Logo = () => (
@@ -111,9 +131,7 @@ const Welcome: React.FC = () => {
           <span className="material-icons-round text-white text-xl">location_on</span>
         </div>
       )}
-      <span className="font-display font-bold text-lg tracking-tight text-slate-900 dark:text-white">
-        LUGARE
-      </span>
+      <span className="font-display font-bold text-lg tracking-tight text-slate-900 dark:text-white">LUGARE</span>
     </div>
   );
 
@@ -124,19 +142,25 @@ const Welcome: React.FC = () => {
         <div className="max-w-6xl mx-auto px-5 sm:px-8 h-16 flex items-center justify-between">
           <Logo />
           <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-600 dark:text-slate-300">
-            <a href="#como-funciona" className="hover:text-primary transition-colors">Cómo funciona</a>
-            <a href="#categorias" className="hover:text-primary transition-colors">Categorías</a>
-            <a href="#anfitriones" className="hover:text-primary transition-colors">Anfitriones</a>
+            <a href="#como-funciona" className="hover:text-primary transition-colors">
+              Cómo funciona
+            </a>
+            <a href="#categorias" className="hover:text-primary transition-colors">
+              Categorías
+            </a>
+            <a href="#anfitriones" className="hover:text-primary transition-colors">
+              Anfitriones
+            </a>
           </nav>
           <div className="flex items-center gap-2">
             <button
-              onClick={() => navigate('/user/login')}
+              onClick={() => navigate("/user/login")}
               className="hidden sm:inline-flex text-sm font-semibold text-slate-700 dark:text-slate-200 hover:text-primary px-3 py-2 rounded-lg transition-colors"
             >
               Iniciar sesión
             </button>
             <button
-              onClick={() => navigate('/user/login')}
+              onClick={() => navigate("/user/login")}
               className="text-sm font-semibold bg-primary text-white px-4 py-2 rounded-xl shadow-md shadow-primary/20 hover:shadow-lg hover:shadow-primary/30 active:scale-95 transition-all"
             >
               Empezar
@@ -161,20 +185,21 @@ const Welcome: React.FC = () => {
               <br className="hidden sm:block" /> para cada <span className="text-secondary">momento</span>.
             </h1>
             <p className="text-lg text-slate-600 dark:text-slate-300 max-w-lg">
-              Reserva terrazas, quintas, salones, jardines y haciendas para bodas, fiestas y
-              eventos. Todo en una sola plataforma, simple y confiable.
+              Reserva el lugar ideal para tus fiestas, bodas y eventos En un sola Plataforma,simple y confiable
             </p>
             <div className="flex flex-col sm:flex-row gap-3">
               <button
-                onClick={() => navigate('/user/login')}
+                onClick={() => navigate("/user/login")}
                 className="group inline-flex items-center justify-center gap-2 bg-primary text-white font-bold px-6 py-4 rounded-2xl shadow-xl shadow-primary/25 hover:shadow-2xl hover:shadow-primary/40 active:scale-95 transition-all"
               >
                 <span className="material-icons-round">celebration</span>
                 Busco un lugar
-                <span className="material-icons-round transition-transform group-hover:translate-x-1">arrow_forward</span>
+                <span className="material-icons-round transition-transform group-hover:translate-x-1">
+                  arrow_forward
+                </span>
               </button>
               <button
-                onClick={() => navigate('/provider/login')}
+                onClick={() => navigate("/provider/login")}
                 className="group inline-flex items-center justify-center gap-2 bg-white dark:bg-surface-dark border-2 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white font-bold px-6 py-4 rounded-2xl hover:border-secondary hover:text-secondary active:scale-95 transition-all"
               >
                 <span className="material-icons-round">apartment</span>
@@ -243,13 +268,10 @@ const Welcome: React.FC = () => {
             {categories.map((c) => (
               <button
                 key={c.label}
-                onClick={() => navigate('/user/login')}
+                onClick={() => navigate("/user/login")}
                 className="group bg-white dark:bg-surface-dark border border-slate-100 dark:border-slate-800 rounded-3xl overflow-hidden text-left hover:border-primary hover:shadow-xl hover:shadow-primary/10 hover:-translate-y-1 active:scale-95 transition-all"
               >
-                <div
-                  className="relative h-28 bg-cover bg-center"
-                  style={{ backgroundImage: `url(${c.img})` }}
-                >
+                <div className="relative h-28 bg-cover bg-center" style={{ backgroundImage: `url(${c.img})` }}>
                   <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
                   <div className="absolute bottom-2 left-2 w-9 h-9 rounded-xl bg-white/95 text-primary flex items-center justify-center shadow-md group-hover:bg-primary group-hover:text-white transition-colors">
                     <span className="material-icons-round text-base">{c.icon}</span>
@@ -308,7 +330,10 @@ const Welcome: React.FC = () => {
       </section>
 
       {/* ============ ANFITRIONES ============ */}
-      <section id="anfitriones" className="py-16 sm:py-24 bg-gradient-to-br from-slate-900 via-slate-900 to-slate-800 text-white">
+      <section
+        id="anfitriones"
+        className="py-16 sm:py-24 bg-gradient-to-br from-slate-900 via-slate-900 to-slate-800 text-white"
+      >
         <div className="max-w-6xl mx-auto px-5 sm:px-8 grid md:grid-cols-2 gap-12 items-center">
           <div>
             <p className="text-secondary text-sm font-bold uppercase tracking-widest mb-2">Para anfitriones</p>
@@ -316,11 +341,11 @@ const Welcome: React.FC = () => {
               Convierte tu espacio en una fuente de ingresos
             </h2>
             <p className="text-slate-300 mb-8">
-              Publica tu terraza, quinta, salón, jardín o hacienda. Nosotros nos encargamos de
-              cobros, calendario y difusión.
+              Publica tu terraza, quinta, salón, jardín o hacienda. Nosotros nos encargamos de cobros, calendario y
+              difusión.
             </p>
             <button
-              onClick={() => navigate('/provider/login')}
+              onClick={() => navigate("/provider/login")}
               className="inline-flex items-center gap-2 bg-secondary text-white font-bold px-6 py-4 rounded-2xl shadow-xl shadow-secondary/25 hover:shadow-2xl hover:shadow-secondary/40 active:scale-95 transition-all"
             >
               <span className="material-icons-round">add_business</span>
@@ -349,13 +374,11 @@ const Welcome: React.FC = () => {
         <div className="max-w-6xl mx-auto px-5 sm:px-8">
           <div className="text-center max-w-2xl mx-auto mb-12">
             <p className="text-primary text-sm font-bold uppercase tracking-widest mb-2">Accede a tu cuenta</p>
-            <h2 className="text-3xl sm:text-4xl font-display font-bold tracking-tight">
-              Elige tu experiencia
-            </h2>
+            <h2 className="text-3xl sm:text-4xl font-display font-bold tracking-tight">Elige tu experiencia</h2>
           </div>
           <div className="grid md:grid-cols-2 gap-5 max-w-3xl mx-auto">
             <button
-              onClick={() => navigate('/user/login')}
+              onClick={() => navigate("/user/login")}
               className="group bg-white dark:bg-surface-dark border-2 border-slate-100 dark:border-slate-800 p-7 rounded-3xl text-left transition-all hover:border-primary hover:shadow-xl hover:shadow-primary/10 active:scale-95"
             >
               <div className="w-14 h-14 rounded-2xl bg-orange-50 dark:bg-orange-900/20 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-colors mb-4">
@@ -368,7 +391,7 @@ const Welcome: React.FC = () => {
               </span>
             </button>
             <button
-              onClick={() => navigate('/provider/login')}
+              onClick={() => navigate("/provider/login")}
               className="group bg-white dark:bg-surface-dark border-2 border-slate-100 dark:border-slate-800 p-7 rounded-3xl text-left transition-all hover:border-secondary hover:shadow-xl hover:shadow-secondary/10 active:scale-95"
             >
               <div className="w-14 h-14 rounded-2xl bg-cyan-50 dark:bg-cyan-900/20 flex items-center justify-center text-secondary group-hover:bg-secondary group-hover:text-white transition-colors mb-4">
@@ -392,7 +415,7 @@ const Welcome: React.FC = () => {
             © 2026 Lugare. Todos los derechos reservados.
           </p>
           <button
-            onClick={() => navigate('/admin/login')}
+            onClick={() => navigate("/admin/login")}
             className="text-[10px] text-slate-300 dark:text-slate-700 hover:text-slate-500 transition-colors uppercase tracking-widest"
           >
             Acceso administrador
