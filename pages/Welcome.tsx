@@ -151,6 +151,9 @@ const Welcome: React.FC = () => {
             <a href="#anfitriones" className="hover:text-primary transition-colors">
               Anfitriones
             </a>
+            <a href="#precios" className="hover:text-primary transition-colors">
+              Precios
+            </a>
           </nav>
           <div className="flex items-center gap-2">
             <button
