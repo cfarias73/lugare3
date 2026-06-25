@@ -151,6 +151,9 @@ const Welcome: React.FC = () => {
             <a href="#anfitriones" className="hover:text-primary transition-colors">
               Anfitriones
             </a>
+            <a href="#precios" className="hover:text-primary transition-colors">
+              Precios
+            </a>
           </nav>
           <div className="flex items-center gap-2">
             <button
@@ -366,6 +369,44 @@ const Welcome: React.FC = () => {
               </li>
             ))}
           </ul>
+        </div>
+      </section>
+
+      {/* ============ COSTO / GRATIS ============ */}
+      <section id="precios" className="py-16 sm:py-24 bg-slate-50 dark:bg-slate-900/40">
+        <div className="max-w-5xl mx-auto px-5 sm:px-8">
+          <div className="text-center max-w-2xl mx-auto mb-10">
+            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 text-xs font-bold uppercase tracking-widest mb-3">
+              <span className="material-icons-round text-sm">verified</span>
+              100% Gratis
+            </span>
+            <h2 className="text-3xl sm:text-4xl font-display font-bold tracking-tight mb-3">
+              Sin costo por registrarte ni por usar la plataforma
+            </h2>
+            <p className="text-slate-600 dark:text-slate-300">
+              Crea tu cuenta, explora espacios y publica los tuyos sin pagar nada. Solo cobramos una pequeña comisión cuando se concreta una reserva.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-5">
+            {[
+              { icon: "person_add", title: "Registro gratis", desc: "Crear tu cuenta como huésped o anfitrión no tiene ningún costo." },
+              { icon: "explore", title: "Uso sin mensualidades", desc: "Navega, publica espacios y recibe solicitudes sin pagar suscripciones." },
+              { icon: "handshake", title: "Solo pagas al reservar", desc: "Una comisión transparente se aplica únicamente cuando se concreta una reserva." },
+            ].map((c) => (
+              <div key={c.title} className="bg-white dark:bg-surface-dark border border-slate-100 dark:border-slate-800 rounded-3xl p-6 text-center">
+                <div className="w-12 h-12 mx-auto rounded-2xl bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-3">
+                  <span className="material-icons-round">{c.icon}</span>
+                </div>
+                <h3 className="font-display font-bold text-lg mb-1">{c.title}</h3>
+                <p className="text-sm text-slate-500 dark:text-slate-400">{c.desc}</p>
+              </div>
+            ))}
+          </div>
+
+          <p className="text-center text-xs text-slate-400 dark:text-slate-500 mt-8 max-w-xl mx-auto">
+            Sin tarjeta para registrarte. Sin costos ocultos. Sin permanencia.
+          </p>
         </div>
       </section>
 
