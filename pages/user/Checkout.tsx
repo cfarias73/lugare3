@@ -24,6 +24,10 @@ const Checkout: React.FC = () => {
   const hours = Number(params.get('hours') || 4);
   const guestCount = Number(params.get('guests') || 10);
   const serviceIds = (params.get('services') || '').split(',').filter(Boolean);
+  // Snapshot enviado por el calendario (fuente de verdad si está disponible)
+  const snapshotSubtotal = params.get('subtotal') ? Number(params.get('subtotal')) : null;
+  const snapshotExtraHours = params.get('extra_hours') ? Number(params.get('extra_hours')) : null;
+  void (params.get('slot_hours')); // reservado para futuro desglose detallado
 
   useEffect(() => {
     supabase.from('venues').select('*').eq('id', id).single().then(({ data }) => setVenue(data));
@@ -50,7 +54,7 @@ const Checkout: React.FC = () => {
       : Number(venue.min_hours) || 5;
   const baseCapacityResolved =
     venue.base_capacity != null ? Number(venue.base_capacity) : 0;
-  const breakdown = usingFlexible
+  const computedBreakdown = usingFlexible
     ? calcVenuePricing({
         basePrice: Number(venue.base_price) || 0,
         baseCapacity: baseCapacityResolved,
@@ -61,10 +65,24 @@ const Checkout: React.FC = () => {
         hours,
       })
     : null;
-  const subtotal = breakdown ? breakdown.total : (Number(venue.price_per_hour) || 0) * hours;
+  // Si el calendario envió un snapshot, lo usamos como fuente de verdad para
+  // el desglose visible y forzamos coincidencia de extra_hours.
+  const breakdown = computedBreakdown
+    ? {
+        ...computedBreakdown,
+        extraHours: snapshotExtraHours != null ? snapshotExtraHours : computedBreakdown.extraHours,
+        extraHoursCost:
+          snapshotExtraHours != null
+            ? snapshotExtraHours * (Number(venue.extra_hour_price) || 0)
+            : computedBreakdown.extraHoursCost,
+      }
+    : null;
+  const computedSubtotal = breakdown ? breakdown.total : (Number(venue.price_per_hour) || 0) * hours;
+  const subtotal = snapshotSubtotal != null && snapshotSubtotal > 0 ? snapshotSubtotal : computedSubtotal;
   const extrasTotal = extras.reduce((sum, e) => sum + e.price, 0);
   const stripeFee = Math.round((subtotal + extrasTotal) * 0.036 + 3);
   const total = subtotal + extrasTotal + stripeFee;
+
 
 
   const handlePayment = async () => {

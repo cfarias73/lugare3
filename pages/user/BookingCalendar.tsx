@@ -127,12 +127,17 @@ const BookingCalendar: React.FC = () => {
       const padN = (n: number) => String(n).padStart(2, '0');
       const newEnd = `${padN(endDate.getHours())}:${padN(endDate.getMinutes())}:${padN(endDate.getSeconds())}`;
       const date = toDateStr(year, month, selectedDay);
+      // Snapshot del desglose calculado en el calendario: evita que el Checkout
+      // recalcule con valores que puedan no coincidir (p.ej. fallback distinto).
       const params = new URLSearchParams({
         date,
         start: slot.start,
         end: newEnd,
         hours: String(totalHours),
         guests: String(guests || venue.baseCapacity || 10),
+        extra_hours: String(extraHours),
+        slot_hours: String(slot.hours),
+        subtotal: String(Math.round(estimatedTotal)),
       });
       if (servicesParam) params.set('services', servicesParam);
       navigate(`/user/checkout/${id}?${params.toString()}`);
@@ -141,6 +146,7 @@ const BookingCalendar: React.FC = () => {
       alert('Por favor selecciona un día y un horario.');
     }
   };
+
 
   if (!venue) {
     return (
