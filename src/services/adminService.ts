@@ -52,7 +52,7 @@ export const deleteHostProfile = async (hostId: string) => {
 export const getAllHosts = async () => {
   const { data, error } = await supabase
     .from('profiles')
-    .select('id, name, email, created_at, venues(id)')
+    .select('id, name, email, created_at, clabe, bank_name, account_holder, venues(id)')
     .eq('role', 'provider')
     .order('created_at', { ascending: false });
   if (error) throw error;

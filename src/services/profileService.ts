@@ -12,12 +12,15 @@ export interface ProfileData {
   business_name: string | null;
   fiscal_doc_url: string | null;
   member_since: string | null;
+  clabe: string | null;
+  bank_name: string | null;
+  account_holder: string | null;
 }
 
 export const getProfile = async (userId: string): Promise<ProfileData | null> => {
   const { data, error } = await supabase
     .from('profiles')
-    .select('id, name, phone, location, description, avatar_url, rfc, business_name, fiscal_doc_url, member_since')
+    .select('id, name, phone, location, description, avatar_url, rfc, business_name, fiscal_doc_url, member_since, clabe, bank_name, account_holder')
     .eq('id', userId)
     .maybeSingle();
   if (error) throw error;

@@ -33,6 +33,9 @@ const Profile: React.FC = () => {
     description: '',
     rfc: '',
     business_name: '',
+    clabe: '',
+    bank_name: '',
+    account_holder: '',
   });
   const [avatarUrl, setAvatarUrl] = useState<string>('');
   const [fiscalDocUrl, setFiscalDocUrl] = useState<string>('');
@@ -56,6 +59,9 @@ const Profile: React.FC = () => {
             description: profile.description ?? '',
             rfc: profile.rfc ?? '',
             business_name: profile.business_name ?? '',
+            clabe: profile.clabe ?? '',
+            bank_name: profile.bank_name ?? '',
+            account_holder: profile.account_holder ?? '',
           });
           setAvatarUrl(profile.avatar_url ?? '');
           setFiscalDocUrl(profile.fiscal_doc_url ?? '');
@@ -81,6 +87,10 @@ const Profile: React.FC = () => {
     if (!user?.id) return;
     if (!form.name.trim()) {
       toast.error('El nombre es requerido');
+      return;
+    }
+    if (form.clabe && !/^\d{18}$/.test(form.clabe.trim())) {
+      toast.error('La CLABE debe tener exactamente 18 dígitos');
       return;
     }
     setSaving(true);
@@ -357,6 +367,55 @@ const Profile: React.FC = () => {
             </div>
           </div>
         </section>
+
+        {/* Datos bancarios */}
+        <section>
+          <div className="flex items-center justify-between mb-6 px-1">
+            <h2 className="text-lg font-bold dark:text-white tracking-tight">Datos bancarios</h2>
+            <span className="material-icons-round text-slate-300">account_balance</span>
+          </div>
+          <p className="text-xs text-slate-400 font-medium mb-4 px-1 leading-relaxed">
+            Esta cuenta será utilizada por el administrador para depositar tus ganancias. Mantenla actualizada.
+          </p>
+          <div className="bg-white dark:bg-surface-dark p-7 rounded-[32px] shadow-sm border border-slate-100 dark:border-slate-800 space-y-7">
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">CLABE interbancaria (18 dígitos)</label>
+              {isEditing ? (
+                <input
+                  className={inputCls}
+                  value={form.clabe}
+                  onChange={(e) => setForm({ ...form, clabe: e.target.value.replace(/\D/g, '').slice(0, 18) })}
+                  placeholder="012345678901234567"
+                  inputMode="numeric"
+                  maxLength={18}
+                />
+              ) : (
+                <div className={readCls}>{form.clabe || '—'}</div>
+              )}
+              {isEditing && form.clabe && form.clabe.length !== 18 && (
+                <p className="text-[10px] text-red-500 font-bold ml-1">Faltan {18 - form.clabe.length} dígitos</p>
+              )}
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Banco</label>
+              {isEditing ? (
+                <input className={inputCls} value={form.bank_name} onChange={(e) => setForm({ ...form, bank_name: e.target.value })} placeholder="BBVA, Santander, Banorte..." />
+              ) : (
+                <div className={readCls}>{form.bank_name || '—'}</div>
+              )}
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Titular de la cuenta</label>
+              {isEditing ? (
+                <input className={inputCls} value={form.account_holder} onChange={(e) => setForm({ ...form, account_holder: e.target.value })} placeholder="Nombre completo del titular" />
+              ) : (
+                <div className={readCls}>{form.account_holder || '—'}</div>
+              )}
+            </div>
+          </div>
+        </section>
+
+
 
         <div className="pt-6">
           <button

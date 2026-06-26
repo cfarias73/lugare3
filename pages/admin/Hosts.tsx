@@ -115,6 +115,7 @@ const Hosts: React.FC = () => {
               <th className="p-4">Nombre</th>
               <th className="p-4">Email</th>
               <th className="p-4">Espacios</th>
+              <th className="p-4">CLABE / Banco</th>
               <th className="p-4">Fecha de registro</th>
               <th className="p-4 text-right">Acciones</th>
             </tr>
@@ -126,13 +127,14 @@ const Hosts: React.FC = () => {
                   <td className="p-4"><Skeleton className="h-4 w-32" /></td>
                   <td className="p-4"><Skeleton className="h-4 w-48" /></td>
                   <td className="p-4"><Skeleton className="h-4 w-16" /></td>
+                  <td className="p-4"><Skeleton className="h-4 w-40" /></td>
                   <td className="p-4"><Skeleton className="h-4 w-24" /></td>
                   <td className="p-4"><Skeleton className="h-4 w-20" /></td>
                 </tr>
               ))
             ) : filtered.length === 0 ? (
               <tr>
-                <td colSpan={5} className="p-8">
+                <td colSpan={6} className="p-8">
                   <EmptyState title="No hay anfitriones" description="No se encontraron anfitriones con los filtros aplicados." icon="storefront" />
                 </td>
               </tr>
@@ -142,6 +144,27 @@ const Hosts: React.FC = () => {
                   <td className="p-4 font-medium">{host.name || '—'}</td>
                   <td className="p-4">{host.email}</td>
                   <td className="p-4">{host.spaces}</td>
+                  <td className="p-4">
+                    {host.clabe ? (
+                      <div className="flex flex-col">
+                        <button
+                          onClick={() => {
+                            navigator.clipboard.writeText(host.clabe);
+                            toast.success('CLABE copiada');
+                          }}
+                          className="font-mono text-xs text-slate-700 dark:text-slate-200 hover:text-primary text-left"
+                          title="Copiar CLABE"
+                        >
+                          {host.clabe}
+                        </button>
+                        <span className="text-[10px] text-slate-400 uppercase tracking-wider">
+                          {host.bank_name || 'Sin banco'} {host.account_holder ? `· ${host.account_holder}` : ''}
+                        </span>
+                      </div>
+                    ) : (
+                      <span className="text-xs text-slate-400 italic">No registrada</span>
+                    )}
+                  </td>
                   <td className="p-4 text-slate-500">{host.created_at ? new Date(host.created_at).toLocaleDateString() : '—'}</td>
                   <td className="p-4 text-right">
                     <div className="flex justify-end gap-2">
