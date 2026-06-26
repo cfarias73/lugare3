@@ -61,7 +61,7 @@ const BookingCalendar: React.FC = () => {
             basePrice: data.base_price != null ? Number(data.base_price) : null,
             baseCapacity: data.base_capacity != null ? Number(data.base_capacity) : null,
             maxCapacity: data.max_capacity != null ? Number(data.max_capacity) : (data.capacity ?? null),
-            includedHours: data.included_hours != null ? Number(data.included_hours) : (Number(data.min_hours) || 5),
+            includedHours: Math.max(Number(data.included_hours) || 0, Number(data.min_hours) || 0) || 5,
             extraPersonPrice: data.extra_person_price != null ? Number(data.extra_person_price) : 0,
           };
           setVenue(mapped);

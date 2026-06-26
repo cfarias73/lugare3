@@ -3,7 +3,7 @@ import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { useUser } from '../../context/UserContext';
 import { toast } from 'sonner';
 import { supabase } from '../../lib/supabaseClient';
-import { getServicesByIds, PublicVenueService } from '../../src/services/venueService';
+import { getServicesByIds, getVenueById, PublicVenueService } from '../../src/services/venueService';
 import { calcVenuePricing } from '../../src/utils/pricing';
 
 const Checkout: React.FC = () => {
@@ -30,7 +30,19 @@ const Checkout: React.FC = () => {
   void (params.get('slot_hours')); // reservado para futuro desglose detallado
 
   useEffect(() => {
-    supabase.from('venues').select('*').eq('id', id).single().then(({ data }) => setVenue(data));
+    if (!id) return;
+    // Traemos los campos crudos (base_price, included_hours, etc.) y además
+    // resolvemos la imagen principal vía getVenueById para mostrar la foto.
+    Promise.all([
+      supabase.from('venues').select('*').eq('id', id).single(),
+      getVenueById(id),
+    ]).then(([{ data }, mapped]) => {
+      if (!data) return;
+      setVenue({
+        ...data,
+        image: mapped?.image || data.image || null,
+      });
+    });
     supabase.from('platform_settings').select('commission_percent').limit(1).single().then(({ data }) => {
       if (data) setSettings(data);
     });
@@ -46,12 +58,11 @@ const Checkout: React.FC = () => {
   }
 
   const usingFlexible = venue.base_price != null;
-  // IMPORTANTE: el fallback debe coincidir con el del calendario (min_hours || 5)
-  // para evitar inconsistencias de precio entre pantallas.
+  // Resolución de horas incluidas: usamos el mayor entre included_hours y
+  // min_hours para evitar que un valor antiguo (ej. 4h) muestre una base
+  // menor al mínimo real configurado por el anfitrión.
   const includedHoursResolved =
-    venue.included_hours != null
-      ? Number(venue.included_hours)
-      : Number(venue.min_hours) || 5;
+    Math.max(Number(venue.included_hours) || 0, Number(venue.min_hours) || 0) || 5;
   const baseCapacityResolved =
     venue.base_capacity != null ? Number(venue.base_capacity) : 0;
   const computedBreakdown = usingFlexible
