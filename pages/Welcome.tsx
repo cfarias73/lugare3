@@ -607,9 +607,10 @@ const Welcome: React.FC = () => {
                     </svg>
                   </a>
                 ))}
-
+              </div>
             </div>
           </div>
+
 
           {/* Bottom: Copyright + Admin */}
           <div className="border-t border-slate-200 dark:border-slate-800 pt-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
