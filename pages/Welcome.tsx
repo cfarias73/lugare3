@@ -160,6 +160,15 @@ const Welcome: React.FC = () => {
           </nav>
           <div className="flex items-center gap-2">
             <button
+              onClick={() => document.documentElement.classList.toggle('dark')}
+              aria-label="Cambiar tema claro/oscuro"
+              title="Cambiar tema"
+              className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition-colors"
+            >
+              <span className="material-icons-outlined text-xl dark:hidden">dark_mode</span>
+              <span className="material-icons-outlined text-xl hidden dark:inline">light_mode</span>
+            </button>
+            <button
               onClick={() => navigate("/user/login")}
               className="hidden sm:inline-flex text-sm font-semibold text-slate-700 dark:text-slate-200 hover:text-primary px-3 py-2 rounded-lg transition-colors"
             >
