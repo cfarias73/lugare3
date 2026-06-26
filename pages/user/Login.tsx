@@ -193,13 +193,6 @@ const Login: React.FC = () => {
           </p>
         </footer>
       </div>
-      
-      <button 
-        className="fixed bottom-4 right-4 p-2.5 bg-gray-100 dark:bg-gray-800 rounded-full shadow-lg z-50 transition-colors border border-slate-200 dark:border-slate-700" 
-        onClick={() => document.documentElement.classList.toggle('dark')}
-      >
-        <span className="material-icons-outlined text-gray-800 dark:text-gray-100">dark_mode</span>
-      </button>
     </div>
   );
 };
