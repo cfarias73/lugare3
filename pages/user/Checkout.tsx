@@ -30,7 +30,19 @@ const Checkout: React.FC = () => {
   void (params.get('slot_hours')); // reservado para futuro desglose detallado
 
   useEffect(() => {
-    supabase.from('venues').select('*').eq('id', id).single().then(({ data }) => setVenue(data));
+    if (!id) return;
+    // Traemos los campos crudos (base_price, included_hours, etc.) y además
+    // resolvemos la imagen principal vía getVenueById para mostrar la foto.
+    Promise.all([
+      supabase.from('venues').select('*').eq('id', id).single(),
+      getVenueById(id),
+    ]).then(([{ data }, mapped]) => {
+      if (!data) return;
+      setVenue({
+        ...data,
+        image: mapped?.image || data.image || null,
+      });
+    });
     supabase.from('platform_settings').select('commission_percent').limit(1).single().then(({ data }) => {
       if (data) setSettings(data);
     });
