@@ -136,7 +136,7 @@ const Welcome: React.FC = () => {
   );
 
   return (
-    <div className="min-h-screen bg-white dark:bg-background-dark text-slate-900 dark:text-white overflow-x-hidden">
+    <div className="landing-typo min-h-screen bg-white dark:bg-background-dark text-slate-900 dark:text-white overflow-x-hidden">
       {/* ============ NAV ============ */}
       <header className="sticky top-0 z-40 backdrop-blur-xl bg-white/80 dark:bg-background-dark/80 border-b border-slate-100 dark:border-slate-800">
         <div className="max-w-6xl mx-auto px-5 sm:px-8 h-16 flex items-center justify-between">
