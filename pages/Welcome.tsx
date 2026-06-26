@@ -256,12 +256,12 @@ const Welcome: React.FC = () => {
                 <p className="font-bold leading-tight relative">Jardines al aire libre</p>
               </div>
               <div
-                className="col-span-3 row-span-2 col-start-4 row-start-5 rounded-3xl shadow-xl p-5 flex flex-col justify-between text-white bg-cover bg-center relative overflow-hidden"
+                className="col-span-3 row-span-2 col-start-4 row-start-5 rounded-3xl shadow-xl shadow-amber-400/30 p-5 flex flex-col justify-between bg-cover bg-center relative overflow-hidden"
                 style={{ backgroundImage: `url(${STOCK.terraza})` }}
               >
-                <div className="absolute inset-0 bg-gradient-to-br from-slate-900/85 to-slate-900/40" />
-                <span className="material-icons-round text-3xl relative">deck</span>
-                <p className="font-bold leading-tight relative">Terrazas con vista</p>
+                <div className="absolute inset-0 bg-gradient-to-br from-amber-400/85 via-amber-300/65 to-yellow-200/40" />
+                <span className="material-icons-round text-3xl relative text-slate-900">deck</span>
+                <p className="font-bold leading-tight relative text-slate-900">Terrazas con vista</p>
               </div>
             </div>
           </div>
