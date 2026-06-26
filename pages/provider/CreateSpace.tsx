@@ -9,7 +9,7 @@ import { getCategories, Category } from '../../src/services/categoryService';
 import { validateSpaceName } from '../../src/utils/profanityFilter';
 import { AMENITIES } from '../../src/constants/amenities';
 
-const RULES = ['No mascotas', 'No fumar', 'Horarios de silencio', 'No fiestas'];
+const RULES = ['No mascotas', 'No fumar', 'Horarios de silencio'];
 
 const CreateSpaceContent: React.FC = () => {
   const navigate = useNavigate();
