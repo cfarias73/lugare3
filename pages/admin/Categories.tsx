@@ -14,6 +14,18 @@ import {
 
 const emptyForm = { slug: '', name: '', icon: 'category', sort_order: 0, is_active: true };
 
+const AVAILABLE_ICONS = [
+  'category', 'meeting_room', 'celebration', 'work', 'restaurant', 'spa',
+  'business_center', 'groups', 'cake', 'local_bar', 'nightlife', 'deck',
+  'roofing', 'villa', 'house', 'cottage', 'apartment', 'hotel',
+  'pool', 'beach_access', 'park', 'forest', 'yard', 'nature',
+  'theater_comedy', 'mic', 'music_note', 'sports_esports', 'sports_bar',
+  'church', 'temple_buddhist', 'casino', 'museum', 'school', 'auto_stories',
+  'photo_camera', 'movie', 'palette', 'brush', 'self_improvement',
+  'fitness_center', 'sports_soccer', 'directions_boat', 'flight',
+  'cafe', 'lunch_dining', 'dinner_dining', 'wine_bar', 'liquor',
+];
+
 const Categories: React.FC = () => {
   const [items, setItems] = useState<Category[]>([]);
   const [counts, setCounts] = useState<Record<string, number>>({});
@@ -131,8 +143,25 @@ const Categories: React.FC = () => {
               className="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-lg dark:bg-slate-800 dark:text-white"
             />
             <p className="text-[10px] text-slate-400 mt-1">
-              Ej: meeting_room, celebration, work, restaurant, spa
+              Escribe un nombre o selecciona uno de la lista
             </p>
+            <div className="mt-2 grid grid-cols-8 gap-1 max-h-40 overflow-y-auto p-2 border border-slate-200 dark:border-slate-700 rounded-lg">
+              {AVAILABLE_ICONS.map((ic) => (
+                <button
+                  key={ic}
+                  type="button"
+                  onClick={() => setForm({ ...form, icon: ic })}
+                  title={ic}
+                  className={`flex items-center justify-center aspect-square rounded-md transition ${
+                    form.icon === ic
+                      ? 'bg-primary text-white'
+                      : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300'
+                  }`}
+                >
+                  <span className="material-icons-outlined text-base">{ic}</span>
+                </button>
+              ))}
+            </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
@@ -174,8 +203,8 @@ const Categories: React.FC = () => {
           </div>
         </div>
 
-        <div className="md:col-span-2 bg-white dark:bg-surface-dark rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden">
-          <table className="w-full text-left">
+        <div className="md:col-span-2 bg-white dark:bg-surface-dark rounded-2xl border border-slate-100 dark:border-slate-800 overflow-x-auto">
+          <table className="w-full text-left min-w-[640px]">
             <thead className="bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-xs uppercase tracking-widest">
               <tr>
                 <th className="p-4">Icono</th>
