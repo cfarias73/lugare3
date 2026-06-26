@@ -178,3 +178,27 @@ export const getFinanceData = async () => {
   if (error) throw error;
   return data || [];
 };
+
+// ===== Reseñas =====
+export const getAllReviews = async () => {
+  const { data, error } = await supabase
+    .from('reviews')
+    .select('id, rating, comment, created_at, venue_id, user_id, venues(name), profiles(name)')
+    .order('created_at', { ascending: false })
+    .limit(200);
+  if (error) throw error;
+  return data || [];
+};
+
+export const updateReview = async (
+  reviewId: string,
+  patch: { rating?: number; comment?: string }
+) => {
+  const { error } = await supabase.from('reviews').update(patch).eq('id', reviewId);
+  if (error) throw error;
+};
+
+export const deleteReview = async (reviewId: string) => {
+  const { error } = await supabase.from('reviews').delete().eq('id', reviewId);
+  if (error) throw error;
+};
