@@ -33,6 +33,9 @@ const Profile: React.FC = () => {
     description: '',
     rfc: '',
     business_name: '',
+    clabe: '',
+    bank_name: '',
+    account_holder: '',
   });
   const [avatarUrl, setAvatarUrl] = useState<string>('');
   const [fiscalDocUrl, setFiscalDocUrl] = useState<string>('');
@@ -56,6 +59,9 @@ const Profile: React.FC = () => {
             description: profile.description ?? '',
             rfc: profile.rfc ?? '',
             business_name: profile.business_name ?? '',
+            clabe: profile.clabe ?? '',
+            bank_name: profile.bank_name ?? '',
+            account_holder: profile.account_holder ?? '',
           });
           setAvatarUrl(profile.avatar_url ?? '');
           setFiscalDocUrl(profile.fiscal_doc_url ?? '');
