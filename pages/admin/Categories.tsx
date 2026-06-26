@@ -143,8 +143,25 @@ const Categories: React.FC = () => {
               className="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-lg dark:bg-slate-800 dark:text-white"
             />
             <p className="text-[10px] text-slate-400 mt-1">
-              Ej: meeting_room, celebration, work, restaurant, spa
+              Escribe un nombre o selecciona uno de la lista
             </p>
+            <div className="mt-2 grid grid-cols-8 gap-1 max-h-40 overflow-y-auto p-2 border border-slate-200 dark:border-slate-700 rounded-lg">
+              {AVAILABLE_ICONS.map((ic) => (
+                <button
+                  key={ic}
+                  type="button"
+                  onClick={() => setForm({ ...form, icon: ic })}
+                  title={ic}
+                  className={`flex items-center justify-center aspect-square rounded-md transition ${
+                    form.icon === ic
+                      ? 'bg-primary text-white'
+                      : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300'
+                  }`}
+                >
+                  <span className="material-icons-outlined text-base">{ic}</span>
+                </button>
+              ))}
+            </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
