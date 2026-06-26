@@ -58,16 +58,11 @@ const Checkout: React.FC = () => {
   }
 
   const usingFlexible = venue.base_price != null;
-  // Resolución de horas incluidas: tomamos el mayor entre included_hours y
-  // min_hours para evitar que un default antiguo (4h) muestre una base menor
-  // que el mínimo real configurado por el anfitrión.
-  const includedHoursResolved = Math.max(
-    Number(venue.included_hours) || 0,
-    Number(venue.min_hours) || 0,
-    5,
-  ) === 5 && !venue.included_hours && !venue.min_hours
-    ? 5
-    : Math.max(Number(venue.included_hours) || 0, Number(venue.min_hours) || 0) || 5;
+  // Resolución de horas incluidas: usamos el mayor entre included_hours y
+  // min_hours para evitar que un valor antiguo (ej. 4h) muestre una base
+  // menor al mínimo real configurado por el anfitrión.
+  const includedHoursResolved =
+    Math.max(Number(venue.included_hours) || 0, Number(venue.min_hours) || 0) || 5;
   const baseCapacityResolved =
     venue.base_capacity != null ? Number(venue.base_capacity) : 0;
   const computedBreakdown = usingFlexible
