@@ -203,8 +203,8 @@ const Categories: React.FC = () => {
           </div>
         </div>
 
-        <div className="md:col-span-2 bg-white dark:bg-surface-dark rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden">
-          <table className="w-full text-left">
+        <div className="md:col-span-2 bg-white dark:bg-surface-dark rounded-2xl border border-slate-100 dark:border-slate-800 overflow-x-auto">
+          <table className="w-full text-left min-w-[640px]">
             <thead className="bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-xs uppercase tracking-widest">
               <tr>
                 <th className="p-4">Icono</th>
