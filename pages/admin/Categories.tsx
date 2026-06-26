@@ -14,6 +14,18 @@ import {
 
 const emptyForm = { slug: '', name: '', icon: 'category', sort_order: 0, is_active: true };
 
+const AVAILABLE_ICONS = [
+  'category', 'meeting_room', 'celebration', 'work', 'restaurant', 'spa',
+  'business_center', 'groups', 'cake', 'local_bar', 'nightlife', 'deck',
+  'roofing', 'villa', 'house', 'cottage', 'apartment', 'hotel',
+  'pool', 'beach_access', 'park', 'forest', 'yard', 'nature',
+  'theater_comedy', 'mic', 'music_note', 'sports_esports', 'sports_bar',
+  'church', 'temple_buddhist', 'casino', 'museum', 'school', 'auto_stories',
+  'photo_camera', 'movie', 'palette', 'brush', 'self_improvement',
+  'fitness_center', 'sports_soccer', 'directions_boat', 'flight',
+  'cafe', 'lunch_dining', 'dinner_dining', 'wine_bar', 'liquor',
+];
+
 const Categories: React.FC = () => {
   const [items, setItems] = useState<Category[]>([]);
   const [counts, setCounts] = useState<Record<string, number>>({});
