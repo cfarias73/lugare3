@@ -275,7 +275,7 @@ const BookingCalendar: React.FC = () => {
                 <div>
                   <h4 className="text-sm font-bold">Horas extra</h4>
                   <p className="text-[11px] text-slate-500 mt-0.5">
-                    El horario incluye {slotHours}h. ${extraPrice.toLocaleString()}/h adicional.
+                    Tu paquete incluye {usingFlexible ? venue.includedHours : slotHours}h. Este horario dura {slotHours}h{usingFlexible && slotHours > venue.includedHours ? ` (ya incluye ${slotHours - venue.includedHours}h extra)` : ''}. ${extraPrice.toLocaleString()}/h adicional.
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
