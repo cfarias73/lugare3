@@ -89,6 +89,10 @@ const Profile: React.FC = () => {
       toast.error('El nombre es requerido');
       return;
     }
+    if (form.clabe && !/^\d{18}$/.test(form.clabe.trim())) {
+      toast.error('La CLABE debe tener exactamente 18 dígitos');
+      return;
+    }
     setSaving(true);
     try {
       await updateProfile(user.id, form);
