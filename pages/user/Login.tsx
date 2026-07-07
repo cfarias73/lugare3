@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../../context/UserContext';
 import { ErrorMessage } from '../../components/ui/ErrorMessage';
+import Logo from '../../components/Logo';
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
@@ -59,19 +60,7 @@ const Login: React.FC = () => {
       </button>
       <div className="w-full max-w-[400px] flex flex-col items-center space-y-8">
         <div className="flex flex-col items-center space-y-4">
-          <div className="relative w-24 h-24">
-            <div className="w-full h-full flex items-center justify-center relative">
-              <svg className="w-20 h-20 text-primary fill-current" viewBox="0 0 24 24">
-                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"></path>
-              </svg>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span className="material-icons-outlined text-white text-3xl">star</span>
-              </div>
-              <div className="absolute -top-1 -right-2 w-2 h-2 rounded-full bg-blue-400"></div>
-              <div className="absolute top-4 -left-3 w-3 h-3 rounded-full bg-orange-300"></div>
-              <div className="absolute bottom-6 -right-4 w-2 h-4 rounded-full bg-teal-400 rotate-45"></div>
-            </div>
-          </div>
+          <Logo size={80} showText={false} />
           <div className="text-center space-y-2">
             <h1 className="text-2xl font-bold text-slate-800 dark:text-white font-display">
               {isLogin ? 'Bienvenido a Lugare' : 'Únete a Lugare'}
