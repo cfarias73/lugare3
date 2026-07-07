@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../../context/UserContext';
 import { ErrorMessage } from '../../components/ui/ErrorMessage';
+import Logo from '../../components/Logo';
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
@@ -59,18 +60,8 @@ const Login: React.FC = () => {
       </button>
       <div className="w-full bg-white dark:bg-surface-dark rounded-[40px] shadow-2xl overflow-hidden px-8 py-10 flex flex-col relative transition-all duration-300">
         <div className="flex flex-col items-center mb-8">
-          <div className="relative w-20 h-20 mb-4">
-            <div className="flex items-center justify-center h-full">
-              <div className="w-16 h-16 bg-primary/10 rounded-full absolute flex items-center justify-center">
-                <span className="material-icons-round text-primary text-4xl">star</span>
-              </div>
-              <svg className="text-primary w-20 h-20" fill="none" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                <path d="M50 95C50 95 85 65.5 85 42.5C85 23.17 69.33 7.5 50 7.5C30.67 7.5 15 23.17 15 42.5C15 65.5 50 95 50 95Z" fill="currentColor" fillOpacity="0.05" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="4"></path>
-              </svg>
-            </div>
-            <div className="absolute top-0 left-0 w-2.5 h-2.5 rounded-full bg-blue-400 opacity-60"></div>
-            <div className="absolute top-3 right-0 w-1.5 h-1.5 rounded-full bg-yellow-400 opacity-60"></div>
-            <div className="absolute bottom-5 -left-1.5 w-3 h-3 rounded-full bg-green-400 opacity-40 rotate-12"></div>
+          <div className="mb-4">
+            <Logo size={80} showText={false} />
           </div>
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white text-center mb-1 font-display tracking-tight uppercase">
             {isLogin ? 'Bienvenido Anfitrión' : 'Crea tu cuenta'}

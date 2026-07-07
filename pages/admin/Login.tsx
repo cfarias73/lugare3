@@ -4,6 +4,7 @@ import { useUser } from '../../context/UserContext';
 import { supabase } from '../../lib/supabaseClient';
 import { ErrorMessage } from '../../components/ui/ErrorMessage';
 import { toast } from 'sonner';
+import Logo from '../../components/Logo';
 
 const AdminLogin: React.FC = () => {
   const navigate = useNavigate();
@@ -68,6 +69,9 @@ const AdminLogin: React.FC = () => {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-background-dark flex flex-col items-center justify-center p-6">
       <div className="w-full max-w-md bg-white dark:bg-surface-dark rounded-[40px] shadow-2xl p-10">
+        <div className="flex justify-center mb-6">
+          <Logo size={64} showText={false} />
+        </div>
         <h1 className="text-2xl font-bold text-slate-900 dark:text-white text-center mb-8 font-display uppercase tracking-tight">
           Acceso SuperAdmin
         </h1>
