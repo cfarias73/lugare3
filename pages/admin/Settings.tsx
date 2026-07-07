@@ -52,7 +52,7 @@ const Settings: React.FC = () => {
             <div>
               <label className="block text-sm font-bold mb-2">Comisión de plataforma (%)</label>
               <p className="text-xs text-slate-500 mb-3">
-                Porcentaje que retiene Lugarem de cada reserva. El resto se paga al host.
+                Porcentaje que retiene Lugare de cada reserva. El resto se paga al host.
               </p>
               <input
                 type="number"
