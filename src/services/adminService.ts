@@ -90,7 +90,7 @@ export const getAdminStats = async () => {
 
 export const getAllUsers = async () => {
   const [profiles, providerIds, adminIds] = await Promise.all([
-    getAllProfiles('id, name, email, created_at'),
+    getAllProfiles('id, name, created_at'),
     getProviderIds(),
     getUserIdsByRole('admin'),
   ]);
