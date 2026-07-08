@@ -40,15 +40,15 @@ const resolveRole = async (sessionUser: any): Promise<'user' | 'provider' | 'adm
 };
 
 const hydrateUser = async (sessionUser: any): Promise<User> => {
-  const [{ data: profile }, role] = await Promise.all([
-    supabase.from('profiles').select('name').eq('id', sessionUser.id).single(),
+  const [profileRes, role] = await Promise.all([
+    supabase.from('profiles').select('name').eq('id', sessionUser.id).maybeSingle(),
     resolveRole(sessionUser),
   ]);
 
   return {
     id: sessionUser.id,
     email: sessionUser.email!,
-    name: profile?.name || sessionUser.user_metadata?.name || 'Usuario',
+    name: profileRes.data?.name || sessionUser.user_metadata?.name || 'Usuario',
     isAuthenticated: true,
     role,
   };

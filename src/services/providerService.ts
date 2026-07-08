@@ -27,16 +27,24 @@ export interface CreateVenueData extends VenuePayload {
   imageFiles: File[];
 }
 
+const sanitizeExt = (name: string): string => {
+  const raw = (name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '');
+  return raw.slice(0, 5) || 'jpg';
+};
+
 const uploadImages = async (providerId: string, venueId: string, files: File[]): Promise<string[]> => {
   const urls: string[] = [];
   for (const file of files) {
-    const ext = file.name.split('.').pop() || 'jpg';
+    const ext = sanitizeExt(file.name);
     const path = `${providerId}/${venueId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
     const { error } = await supabase.storage.from('venues').upload(path, file, {
-      contentType: file.type,
+      contentType: file.type || 'image/jpeg',
       upsert: false,
     });
-    if (error) throw error;
+    if (error) {
+      const msg = (error as any)?.message || 'Error subiendo imagen';
+      throw new Error(`No se pudo subir "${file.name}": ${msg}`);
+    }
     const { data } = supabase.storage.from('venues').getPublicUrl(path);
     urls.push(data.publicUrl);
   }
@@ -59,10 +67,16 @@ export const createVenue = async (providerId: string, data: CreateVenueData) => 
   if (venueError) throw venueError;
 
   if (imageFiles.length > 0) {
-    const urls = await uploadImages(providerId, venue.id, imageFiles);
-    const rows = urls.map((url) => ({ venue_id: venue.id, image_url: url }));
-    const { error: imgErr } = await supabase.from('venue_images').insert(rows);
-    if (imgErr) throw imgErr;
+    try {
+      const urls = await uploadImages(providerId, venue.id, imageFiles);
+      const rows = urls.map((url) => ({ venue_id: venue.id, image_url: url }));
+      const { error: imgErr } = await supabase.from('venue_images').insert(rows);
+      if (imgErr) throw imgErr;
+    } catch (e) {
+      // Rollback venue insert if images fail so the provider can retry cleanly
+      await supabase.from('venues').delete().eq('id', venue.id);
+      throw e;
+    }
   }
 
   return venue;
