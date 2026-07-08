@@ -138,7 +138,7 @@ export const getAllHosts = async () => {
 export const getAllBookings = async () => {
   const { data, error } = await supabase
     .from('bookings')
-    .select('id, event_date, status, total_price, venues(name), profiles(name, email)')
+    .select('id, event_date, status, total_price, venues(name), profiles(name)')
     .order('event_date', { ascending: false })
     .limit(100);
   if (error) throw error;
