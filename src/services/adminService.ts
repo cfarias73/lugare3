@@ -126,7 +126,7 @@ export const getAllHosts = async () => {
   if (venuesRes.error) throw venuesRes.error;
 
   const venueRows = venuesRes.data || [];
-  const hosts = await getProfilesByIds(providerIds, 'id, name, email, created_at, clabe, bank_name, account_holder');
+  const hosts = await getProfilesByIds(providerIds, 'id, name, created_at, clabe, bank_name, account_holder');
   const spacesByProvider = venueRows.reduce((acc: Record<string, number>, venue: any) => {
     acc[venue.provider_id] = (acc[venue.provider_id] || 0) + 1;
     return acc;
