@@ -15,28 +15,6 @@ const getUserIdsByRole = async (role: AppRole) => {
   return unique((data || []).map((row: any) => row.user_id as string));
 };
 
-const getProfileIdsByLegacyRole = async (role: AppRole) => {
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('id')
-    .eq('role', role);
-
-  if (error) {
-    console.warn(`[adminService] legacy profile role lookup failed for ${role}`, error);
-    return [];
-  }
-  return unique((data || []).map((row: any) => row.id as string));
-};
-
-const getAccountIdsByRole = async (role: AppRole) => {
-  const [roleTableIds, legacyProfileIds] = await Promise.all([
-    getUserIdsByRole(role),
-    getProfileIdsByLegacyRole(role),
-  ]);
-
-  return unique([...roleTableIds, ...legacyProfileIds]);
-};
-
 const getProfilesByIds = async (ids: string[], columns: string) => {
   if (ids.length === 0) return [];
 
@@ -48,6 +26,31 @@ const getProfilesByIds = async (ids: string[], columns: string) => {
 
   if (error) throw error;
   return data || [];
+};
+
+const getAllProfiles = async (columns: string) => {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select(columns)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return data || [];
+};
+
+const getVenueProviderIds = async () => {
+  const { data, error } = await supabase.from('venues').select('provider_id');
+  if (error) throw error;
+  return unique((data || []).map((venue: any) => venue.provider_id as string));
+};
+
+const getProviderIds = async () => {
+  const [roleProviderIds, venueProviderIds] = await Promise.all([
+    getUserIdsByRole('provider'),
+    getVenueProviderIds(),
+  ]);
+
+  return unique([...roleProviderIds, ...venueProviderIds]);
 };
 
 const attachProviderProfiles = async (venues: any[]) => {
@@ -62,24 +65,22 @@ const attachProviderProfiles = async (venues: any[]) => {
 };
 
 export const getAdminStats = async () => {
-  const [userIds, providerRoleIds, providerVenuesRes, bookingsRes, todayRes, revenueRes] = await Promise.all([
-    getAccountIdsByRole('user'),
-    getAccountIdsByRole('provider'),
-    supabase.from('venues').select('provider_id'),
+  const [profiles, providerIds, adminIds, bookingsRes, todayRes, revenueRes] = await Promise.all([
+    getAllProfiles('id'),
+    getProviderIds(),
+    getUserIdsByRole('admin'),
     supabase.from('bookings').select('*', { count: 'exact', head: true }),
     supabase.from('bookings').select('*', { count: 'exact', head: true }).eq('event_date', new Date().toISOString().slice(0, 10)),
     supabase.from('bookings').select('total_price').eq('status', 'completed'),
   ]);
-  if (providerVenuesRes.error) throw providerVenuesRes.error;
   if (bookingsRes.error) throw bookingsRes.error;
   if (todayRes.error) throw todayRes.error;
   if (revenueRes.error) throw revenueRes.error;
 
-  const providerVenueIds = (providerVenuesRes.data || []).map((venue: any) => venue.provider_id as string);
-  const providerIds = unique([...providerRoleIds, ...providerVenueIds]);
+  const excludedFromUsers = new Set([...providerIds, ...adminIds]);
   const revenue = (revenueRes.data || []).reduce((s: number, b: any) => s + Number(b.total_price || 0), 0);
   return {
-    userCount: userIds.length,
+    userCount: profiles.filter((profile: any) => !excludedFromUsers.has(profile.id)).length,
     providerCount: providerIds.length,
     bookingCount: bookingsRes.count || 0,
     todayBookings: todayRes.count || 0,
@@ -88,8 +89,13 @@ export const getAdminStats = async () => {
 };
 
 export const getAllUsers = async () => {
-  const userIds = await getAccountIdsByRole('user');
-  return getProfilesByIds(userIds, 'id, name, email, created_at');
+  const [profiles, providerIds, adminIds] = await Promise.all([
+    getAllProfiles('id, name, email, created_at'),
+    getProviderIds(),
+    getUserIdsByRole('admin'),
+  ]);
+  const excludedFromUsers = new Set([...providerIds, ...adminIds]);
+  return profiles.filter((profile: any) => !excludedFromUsers.has(profile.id));
 };
 
 export const updateUserName = async (userId: string, name: string) => {
@@ -113,15 +119,13 @@ export const deleteHostProfile = async (hostId: string) => {
 };
 
 export const getAllHosts = async () => {
-  const [providerRoleIds, venuesRes] = await Promise.all([
-    getAccountIdsByRole('provider'),
+  const [providerIds, venuesRes] = await Promise.all([
+    getProviderIds(),
     supabase.from('venues').select('id, provider_id'),
   ]);
   if (venuesRes.error) throw venuesRes.error;
 
   const venueRows = venuesRes.data || [];
-  const providerVenueIds = venueRows.map((venue: any) => venue.provider_id as string);
-  const providerIds = unique([...providerRoleIds, ...providerVenueIds]);
   const hosts = await getProfilesByIds(providerIds, 'id, name, email, created_at, clabe, bank_name, account_holder');
   const spacesByProvider = venueRows.reduce((acc: Record<string, number>, venue: any) => {
     acc[venue.provider_id] = (acc[venue.provider_id] || 0) + 1;
