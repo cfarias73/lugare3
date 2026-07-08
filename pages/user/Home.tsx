@@ -295,7 +295,7 @@ const Home: React.FC = () => {
           <div className="flex overflow-x-auto no-scrollbar gap-5 -mx-5 px-5 pb-4 snap-x snap-mandatory">
             {isLoading ? (
               [1, 2].map((i) => (
-                <div key={i} className="snap-center shrink-0 min-w-[280px] bg-white dark:bg-surface-dark rounded-3xl overflow-hidden shadow-sm border border-slate-100 dark:border-slate-800">
+                <div key={i} className="snap-center shrink-0 w-[calc(100vw-2.5rem)] max-w-[320px] bg-white dark:bg-surface-dark rounded-3xl overflow-hidden shadow-sm border border-slate-100 dark:border-slate-800">
                   <div className="h-48 bg-slate-200 dark:bg-slate-700 animate-pulse" />
                   <div className="p-4 space-y-3">
                     <div className="h-5 bg-slate-200 dark:bg-slate-700 animate-pulse w-3/4" />
