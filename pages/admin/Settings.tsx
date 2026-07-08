@@ -26,6 +26,8 @@ const Settings: React.FC = () => {
     }
     setSaving(true);
     try {
+      let shouldCreateSettings = !settingsId;
+
       if (settingsId) {
         const { data, error } = await supabase
           .from('platform_settings')
@@ -34,10 +36,10 @@ const Settings: React.FC = () => {
           .select('id')
           .maybeSingle();
         if (error) throw error;
-        if (!data) setSettingsId(null);
+        if (!data) shouldCreateSettings = true;
       }
 
-      if (!settingsId) {
+      if (shouldCreateSettings) {
         const { data, error } = await supabase
           .from('platform_settings')
           .insert({ commission_percent: commission, updated_at: new Date().toISOString() })

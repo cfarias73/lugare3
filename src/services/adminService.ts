@@ -15,6 +15,28 @@ const getUserIdsByRole = async (role: AppRole) => {
   return unique((data || []).map((row: any) => row.user_id as string));
 };
 
+const getProfileIdsByLegacyRole = async (role: AppRole) => {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('id')
+    .eq('role', role);
+
+  if (error) {
+    console.warn(`[adminService] legacy profile role lookup failed for ${role}`, error);
+    return [];
+  }
+  return unique((data || []).map((row: any) => row.id as string));
+};
+
+const getAccountIdsByRole = async (role: AppRole) => {
+  const [roleTableIds, legacyProfileIds] = await Promise.all([
+    getUserIdsByRole(role),
+    getProfileIdsByLegacyRole(role),
+  ]);
+
+  return unique([...roleTableIds, ...legacyProfileIds]);
+};
+
 const getProfilesByIds = async (ids: string[], columns: string) => {
   if (ids.length === 0) return [];
 
@@ -41,8 +63,8 @@ const attachProviderProfiles = async (venues: any[]) => {
 
 export const getAdminStats = async () => {
   const [userIds, providerRoleIds, providerVenuesRes, bookingsRes, todayRes, revenueRes] = await Promise.all([
-    getUserIdsByRole('user'),
-    getUserIdsByRole('provider'),
+    getAccountIdsByRole('user'),
+    getAccountIdsByRole('provider'),
     supabase.from('venues').select('provider_id'),
     supabase.from('bookings').select('*', { count: 'exact', head: true }),
     supabase.from('bookings').select('*', { count: 'exact', head: true }).eq('event_date', new Date().toISOString().slice(0, 10)),
@@ -66,7 +88,7 @@ export const getAdminStats = async () => {
 };
 
 export const getAllUsers = async () => {
-  const userIds = await getUserIdsByRole('user');
+  const userIds = await getAccountIdsByRole('user');
   return getProfilesByIds(userIds, 'id, name, email, created_at');
 };
 
@@ -92,7 +114,7 @@ export const deleteHostProfile = async (hostId: string) => {
 
 export const getAllHosts = async () => {
   const [providerRoleIds, venuesRes] = await Promise.all([
-    getUserIdsByRole('provider'),
+    getAccountIdsByRole('provider'),
     supabase.from('venues').select('id, provider_id'),
   ]);
   if (venuesRes.error) throw venuesRes.error;
