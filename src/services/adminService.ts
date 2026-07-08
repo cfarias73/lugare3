@@ -55,7 +55,7 @@ const getProviderIds = async () => {
 
 const attachProviderProfiles = async (venues: any[]) => {
   const providerIds = unique(venues.map((venue) => venue.provider_id as string));
-  const providers = await getProfilesByIds(providerIds, 'id, name, email');
+  const providers = await getProfilesByIds(providerIds, 'id, name');
   const providerById = new Map(providers.map((profile: any) => [profile.id, profile]));
 
   return venues.map((venue) => ({
@@ -90,7 +90,7 @@ export const getAdminStats = async () => {
 
 export const getAllUsers = async () => {
   const [profiles, providerIds, adminIds] = await Promise.all([
-    getAllProfiles('id, name, email, created_at'),
+    getAllProfiles('id, name, created_at'),
     getProviderIds(),
     getUserIdsByRole('admin'),
   ]);
@@ -126,7 +126,7 @@ export const getAllHosts = async () => {
   if (venuesRes.error) throw venuesRes.error;
 
   const venueRows = venuesRes.data || [];
-  const hosts = await getProfilesByIds(providerIds, 'id, name, email, created_at, clabe, bank_name, account_holder');
+  const hosts = await getProfilesByIds(providerIds, 'id, name, created_at, clabe, bank_name, account_holder');
   const spacesByProvider = venueRows.reduce((acc: Record<string, number>, venue: any) => {
     acc[venue.provider_id] = (acc[venue.provider_id] || 0) + 1;
     return acc;
@@ -138,7 +138,7 @@ export const getAllHosts = async () => {
 export const getAllBookings = async () => {
   const { data, error } = await supabase
     .from('bookings')
-    .select('id, event_date, status, total_price, venues(name), profiles(name, email)')
+    .select('id, event_date, status, total_price, venues(name), profiles(name)')
     .order('event_date', { ascending: false })
     .limit(100);
   if (error) throw error;
