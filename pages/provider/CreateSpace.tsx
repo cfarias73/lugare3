@@ -182,8 +182,9 @@ const CreateSpaceContent: React.FC = () => {
       }
       navigate('/provider/spaces');
     } catch (e: any) {
-      console.error(e);
-      toast.error(e.message ?? 'Error al guardar');
+      console.error('[CreateSpace] save failed', e);
+      const parts = [e?.message, e?.details, e?.hint, e?.code].filter(Boolean);
+      toast.error(parts.length ? parts.join(' — ') : 'Error al guardar el espacio');
     } finally {
       setLoading(false);
     }
