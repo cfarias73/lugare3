@@ -295,7 +295,7 @@ const Home: React.FC = () => {
           <div className="flex overflow-x-auto no-scrollbar gap-5 -mx-5 px-5 pb-4 snap-x snap-mandatory">
             {isLoading ? (
               [1, 2].map((i) => (
-                <div key={i} className="snap-center shrink-0 min-w-[280px] bg-white dark:bg-surface-dark rounded-3xl overflow-hidden shadow-sm border border-slate-100 dark:border-slate-800">
+                <div key={i} className="snap-center shrink-0 w-[calc(100vw-2.5rem)] max-w-[320px] bg-white dark:bg-surface-dark rounded-3xl overflow-hidden shadow-sm border border-slate-100 dark:border-slate-800">
                   <div className="h-48 bg-slate-200 dark:bg-slate-700 animate-pulse" />
                   <div className="p-4 space-y-3">
                     <div className="h-5 bg-slate-200 dark:bg-slate-700 animate-pulse w-3/4" />
@@ -309,7 +309,7 @@ const Home: React.FC = () => {
               <div 
                 key={venue.id} 
                 onClick={() => navigate(`/user/venue/${venue.id}`)}
-                className="snap-center shrink-0 min-w-[280px] bg-white dark:bg-surface-dark rounded-3xl overflow-hidden shadow-sm border border-slate-100 dark:border-slate-800 cursor-pointer transform hover:scale-[0.98] transition-transform"
+                className="snap-center shrink-0 w-[calc(100vw-2.5rem)] max-w-[320px] bg-white dark:bg-surface-dark rounded-3xl overflow-hidden shadow-sm border border-slate-100 dark:border-slate-800 cursor-pointer transform hover:scale-[0.98] transition-transform"
               >
                 <div className="relative h-48">
                   <img alt={venue.name} className="w-full h-full object-cover" src={venue.image} loading="lazy" />
