@@ -10,7 +10,7 @@ const Settings: React.FC = () => {
   const [settingsId, setSettingsId] = useState<string | null>(null);
 
   useEffect(() => {
-    supabase.from('platform_settings').select('*').limit(1).single().then(({ data }) => {
+    supabase.from('platform_settings').select('*').limit(1).maybeSingle().then(({ data }) => {
       if (data) {
         setCommission(Number(data.commission_percent));
         setSettingsId(data.id);
@@ -26,11 +26,26 @@ const Settings: React.FC = () => {
     }
     setSaving(true);
     try {
-      const { error } = await supabase
-        .from('platform_settings')
-        .update({ commission_percent: commission, updated_at: new Date().toISOString() })
-        .eq('id', settingsId);
-      if (error) throw error;
+      if (settingsId) {
+        const { data, error } = await supabase
+          .from('platform_settings')
+          .update({ commission_percent: commission, updated_at: new Date().toISOString() })
+          .eq('id', settingsId)
+          .select('id')
+          .maybeSingle();
+        if (error) throw error;
+        if (!data) setSettingsId(null);
+      }
+
+      if (!settingsId) {
+        const { data, error } = await supabase
+          .from('platform_settings')
+          .insert({ commission_percent: commission, updated_at: new Date().toISOString() })
+          .select('id')
+          .single();
+        if (error) throw error;
+        setSettingsId(data.id);
+      }
       toast.success('Comisión actualizada');
     } catch (e: any) {
       toast.error(e.message);
@@ -52,7 +67,7 @@ const Settings: React.FC = () => {
             <div>
               <label className="block text-sm font-bold mb-2">Comisión de plataforma (%)</label>
               <p className="text-xs text-slate-500 mb-3">
-                Porcentaje que retiene Lugare de cada reserva. El resto se paga al host.
+                Porcentaje que tiene Lugare por cada reserva. El resto se paga al anfitrión.
               </p>
               <input
                 type="number"
