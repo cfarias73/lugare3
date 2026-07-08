@@ -1,18 +1,87 @@
 import { supabase } from '../../lib/supabaseClient';
 import { createNotification } from './notificationService';
 
+type AppRole = 'user' | 'provider' | 'admin';
+
+const unique = <T,>(items: T[]) => Array.from(new Set(items.filter(Boolean)));
+
+const getUserIdsByRole = async (role: AppRole) => {
+  const { data, error } = await supabase
+    .from('user_roles')
+    .select('user_id')
+    .eq('role', role);
+
+  if (error) throw error;
+  return unique((data || []).map((row: any) => row.user_id as string));
+};
+
+const getProfilesByIds = async (ids: string[], columns: string) => {
+  if (ids.length === 0) return [];
+
+  const { data, error } = await supabase
+    .from('profiles')
+    .select(columns)
+    .in('id', ids)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return data || [];
+};
+
+const getAllProfiles = async (columns: string) => {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select(columns)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return data || [];
+};
+
+const getVenueProviderIds = async () => {
+  const { data, error } = await supabase.from('venues').select('provider_id');
+  if (error) throw error;
+  return unique((data || []).map((venue: any) => venue.provider_id as string));
+};
+
+const getProviderIds = async () => {
+  const [roleProviderIds, venueProviderIds] = await Promise.all([
+    getUserIdsByRole('provider'),
+    getVenueProviderIds(),
+  ]);
+
+  return unique([...roleProviderIds, ...venueProviderIds]);
+};
+
+const attachProviderProfiles = async (venues: any[]) => {
+  const providerIds = unique(venues.map((venue) => venue.provider_id as string));
+  const providers = await getProfilesByIds(providerIds, 'id, name, email');
+  const providerById = new Map(providers.map((profile: any) => [profile.id, profile]));
+
+  return venues.map((venue) => ({
+    ...venue,
+    profiles: providerById.get(venue.provider_id) || null,
+  }));
+};
+
 export const getAdminStats = async () => {
-  const [usersRes, providersRes, bookingsRes, todayRes, revenueRes] = await Promise.all([
-    supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'user'),
-    supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'provider'),
+  const [profiles, providerIds, adminIds, bookingsRes, todayRes, revenueRes] = await Promise.all([
+    getAllProfiles('id'),
+    getProviderIds(),
+    getUserIdsByRole('admin'),
     supabase.from('bookings').select('*', { count: 'exact', head: true }),
     supabase.from('bookings').select('*', { count: 'exact', head: true }).eq('event_date', new Date().toISOString().slice(0, 10)),
     supabase.from('bookings').select('total_price').eq('status', 'completed'),
   ]);
+  if (bookingsRes.error) throw bookingsRes.error;
+  if (todayRes.error) throw todayRes.error;
+  if (revenueRes.error) throw revenueRes.error;
+
+  const excludedFromUsers = new Set([...providerIds, ...adminIds]);
   const revenue = (revenueRes.data || []).reduce((s: number, b: any) => s + Number(b.total_price || 0), 0);
   return {
-    userCount: usersRes.count || 0,
-    providerCount: providersRes.count || 0,
+    userCount: profiles.filter((profile: any) => !excludedFromUsers.has(profile.id)).length,
+    providerCount: providerIds.length,
     bookingCount: bookingsRes.count || 0,
     todayBookings: todayRes.count || 0,
     revenue,
@@ -20,13 +89,13 @@ export const getAdminStats = async () => {
 };
 
 export const getAllUsers = async () => {
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('id, name, email, created_at')
-    .eq('role', 'user')
-    .order('created_at', { ascending: false });
-  if (error) throw error;
-  return data || [];
+  const [profiles, providerIds, adminIds] = await Promise.all([
+    getAllProfiles('id, name, email, created_at'),
+    getProviderIds(),
+    getUserIdsByRole('admin'),
+  ]);
+  const excludedFromUsers = new Set([...providerIds, ...adminIds]);
+  return profiles.filter((profile: any) => !excludedFromUsers.has(profile.id));
 };
 
 export const updateUserName = async (userId: string, name: string) => {
@@ -50,13 +119,20 @@ export const deleteHostProfile = async (hostId: string) => {
 };
 
 export const getAllHosts = async () => {
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('id, name, email, created_at, clabe, bank_name, account_holder, venues(id)')
-    .eq('role', 'provider')
-    .order('created_at', { ascending: false });
-  if (error) throw error;
-  return (data || []).map((h: any) => ({ ...h, spaces: h.venues?.length || 0 }));
+  const [providerIds, venuesRes] = await Promise.all([
+    getProviderIds(),
+    supabase.from('venues').select('id, provider_id'),
+  ]);
+  if (venuesRes.error) throw venuesRes.error;
+
+  const venueRows = venuesRes.data || [];
+  const hosts = await getProfilesByIds(providerIds, 'id, name, email, created_at, clabe, bank_name, account_holder');
+  const spacesByProvider = venueRows.reduce((acc: Record<string, number>, venue: any) => {
+    acc[venue.provider_id] = (acc[venue.provider_id] || 0) + 1;
+    return acc;
+  }, {});
+
+  return hosts.map((host: any) => ({ ...host, spaces: spacesByProvider[host.id] || 0 }));
 };
 
 export const getAllBookings = async () => {
@@ -93,23 +169,20 @@ export const cancelBooking = async (bookingId: string) => {
 export const getAllVenuesAdmin = async () => {
   const { data, error } = await supabase
     .from('venues')
-    .select('id, name, status, city, category, created_at, profiles(name, email)')
+    .select('id, provider_id, name, status, city, category, created_at')
     .order('created_at', { ascending: false });
   if (error) throw error;
-  return data || [];
+  return attachProviderProfiles(data || []);
 };
 
 export const getPendingVenues = async () => {
   const { data, error } = await supabase
     .from('venues')
-    .select(`
-      *,
-      profiles (name, email)
-    `)
+    .select('*')
     .eq('status', 'pending');
 
   if (error) throw error;
-  return data;
+  return attachProviderProfiles(data || []);
 };
 
 export const approveVenue = async (venueId: string) => {
