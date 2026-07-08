@@ -55,7 +55,7 @@ const getProviderIds = async () => {
 
 const attachProviderProfiles = async (venues: any[]) => {
   const providerIds = unique(venues.map((venue) => venue.provider_id as string));
-  const providers = await getProfilesByIds(providerIds, 'id, name, email');
+  const providers = await getProfilesByIds(providerIds, 'id, name');
   const providerById = new Map(providers.map((profile: any) => [profile.id, profile]));
 
   return venues.map((venue) => ({
