@@ -204,16 +204,18 @@ const Categories: React.FC = () => {
         </div>
 
         <div className="md:col-span-2 bg-white dark:bg-surface-dark rounded-2xl border border-slate-100 dark:border-slate-800 overflow-x-auto">
-          <table className="w-full text-left min-w-[640px]">
+          <table className="w-full text-left min-w-[640px] border-collapse">
             <thead className="bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-xs uppercase tracking-widest">
               <tr>
-                <th className="p-4">Icono</th>
-                <th className="p-4">Nombre</th>
-                <th className="p-4">Slug</th>
-                <th className="p-4">Espacios</th>
-                <th className="p-4">Orden</th>
-                <th className="p-4">Estado</th>
-                <th className="p-4">Acciones</th>
+                <th className="p-3">Icono</th>
+                <th className="p-3">Nombre</th>
+                <th className="p-3">Slug</th>
+                <th className="p-3">Espacios</th>
+                <th className="p-3">Orden</th>
+                <th className="p-3">Estado</th>
+                <th className="p-3 sticky right-0 bg-slate-50 dark:bg-slate-800 shadow-[-8px_0_8px_-8px_rgba(0,0,0,0.15)]">
+                  Acciones
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -221,7 +223,7 @@ const Categories: React.FC = () => {
                 [1, 2, 3].map((i) => (
                   <tr key={i}>
                     {Array.from({ length: 7 }).map((_, j) => (
-                      <td key={j} className="p-4">
+                      <td key={j} className="p-3">
                         <Skeleton className="h-4 w-20" />
                       </td>
                     ))}
@@ -239,19 +241,19 @@ const Categories: React.FC = () => {
                 </tr>
               ) : (
                 items.map((c) => (
-                  <tr key={c.id} className="text-sm dark:text-slate-300">
-                    <td className="p-4">
+                  <tr key={c.id} className="text-sm dark:text-slate-300 group">
+                    <td className="p-3">
                       <span className="material-icons-outlined text-primary">{c.icon}</span>
                     </td>
-                    <td className="p-4 font-bold">{c.name}</td>
-                    <td className="p-4 text-slate-500">{c.slug}</td>
-                    <td className="p-4">
+                    <td className="p-3 font-bold">{c.name}</td>
+                    <td className="p-3 text-slate-500">{c.slug}</td>
+                    <td className="p-3">
                       <span className="inline-flex items-center justify-center min-w-[2rem] px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold">
                         {counts[c.slug] || 0}
                       </span>
                     </td>
-                    <td className="p-4">{c.sort_order}</td>
-                    <td className="p-4">
+                    <td className="p-3">{c.sort_order}</td>
+                    <td className="p-3">
                       <span
                         className={`text-xs font-bold px-2 py-1 rounded-full ${
                           c.is_active
@@ -262,19 +264,26 @@ const Categories: React.FC = () => {
                         {c.is_active ? 'Activa' : 'Inactiva'}
                       </span>
                     </td>
-                    <td className="p-4 space-x-3">
-                      <button
-                        onClick={() => startEdit(c)}
-                        className="text-primary font-bold text-xs hover:underline"
-                      >
-                        Editar
-                      </button>
-                      <button
-                        onClick={() => handleDelete(c.id)}
-                        className="text-red-500 font-bold text-xs hover:underline"
-                      >
-                        Eliminar
-                      </button>
+                    <td className="p-3 sticky right-0 bg-white dark:bg-surface-dark shadow-[-8px_0_8px_-8px_rgba(0,0,0,0.15)]">
+                      <div className="flex items-center gap-2 justify-end">
+                        <button
+                          onClick={() => startEdit(c)}
+                          title="Editar"
+                          aria-label="Editar categoría"
+                          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary font-bold text-xs transition"
+                        >
+                          <span className="material-icons-outlined text-sm">edit</span>
+                          Editar
+                        </button>
+                        <button
+                          onClick={() => handleDelete(c.id)}
+                          title="Eliminar"
+                          aria-label="Eliminar categoría"
+                          className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 transition"
+                        >
+                          <span className="material-icons-outlined text-sm">delete</span>
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -282,6 +291,7 @@ const Categories: React.FC = () => {
             </tbody>
           </table>
         </div>
+
       </div>
     </AdminLayout>
   );
