@@ -99,23 +99,35 @@ export const getAllUsers = async () => {
 };
 
 export const updateUserName = async (userId: string, name: string) => {
-  const { error } = await supabase.from('profiles').update({ name }).eq('id', userId);
+  const { data, error } = await supabase.from('profiles').update({ name }).eq('id', userId).select('id');
   if (error) throw error;
+  if (!data || data.length === 0) {
+    throw new Error('No se actualizó ninguna fila. Falta política RLS de admin (UPDATE) en profiles.');
+  }
 };
 
 export const deleteUserProfile = async (userId: string) => {
-  const { error } = await supabase.from('profiles').delete().eq('id', userId);
+  const { data, error } = await supabase.from('profiles').delete().eq('id', userId).select('id');
   if (error) throw error;
+  if (!data || data.length === 0) {
+    throw new Error('No se eliminó ninguna fila. Es probable que falten políticas RLS de admin en la tabla profiles.');
+  }
 };
 
 export const updateHostName = async (hostId: string, name: string) => {
-  const { error } = await supabase.from('profiles').update({ name }).eq('id', hostId);
+  const { data, error } = await supabase.from('profiles').update({ name }).eq('id', hostId).select('id');
   if (error) throw error;
+  if (!data || data.length === 0) {
+    throw new Error('No se actualizó ninguna fila. Falta política RLS de admin (UPDATE) en profiles.');
+  }
 };
 
 export const deleteHostProfile = async (hostId: string) => {
-  const { error } = await supabase.from('profiles').delete().eq('id', hostId);
+  const { data, error } = await supabase.from('profiles').delete().eq('id', hostId).select('id');
   if (error) throw error;
+  if (!data || data.length === 0) {
+    throw new Error('No se eliminó ninguna fila. Falta política RLS de admin (DELETE) en profiles.');
+  }
 };
 
 export const getAllHosts = async () => {
@@ -194,6 +206,9 @@ export const approveVenue = async (venueId: string) => {
     .maybeSingle();
 
   if (error) throw error;
+  if (!venue) {
+    throw new Error('No se pudo aprobar (0 filas). Falta política RLS de admin (UPDATE) en venues.');
+  }
 
   // Notificar al anfitrión
   if (venue?.provider_id) {
@@ -220,6 +235,9 @@ export const rejectVenue = async (venueId: string, reason?: string) => {
     .maybeSingle();
 
   if (error) throw error;
+  if (!venue) {
+    throw new Error('No se pudo rechazar (0 filas). Falta política RLS de admin (UPDATE) en venues.');
+  }
 
   if (venue?.provider_id) {
     try {
