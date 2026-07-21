@@ -206,14 +206,12 @@ export const approveVenue = async (venueId: string) => {
     .maybeSingle();
 
   if (error) throw error;
+  if (!venue) {
+    throw new Error('No se pudo aprobar (0 filas). Falta política RLS de admin (UPDATE) en venues.');
+  }
 
   // Notificar al anfitrión
   if (venue?.provider_id) {
-    try {
-      await createNotification({
-        userId: venue.provider_id,
-        title: 'Espacio aprobado',
-        message: `Tu espacio "${venue.name}" fue aprobado y ya es visible para los huéspedes.`,
         type: 'success',
         link: '/provider/spaces',
       });
