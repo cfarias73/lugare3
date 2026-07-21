@@ -99,8 +99,11 @@ export const getAllUsers = async () => {
 };
 
 export const updateUserName = async (userId: string, name: string) => {
-  const { error } = await supabase.from('profiles').update({ name }).eq('id', userId);
+  const { data, error } = await supabase.from('profiles').update({ name }).eq('id', userId).select('id');
   if (error) throw error;
+  if (!data || data.length === 0) {
+    throw new Error('No se actualizó ninguna fila. Falta política RLS de admin (UPDATE) en profiles.');
+  }
 };
 
 export const deleteUserProfile = async (userId: string) => {
