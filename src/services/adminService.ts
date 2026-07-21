@@ -235,6 +235,9 @@ export const rejectVenue = async (venueId: string, reason?: string) => {
     .maybeSingle();
 
   if (error) throw error;
+  if (!venue) {
+    throw new Error('No se pudo rechazar (0 filas). Falta política RLS de admin (UPDATE) en venues.');
+  }
 
   if (venue?.provider_id) {
     try {
