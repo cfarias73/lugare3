@@ -79,8 +79,12 @@ const SendInvitation: React.FC = () => {
   const shareEmail = () => {
     if (!shareUrl) return;
     const subject = encodeURIComponent(`Invitación: ${draftInvitation?.eventName || 'mi evento'}`);
-    const body = encodeURIComponent(shareMessage());
-    window.location.href = `mailto:?subject=${subject}&body=${body}`;
+    const validEmails = guests.filter((g) => g.email && g.email.trim().length > 0).map((g) => g.email!.trim());
+    const bcc = validEmails.length > 0 ? `bcc=${encodeURIComponent(validEmails.join(','))}&` : '';
+    const body = encodeURIComponent(
+      `¡Hola!\n\nEstás cordialmente invitado(a) a ${draftInvitation?.eventName || 'mi evento'}.\n\nMira los detalles y confirma tu asistencia aquí:\n${shareUrl}\n\n¡Esperamos verte pronto!`
+    );
+    window.location.href = `mailto:?${bcc}subject=${subject}&body=${body}`;
   };
 
   const shareNative = async () => {
