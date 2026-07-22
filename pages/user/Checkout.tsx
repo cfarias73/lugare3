@@ -90,8 +90,10 @@ const Checkout: React.FC = () => {
   const computedSubtotal = breakdown ? breakdown.total : (Number(venue.price_per_hour) || 0) * hours;
   const subtotal = snapshotSubtotal != null && snapshotSubtotal > 0 ? snapshotSubtotal : computedSubtotal;
   const extrasTotal = extras.reduce((sum, e) => sum + e.price, 0);
-  const stripeFee = Math.round((subtotal + extrasTotal) * 0.036 + 3);
-  const total = subtotal + extrasTotal + stripeFee;
+  const basePrice = subtotal + extrasTotal;
+  const cb = computeCommissions(basePrice, settings);
+  const stripeFee = cb.stripeFee;
+  const total = cb.userTotal;
 
 
 
