@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import Layout from '../../components/Layout';
 import { useUser } from '../../context/UserContext';
 import { getVenues } from '../../src/services/venueService';
+import { getProfile } from '../../src/services/profileService';
 import { getCategories, Category } from '../../src/services/categoryService';
 import { Venue } from '../../types';
 
@@ -18,6 +19,12 @@ const Home: React.FC = () => {
   const [cityPickerOpen, setCityPickerOpen] = useState(false);
   const [citySearch, setCitySearch] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    getProfile(user.id).then(p => { if (p) setAvatarUrl(p.avatar_url || null); }).catch(() => {});
+  }, [user?.id]);
 
   useEffect(() => {
     const load = async () => {
@@ -98,8 +105,8 @@ const Home: React.FC = () => {
           >
             <img 
               alt="Avatar" 
-              className="w-10 h-10 rounded-full object-cover ring-2 ring-primary/20 cursor-pointer" 
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuCAkY7AviIRiCpv8Koe6LoTyPAt1AJqCGkHEjpFdo4D8JlpGdzUheoCp65Ss2T4-6h5KivvUSvZTqKeC7TsGwEjRb7Oz4do6MpDaKU2HIAu8ZHw7Ohu2ZqkuaCgIOwbm-7nMP_2Rrlf2f1OmMl58h1G4x13DAmAb-De3dxfsK6EPpaol91SSNHQm1YRIwDjPQ36zWMi5cCqel-vSp5_fr14NVk8YSKipiYZwaPbKnTijIAfYrFYafCkd1TLCs1HI5yIgudbnm9F9spC" 
+              className="w-10 h-10 rounded-full object-cover ring-2 ring-primary/20 cursor-pointer bg-slate-100" 
+              src={avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'U')}&background=E5E7EB&color=475569`} 
               loading="lazy"
             />
           </button>
