@@ -228,13 +228,21 @@ const Checkout: React.FC = () => {
               </>
             )}
             <div className="flex justify-between text-sm">
+              <span className="text-slate-600 dark:text-slate-400">IVA ({settings.vat_percent}%)</span>
+              <span className="font-medium">{fmtMXN(cb.vatOnBase + cb.vatOnUserCommission)}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-slate-600 dark:text-slate-400">Cargo de servicio ({settings.user_commission_percent}%)</span>
+              <span className="font-medium">{fmtMXN(cb.userCommission)}</span>
+            </div>
+            <div className="flex justify-between text-sm">
               <span className="text-slate-600 dark:text-slate-400">Cargo por procesamiento</span>
-              <span className="font-medium">${stripeFee.toLocaleString()}</span>
+              <span className="font-medium">{fmtMXN(stripeFee)}</span>
             </div>
 
             <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex justify-between">
               <span className="font-bold text-slate-800 dark:text-white">Total</span>
-              <span className="font-bold text-primary text-lg font-display">${total.toLocaleString()} MXN</span>
+              <span className="font-bold text-primary text-lg font-display">{fmtMXN(total)} MXN</span>
             </div>
           </div>
         </div>
