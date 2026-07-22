@@ -35,6 +35,7 @@ const SendInvitation: React.FC = () => {
       time: draftInvitation.time || '',
       location: draftInvitation.location || '',
       guests,
+      coverImage: draftInvitation.coverImage || null,
     });
     setSending(false);
     if (!saved) {
@@ -49,6 +50,7 @@ const SendInvitation: React.FC = () => {
       time: saved.event_time || '',
       location: saved.location || '',
       guests,
+      coverImage: saved.cover_image_url,
     };
     addInvitation(newInvitation);
     updateDraftInvitation({});
