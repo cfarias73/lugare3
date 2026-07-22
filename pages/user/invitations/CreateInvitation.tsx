@@ -3,6 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../../../context/UserContext';
 import { getUserBookings } from '../../../src/services/userService';
+import InvitationPreview from '../../../components/InvitationPreview';
+import { toast } from 'sonner';
 
 const DESIGNS = [
   { 
@@ -53,6 +55,30 @@ const DESIGNS = [
   },
 ];
 
+// Resize an image file to a max dimension and return a base64 JPEG data URL
+const resizeImageToDataUrl = (file: File, maxDim = 1200, quality = 0.82): Promise<string> =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > height && width > maxDim) { height = Math.round((height * maxDim) / width); width = maxDim; }
+        else if (height > maxDim) { width = Math.round((width * maxDim) / height); height = maxDim; }
+        const canvas = document.createElement('canvas');
+        canvas.width = width; canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return reject(new Error('canvas error'));
+        ctx.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.onerror = reject;
+      img.src = reader.result as string;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+
 const CreateInvitation: React.FC = () => {
   const navigate = useNavigate();
   const { user, updateDraftInvitation, draftInvitation } = useUser();
@@ -61,6 +87,9 @@ const CreateInvitation: React.FC = () => {
   const [date, setDate] = useState(draftInvitation?.date || '');
   const [time, setTime] = useState(draftInvitation?.time || '');
   const [location, setLocation] = useState(draftInvitation?.location || '');
+  const [coverImage, setCoverImage] = useState<string | null>(draftInvitation?.coverImage || null);
+  const [showPreview, setShowPreview] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   // Auto-prefill from latest booking (venue name + address + date + time)
   useEffect(() => {
@@ -86,16 +115,44 @@ const CreateInvitation: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
-  const handleNext = () => {
+  const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) { toast.error('Selecciona una imagen válida'); return; }
+    if (file.size > 8 * 1024 * 1024) { toast.error('La imagen no debe superar 8MB'); return; }
+    setUploading(true);
+    try {
+      const dataUrl = await resizeImageToDataUrl(file);
+      setCoverImage(dataUrl);
+      toast.success('Foto agregada');
+    } catch {
+      toast.error('No se pudo procesar la imagen');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const persistDraft = () => {
     updateDraftInvitation({
       designId: selectedDesign,
       eventName,
       date,
       time,
-      location
+      location,
+      coverImage,
     });
+  };
+
+  const handleNext = () => {
+    persistDraft();
     navigate('/user/invitations/guests');
   };
+
+  const openPreview = () => {
+    persistDraft();
+    setShowPreview(true);
+  };
+
 
   return (
     <div className="bg-background-light dark:bg-background-dark text-slate-800 dark:text-slate-100 min-h-screen flex flex-col max-w-md mx-auto">
