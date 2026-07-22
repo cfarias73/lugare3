@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { supabase } from '../../lib/supabaseClient';
 import { getServicesByIds, getVenueById, PublicVenueService } from '../../src/services/venueService';
 import { calcVenuePricing } from '../../src/utils/pricing';
+import { computeCommissions, loadPlatformSettings, DEFAULT_SETTINGS, PlatformSettings, fmtMXN } from '../../src/utils/commissions';
 
 const Checkout: React.FC = () => {
   const navigate = useNavigate();
@@ -13,7 +14,7 @@ const Checkout: React.FC = () => {
   const { user } = useUser();
   const [isProcessing, setIsProcessing] = useState(false);
   const [venue, setVenue] = useState<any>(null);
-  const [settings, setSettings] = useState<{ commission_percent: number }>({ commission_percent: 10 });
+  const [settings, setSettings] = useState<PlatformSettings>({ ...DEFAULT_SETTINGS });
   const [extras, setExtras] = useState<PublicVenueService[]>([]);
 
   // Booking details (from query params or defaults)
