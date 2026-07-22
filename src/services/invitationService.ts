@@ -9,6 +9,7 @@ export interface InvitationRow {
   event_date: string | null;
   event_time: string | null;
   location: string | null;
+  cover_image_url: string | null;
   created_at: string;
   guests?: Guest[];
 }
@@ -22,18 +23,22 @@ export const createInvitation = async (
     time: string;
     location: string;
     guests: Guest[];
+    coverImage?: string | null;
   }
 ): Promise<InvitationRow | null> => {
+  const insertPayload: any = {
+    user_id: userId,
+    design_id: payload.designId,
+    event_name: payload.eventName,
+    event_date: payload.date,
+    event_time: payload.time,
+    location: payload.location,
+  };
+  if (payload.coverImage) insertPayload.cover_image_url = payload.coverImage;
+
   const { data: inv, error } = await supabase
     .from('invitations')
-    .insert({
-      user_id: userId,
-      design_id: payload.designId,
-      event_name: payload.eventName,
-      event_date: payload.date,
-      event_time: payload.time,
-      location: payload.location,
-    })
+    .insert(insertPayload)
     .select('*')
     .single();
   if (error || !inv) {
@@ -59,12 +64,13 @@ export interface PublicInvitation {
   event_date: string | null;
   event_time: string | null;
   location: string | null;
+  cover_image_url: string | null;
 }
 
 export const getPublicInvitation = async (id: string): Promise<PublicInvitation | null> => {
   const { data, error } = await supabase
     .from('invitations')
-    .select('id, design_id, event_name, event_date, event_time, location')
+    .select('id, design_id, event_name, event_date, event_time, location, cover_image_url')
     .eq('id', id)
     .maybeSingle();
   if (error) {

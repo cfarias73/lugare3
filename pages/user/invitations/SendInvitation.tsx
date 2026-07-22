@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { useUser } from '../../../context/UserContext';
 import { Invitation } from '../../../types';
 import { createInvitation } from '../../../src/services/invitationService';
+import InvitationPreview from '../../../components/InvitationPreview';
 
 const SendInvitation: React.FC = () => {
   const navigate = useNavigate();
@@ -34,6 +35,7 @@ const SendInvitation: React.FC = () => {
       time: draftInvitation.time || '',
       location: draftInvitation.location || '',
       guests,
+      coverImage: draftInvitation.coverImage || null,
     });
     setSending(false);
     if (!saved) {
@@ -48,6 +50,7 @@ const SendInvitation: React.FC = () => {
       time: saved.event_time || '',
       location: saved.location || '',
       guests,
+      coverImage: saved.cover_image_url,
     };
     addInvitation(newInvitation);
     updateDraftInvitation({});
@@ -186,6 +189,26 @@ const SendInvitation: React.FC = () => {
                   ))
                 )}
               </div>
+            </div>
+
+            <div className="px-6 mt-8">
+              <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200 mb-3 flex items-center gap-2">
+                <span className="material-icons-outlined text-primary">visibility</span>
+                Vista previa del diseño
+              </h3>
+              <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
+                Así verán tus invitados la invitación antes de que la envíes.
+              </p>
+              <InvitationPreview
+                data={{
+                  designId: draftInvitation?.designId,
+                  eventName: draftInvitation?.eventName,
+                  date: draftInvitation?.date,
+                  time: draftInvitation?.time,
+                  location: draftInvitation?.location,
+                  coverImage: draftInvitation?.coverImage,
+                }}
+              />
             </div>
           </>
         )}

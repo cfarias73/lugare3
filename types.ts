@@ -80,4 +80,5 @@ export interface Invitation {
   time: string;
   location: string;
   guests: Guest[];
+  coverImage?: string | null;
 }

@@ -58,11 +58,23 @@ const PublicInvitation: React.FC = () => {
   return (
     <div className="min-h-screen bg-slate-100 flex items-center justify-center p-4">
       <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden">
-        <div className={`bg-gradient-to-br ${style.gradient} text-white p-10 text-center`}>
-          <span className="material-icons-outlined text-5xl mb-3">{style.icon}</span>
-          <p className="uppercase text-xs tracking-[0.3em] opacity-80 mb-2">Estás invitado a</p>
-          <h1 className="text-3xl font-bold font-display">{inv.event_name}</h1>
-        </div>
+        {inv.cover_image_url ? (
+          <div className="relative h-64">
+            <img src={inv.cover_image_url} alt={inv.event_name} className="w-full h-full object-cover" />
+            <div className={`absolute inset-0 bg-gradient-to-t ${style.gradient} opacity-60`} />
+            <div className="absolute inset-0 flex flex-col items-center justify-end p-8 text-white text-center">
+              <span className="material-icons-outlined text-4xl mb-2 drop-shadow">{style.icon}</span>
+              <p className="uppercase text-xs tracking-[0.3em] opacity-90 mb-2">Estás invitado a</p>
+              <h1 className="text-3xl font-bold font-display drop-shadow">{inv.event_name}</h1>
+            </div>
+          </div>
+        ) : (
+          <div className={`bg-gradient-to-br ${style.gradient} text-white p-10 text-center`}>
+            <span className="material-icons-outlined text-5xl mb-3">{style.icon}</span>
+            <p className="uppercase text-xs tracking-[0.3em] opacity-80 mb-2">Estás invitado a</p>
+            <h1 className="text-3xl font-bold font-display">{inv.event_name}</h1>
+          </div>
+        )}
         <div className="p-8 space-y-5">
           {inv.event_date && (
             <div className="flex items-start gap-3">
