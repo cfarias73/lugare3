@@ -254,10 +254,12 @@ export const rejectVenue = async (venueId: string, reason?: string) => {
   }
 };
 
-// Tasas configurables (porcentaje)
+// Tasas legacy (deprecado — usar platform_settings). Se mantiene solo para
+// no romper importaciones existentes; los cálculos reales viven en
+// src/utils/commissions.ts y se editan desde /admin/settings.
 export const COMMISSION_RATES = {
-  platform: 0.10,  // 10% comisión Lugare
-  gateway: 0.035,  // 3.5% comisión pasarela (Stripe estándar)
+  platform: 0.10,
+  gateway: 0.035,
 };
 
 export const getFinanceData = async () => {

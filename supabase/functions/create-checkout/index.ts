@@ -149,8 +149,41 @@ serve(async (req) => {
     // Si llegan extras_total del cliente, lo ignoramos (defensa en profundidad)
     void extrasTotalFromClient;
 
-    const subtotal = venueSubtotal + extrasTotal;
-    const stripeFee = Math.round(subtotal * 0.036 + 3);
+    const basePrice = venueSubtotal + extrasTotal;
+
+    // Cargar tasas configurables desde platform_settings (sin hardcodear)
+    const { data: settingsRow } = await admin
+      .from("platform_settings")
+      .select("*")
+      .limit(1)
+      .maybeSingle();
+
+    const s = {
+      host_commission_percent: Number(settingsRow?.host_commission_percent ?? 3.5),
+      user_commission_percent: Number(settingsRow?.user_commission_percent ?? 14),
+      vat_percent: Number(settingsRow?.vat_percent ?? 16),
+      vat_withholding_percent: Number(settingsRow?.vat_withholding_percent ?? 0),
+      isr_withholding_percent: Number(settingsRow?.isr_withholding_percent ?? 0),
+      other_withholding_percent: Number(settingsRow?.other_withholding_percent ?? 0),
+      stripe_percent: Number(settingsRow?.stripe_percent ?? 3.6),
+      stripe_fixed: Number(settingsRow?.stripe_fixed ?? 3),
+    };
+
+    // Motor de cálculo — DEBE coincidir con src/utils/commissions.ts
+    const vatOnBase = basePrice * s.vat_percent / 100;
+    const hostCommission = basePrice * s.host_commission_percent / 100;
+    const userCommission = basePrice * s.user_commission_percent / 100;
+    const vatOnHostCommission = hostCommission * s.vat_percent / 100;
+    const vatOnUserCommission = userCommission * s.vat_percent / 100;
+    const vatOnLugareCommission = vatOnHostCommission + vatOnUserCommission;
+    const vatWithheld = (vatOnBase + vatOnLugareCommission) * s.vat_withholding_percent / 100;
+    const isrWithheld = basePrice * s.isr_withholding_percent / 100;
+    const otherWithheld = basePrice * s.other_withholding_percent / 100;
+    const subtotalBeforeStripe = basePrice + vatOnBase + userCommission + vatOnUserCommission;
+    const stripeFee = subtotalBeforeStripe * s.stripe_percent / 100 + s.stripe_fixed;
+    const userTotal = subtotalBeforeStripe + stripeFee;
+    const hostPayout = basePrice + vatOnBase - hostCommission - vatOnHostCommission - (vatWithheld + isrWithheld + otherWithheld);
+    const lugareNet = hostCommission + userCommission + vatOnLugareCommission - stripeFee;
 
     // 4) Crear sesión de Stripe Checkout
     const stripe = new Stripe(stripeKey, { apiVersion: "2024-06-20" });
@@ -173,14 +206,22 @@ serve(async (req) => {
         },
         quantity: 1,
       },
-      ...services.map((s) => ({
+      ...services.map((s2) => ({
         price_data: {
           currency: "mxn",
-          unit_amount: Math.round(s.price * 100),
-          product_data: { name: `Servicio: ${s.name}` },
+          unit_amount: Math.round(s2.price * 100),
+          product_data: { name: `Servicio: ${s2.name}` },
         },
         quantity: 1,
       })),
+      {
+        price_data: {
+          currency: "mxn",
+          unit_amount: Math.round((vatOnBase + userCommission + vatOnUserCommission) * 100),
+          product_data: { name: `IVA + cargo de servicio (${s.user_commission_percent}%)` },
+        },
+        quantity: 1,
+      },
       {
         price_data: {
           currency: "mxn",
@@ -206,14 +247,23 @@ serve(async (req) => {
         end_time,
         guest_count: String(guests),
         hours: String(hrs),
-        venue_subtotal: String(venueSubtotal),
-        extras_total: String(extrasTotal),
-        stripe_fee: String(stripeFee),
+        base_price: basePrice.toFixed(2),
+        vat_on_base: vatOnBase.toFixed(2),
+        host_commission: hostCommission.toFixed(2),
+        user_commission: userCommission.toFixed(2),
+        vat_on_commission: vatOnLugareCommission.toFixed(2),
+        vat_withheld: vatWithheld.toFixed(2),
+        isr_withheld: isrWithheld.toFixed(2),
+        other_withheld: otherWithheld.toFixed(2),
+        stripe_fee: stripeFee.toFixed(2),
+        host_payout: hostPayout.toFixed(2),
+        lugare_net: lugareNet.toFixed(2),
+        user_total: userTotal.toFixed(2),
         service_ids: (service_ids || []).join(","),
       },
     });
 
-    return json({ url: session.url, total: subtotal + stripeFee });
+    return json({ url: session.url, total: userTotal });
   } catch (e: any) {
     console.error("create-checkout error", e);
     return json({ error: e?.message ?? "Error interno" }, 500);
