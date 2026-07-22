@@ -44,9 +44,7 @@ const Checkout: React.FC = () => {
         image: mapped?.image || data.image || null,
       });
     });
-    supabase.from('platform_settings').select('commission_percent').limit(1).single().then(({ data }) => {
-      if (data) setSettings(data);
-    });
+    loadPlatformSettings(supabase).then(setSettings).catch(() => {});
   }, [id]);
 
   useEffect(() => {
