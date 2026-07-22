@@ -291,21 +291,79 @@ const CreateInvitation: React.FC = () => {
                 </div>
               </div>
             </div>
+
+            {/* Foto del evento (opcional) */}
+            <div className="pt-4">
+              <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-2 ml-1 uppercase tracking-widest">
+                Foto del evento <span className="text-slate-400 normal-case font-medium">(opcional)</span>
+              </label>
+              {coverImage ? (
+                <div className="relative rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800">
+                  <img src={coverImage} alt="Foto del evento" className="w-full h-48 object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => setCoverImage(null)}
+                    className="absolute top-2 right-2 bg-black/60 text-white w-9 h-9 rounded-full flex items-center justify-center backdrop-blur-md active:scale-90"
+                    aria-label="Quitar foto"
+                  >
+                    <span className="material-icons-outlined text-lg">close</span>
+                  </button>
+                </div>
+              ) : (
+                <label className="flex flex-col items-center justify-center gap-2 py-8 px-4 bg-white dark:bg-surface-dark border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-2xl cursor-pointer hover:border-primary hover:bg-primary/5 transition-colors">
+                  <span className="material-icons-outlined text-3xl text-slate-400">add_a_photo</span>
+                  <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+                    {uploading ? 'Procesando…' : 'Sube una foto'}
+                  </span>
+                  <span className="text-xs text-slate-400 text-center">Personaliza tu invitación con una imagen del evento</span>
+                  <input type="file" accept="image/*" className="hidden" onChange={handlePhotoChange} disabled={uploading} />
+                </label>
+              )}
+            </div>
           </div>
         </div>
       </main>
 
       <footer className="fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-background-dark/95 backdrop-blur-xl p-5 pb-8 border-t border-slate-100 dark:border-slate-800 max-w-md mx-auto z-50">
-        <button 
-          onClick={handleNext}
-          className="w-full bg-primary hover:bg-orange-600 text-white font-bold py-4.5 rounded-[22px] transition-all shadow-xl shadow-primary/25 active:scale-95 flex items-center justify-center gap-2 group"
-        >
-          <span>Siguiente paso</span>
-          <span className="material-icons-round text-lg group-hover:translate-x-1 transition-transform">arrow_forward</span>
-        </button>
+        <div className="flex gap-3">
+          <button
+            onClick={openPreview}
+            className="flex-1 bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-100 font-bold py-4 rounded-[22px] transition active:scale-95 flex items-center justify-center gap-2"
+          >
+            <span className="material-icons-outlined text-lg">visibility</span>
+            <span>Vista previa</span>
+          </button>
+          <button
+            onClick={handleNext}
+            className="flex-[1.3] bg-primary hover:bg-orange-600 text-white font-bold py-4 rounded-[22px] transition-all shadow-xl shadow-primary/25 active:scale-95 flex items-center justify-center gap-2 group"
+          >
+            <span>Siguiente</span>
+            <span className="material-icons-round text-lg group-hover:translate-x-1 transition-transform">arrow_forward</span>
+          </button>
+        </div>
       </footer>
+
+      {showPreview && (
+        <div className="fixed inset-0 z-[100] bg-black/70 backdrop-blur-sm flex flex-col p-4 overflow-y-auto" onClick={() => setShowPreview(false)}>
+          <div className="flex justify-between items-center mb-4 max-w-md mx-auto w-full text-white">
+            <h3 className="text-lg font-bold">Vista previa</h3>
+            <button
+              onClick={(e) => { e.stopPropagation(); setShowPreview(false); }}
+              className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center"
+              aria-label="Cerrar"
+            >
+              <span className="material-icons-outlined">close</span>
+            </button>
+          </div>
+          <div onClick={(e) => e.stopPropagation()} className="my-auto">
+            <InvitationPreview data={{ designId: selectedDesign, eventName, date, time, location, coverImage }} />
+            <p className="text-center text-white/70 text-xs mt-4">Así verán tus invitados la invitación</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
+
 
 export default CreateInvitation;
