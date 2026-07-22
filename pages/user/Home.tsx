@@ -19,6 +19,12 @@ const Home: React.FC = () => {
   const [cityPickerOpen, setCityPickerOpen] = useState(false);
   const [citySearch, setCitySearch] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    getProfile(user.id).then(p => { if (p) setAvatarUrl(p.avatar_url || null); }).catch(() => {});
+  }, [user?.id]);
 
   useEffect(() => {
     const load = async () => {
