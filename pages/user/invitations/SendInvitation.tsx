@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { useUser } from '../../../context/UserContext';
 import { Invitation } from '../../../types';
 import { createInvitation } from '../../../src/services/invitationService';
+import InvitationPreview from '../../../components/InvitationPreview';
 
 const SendInvitation: React.FC = () => {
   const navigate = useNavigate();
