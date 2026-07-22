@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import Layout from '../../components/Layout';
 import { useUser } from '../../context/UserContext';
 import { getVenues } from '../../src/services/venueService';
+import { getProfile } from '../../src/services/profileService';
 import { getCategories, Category } from '../../src/services/categoryService';
 import { Venue } from '../../types';
 
