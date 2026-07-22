@@ -190,6 +190,26 @@ const SendInvitation: React.FC = () => {
                 )}
               </div>
             </div>
+
+            <div className="px-6 mt-8">
+              <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200 mb-3 flex items-center gap-2">
+                <span className="material-icons-outlined text-primary">visibility</span>
+                Vista previa del diseño
+              </h3>
+              <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
+                Así verán tus invitados la invitación antes de que la envíes.
+              </p>
+              <InvitationPreview
+                data={{
+                  designId: draftInvitation?.designId,
+                  eventName: draftInvitation?.eventName,
+                  date: draftInvitation?.date,
+                  time: draftInvitation?.time,
+                  location: draftInvitation?.location,
+                  coverImage: draftInvitation?.coverImage,
+                }}
+              />
+            </div>
           </>
         )}
       </main>
