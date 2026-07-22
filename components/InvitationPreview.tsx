@@ -80,7 +80,7 @@ const InvitationPreview: React.FC<{ data: InvitationPreviewData; className?: str
         )}
       </div>
       <div className="border-t border-slate-100 p-4 text-center">
-        <p className="text-[10px] text-slate-400">Invitación enviada a través de Eventify</p>
+        <p className="text-[10px] text-slate-400">Invitación enviada a través de Lugare</p>
       </div>
     </div>
   );
