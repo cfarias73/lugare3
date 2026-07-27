@@ -71,6 +71,16 @@ const BookingCalendar: React.FC = () => {
       });
   }, [id, isUuid]);
 
+  // Scroll guest input into view when a slot is selected
+  useEffect(() => {
+    if (selectedSlot && guestsRef.current) {
+      const timer = setTimeout(() => {
+        guestsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [selectedSlot]);
+
   // Load blocked + booked dates for the visible month
   useEffect(() => {
     if (!id || !isUuid) {
