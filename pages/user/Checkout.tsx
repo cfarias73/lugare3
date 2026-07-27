@@ -235,10 +235,6 @@ const Checkout: React.FC = () => {
               <span className="text-slate-600 dark:text-slate-400">Cargo de servicio ({settings.user_commission_percent}%)</span>
               <span className="font-medium">{fmtMXN(cb.userCommission)}</span>
             </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-slate-600 dark:text-slate-400">Cargo por procesamiento</span>
-              <span className="font-medium">{fmtMXN(stripeFee)}</span>
-            </div>
 
             <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex justify-between">
               <span className="font-bold text-slate-800 dark:text-white">Total</span>
