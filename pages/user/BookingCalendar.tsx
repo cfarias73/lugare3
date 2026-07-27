@@ -37,6 +37,7 @@ const BookingCalendar: React.FC = () => {
   const [venue, setVenue] = useState<any>(null);
   const [blockedDates, setBlockedDates] = useState<Set<string>>(new Set());
   const [bookedDates, setBookedDates] = useState<Set<string>>(new Set());
+  const guestsRef = useRef<HTMLInputElement>(null);
 
   const isUuid = id ? /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id) : false;
 
