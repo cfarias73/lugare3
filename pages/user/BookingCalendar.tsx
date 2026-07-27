@@ -327,15 +327,53 @@ const BookingCalendar: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setGuests(Math.max(1, guests - 1))}
-                    className="w-9 h-9 rounded-full border border-slate-200 dark:border-slate-700 flex items-center justify-center"
+                    disabled={guests <= 1}
+                    className="w-9 h-9 rounded-full border border-slate-200 dark:border-slate-700 flex items-center justify-center disabled:opacity-40"
+                    aria-label="Disminuir invitados"
                   >
                     <span className="material-icons-round text-[18px]">remove</span>
                   </button>
-                  <span className="w-10 text-center font-bold">{guests}</span>
+                  <input
+                    type="number"
+                    inputMode="numeric"
+                    min={1}
+                    max={venue.maxCapacity || 9999}
+                    value={guests}
+                    onChange={(e) => {
+                      const raw = e.target.value;
+                      if (raw === '') {
+                        setGuests(0);
+                        return;
+                      }
+                      const val = parseInt(raw, 10);
+                      if (!Number.isNaN(val)) {
+                        setGuests(Math.max(0, val));
+                      }
+                    }}
+                    onBlur={(e) => {
+                      const val = parseInt(e.target.value, 10);
+                      const max = venue.maxCapacity || 9999;
+                      if (Number.isNaN(val) || val < 1) setGuests(1);
+                      else setGuests(Math.min(max, val));
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        const val = parseInt((e.target as HTMLInputElement).value, 10);
+                        const max = venue.maxCapacity || 9999;
+                        if (Number.isNaN(val) || val < 1) setGuests(1);
+                        else setGuests(Math.min(max, val));
+                        (e.target as HTMLInputElement).blur();
+                      }
+                    }}
+                    className="w-16 text-center font-bold bg-transparent border-b-2 border-primary/30 focus:border-primary focus:outline-none py-1 appearance-none"
+                    aria-label="Número de invitados"
+                  />
                   <button
                     type="button"
                     onClick={() => setGuests(Math.min(venue.maxCapacity || 9999, guests + 1))}
-                    className="w-9 h-9 rounded-full border border-slate-200 dark:border-slate-700 flex items-center justify-center"
+                    disabled={guests >= (venue.maxCapacity || 9999)}
+                    className="w-9 h-9 rounded-full border border-slate-200 dark:border-slate-700 flex items-center justify-center disabled:opacity-40"
+                    aria-label="Aumentar invitados"
                   >
                     <span className="material-icons-round text-[18px]">add</span>
                   </button>
