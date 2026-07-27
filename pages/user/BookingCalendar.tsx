@@ -432,7 +432,7 @@ const BookingCalendar: React.FC = () => {
         <div className="h-32" />
       </main>
 
-      <footer className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white dark:bg-surface-dark border-t border-slate-100 dark:border-slate-800 p-4 pb-8 flex items-center justify-between z-50">
+      <footer className="mt-auto bg-white dark:bg-surface-dark border-t border-slate-100 dark:border-slate-800 p-4 pb-8 flex items-center justify-between z-50">
         <div>
           <div className="text-[10px] text-gray-400">Precio estimado</div>
           <div className="text-lg font-bold text-slate-900 dark:text-white">${estimatedTotal.toLocaleString()} MXN</div>
