@@ -1,8 +1,9 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../../../context/UserContext';
 import { Guest } from '../../../types';
+import * as XLSX from 'xlsx';
 
 const AddGuests: React.FC = () => {
   const navigate = useNavigate();
@@ -10,6 +11,76 @@ const AddGuests: React.FC = () => {
   const [guests, setGuests] = useState<Guest[]>(draftInvitation?.guests || []);
   const [newGuestName, setNewGuestName] = useState('');
   const [newGuestEmail, setNewGuestEmail] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [importMsg, setImportMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  const isValidEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+  const handleImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImportMsg(null);
+    try {
+      const data = await file.arrayBuffer();
+      const wb = XLSX.read(data, { type: 'array' });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows: any[][] = XLSX.utils.sheet_to_json(ws, { header: 1, blankrows: false, defval: '' });
+
+      let nameIdx = 0, emailIdx = 1, startRow = 0;
+      if (rows.length > 0) {
+        const header = rows[0].map((c: any) => String(c).toLowerCase().trim());
+        const nIdx = header.findIndex((h) => /nombre|name|invitado|guest/.test(h));
+        const eIdx = header.findIndex((h) => /correo|email|e-?mail/.test(h));
+        if (nIdx !== -1 || eIdx !== -1) {
+          nameIdx = nIdx !== -1 ? nIdx : (eIdx === 0 ? 1 : 0);
+          emailIdx = eIdx !== -1 ? eIdx : (nIdx === 0 ? 1 : 0);
+          startRow = 1;
+        } else {
+          const firstRow = rows[0].map((c: any) => String(c));
+          const detectedEmail = firstRow.findIndex((v) => isValidEmail(v));
+          if (detectedEmail !== -1) {
+            emailIdx = detectedEmail;
+            nameIdx = detectedEmail === 0 ? 1 : 0;
+          }
+        }
+      }
+
+      const existingEmails = new Set(guests.map((g) => g.email.toLowerCase()));
+      const imported: Guest[] = [];
+      let skipped = 0;
+      for (let i = startRow; i < rows.length; i++) {
+        const row = rows[i];
+        const name = String(row[nameIdx] ?? '').trim();
+        const email = String(row[emailIdx] ?? '').trim();
+        if (!email || !isValidEmail(email)) { skipped++; continue; }
+        if (existingEmails.has(email.toLowerCase())) { skipped++; continue; }
+        existingEmails.add(email.toLowerCase());
+        imported.push({ id: `${Date.now()}-${i}`, name: name || email.split('@')[0], email });
+      }
+
+      if (imported.length === 0) {
+        setImportMsg({ type: 'error', text: 'No se encontraron invitados válidos en el archivo.' });
+      } else {
+        setGuests((prev) => [...prev, ...imported]);
+        setImportMsg({ type: 'success', text: `Se importaron ${imported.length} invitado(s)${skipped ? `, ${skipped} omitido(s)` : ''}.` });
+      }
+    } catch (err) {
+      setImportMsg({ type: 'error', text: 'No se pudo leer el archivo. Usa CSV, XLSX o XLS.' });
+    } finally {
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const handleDownloadTemplate = () => {
+    const ws = XLSX.utils.aoa_to_sheet([
+      ['Nombre', 'Correo'],
+      ['María García', 'maria@ejemplo.com'],
+      ['Juan Pérez', 'juan@ejemplo.com'],
+    ]);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Invitados');
+    XLSX.writeFile(wb, 'plantilla-invitados.xlsx');
+  };
 
   const handleAddGuest = () => {
     if (newGuestName && newGuestEmail) {
@@ -62,6 +133,46 @@ const AddGuests: React.FC = () => {
           <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
             Agrega el nombre y email de las personas que quieres invitar
           </p>
+        </div>
+
+        <div className="bg-white dark:bg-surface-dark p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 mb-6">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-11 h-11 rounded-full bg-teal-50 dark:bg-teal-900/20 flex items-center justify-center">
+              <span className="material-icons-outlined text-secondary">upload_file</span>
+            </div>
+            <div className="flex-1">
+              <h3 className="font-semibold text-slate-800 dark:text-white text-sm">Importar desde archivo</h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400">CSV, XLSX o XLS con columnas Nombre y Correo</p>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="flex-1 py-3 bg-secondary text-white text-sm font-semibold rounded-2xl flex items-center justify-center gap-2 hover:bg-secondary/90 active:scale-[0.98] transition-all"
+            >
+              <span className="material-icons-outlined text-[18px]">file_upload</span>
+              Elegir archivo
+            </button>
+            <button
+              onClick={handleDownloadTemplate}
+              className="px-4 py-3 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-sm font-semibold rounded-2xl flex items-center justify-center gap-1 hover:bg-slate-200 dark:hover:bg-slate-700"
+              title="Descargar plantilla"
+            >
+              <span className="material-icons-outlined text-[18px]">download</span>
+            </button>
+          </div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".csv,.xlsx,.xls,text/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            className="hidden"
+            onChange={handleImportFile}
+          />
+          {importMsg && (
+            <p className={`mt-3 text-xs ${importMsg.type === 'success' ? 'text-green-600 dark:text-green-400' : 'text-red-500'}`}>
+              {importMsg.text}
+            </p>
+          )}
         </div>
 
         <div className="bg-white dark:bg-surface-dark p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 mb-8">
