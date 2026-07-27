@@ -183,7 +183,7 @@ const BookingCalendar: React.FC = () => {
         <h1 className="text-lg font-semibold ml-2 font-display">Calendario de Disponibilidad</h1>
       </header>
 
-      <main className="pb-32 flex-1 overflow-y-auto">
+      <main className="pb-56 flex-1 overflow-y-auto">
         <section className="p-4 flex items-center space-x-4 border-b border-gray-100 dark:border-gray-800">
           <img alt="Venue" className="w-16 h-16 rounded-lg object-cover" src={venue.image} />
           <div className="flex-1">
