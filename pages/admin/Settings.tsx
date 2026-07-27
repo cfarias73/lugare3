@@ -128,7 +128,7 @@ const Settings: React.FC = () => {
 
             <section className="bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl p-6 space-y-5">
               <h2 className="text-lg font-bold dark:text-white">Retenciones fiscales</h2>
-              <Row label="Retención de IVA" hint="Porcentaje del IVA total que se retiene al anfitrión." value={form.vat_withholding_percent} k="vat_withholding_percent" />
+              <Row label="Retención de IVA" hint="Porcentaje del IVA del precio base retenido al anfitrión (no aplica sobre IVA de comisiones)." value={form.vat_withholding_percent} k="vat_withholding_percent" />
               <Row label="Retención de ISR" hint="Porcentaje sobre el precio base retenido al anfitrión." value={form.isr_withholding_percent} k="isr_withholding_percent" />
               <div>
                 <label className="block text-sm font-bold mb-1 dark:text-white">Etiqueta otra retención</label>
