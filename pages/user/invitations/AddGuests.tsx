@@ -135,6 +135,46 @@ const AddGuests: React.FC = () => {
           </p>
         </div>
 
+        <div className="bg-white dark:bg-surface-dark p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 mb-6">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-11 h-11 rounded-full bg-teal-50 dark:bg-teal-900/20 flex items-center justify-center">
+              <span className="material-icons-outlined text-secondary">upload_file</span>
+            </div>
+            <div className="flex-1">
+              <h3 className="font-semibold text-slate-800 dark:text-white text-sm">Importar desde archivo</h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400">CSV, XLSX o XLS con columnas Nombre y Correo</p>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="flex-1 py-3 bg-secondary text-white text-sm font-semibold rounded-2xl flex items-center justify-center gap-2 hover:bg-secondary/90 active:scale-[0.98] transition-all"
+            >
+              <span className="material-icons-outlined text-[18px]">file_upload</span>
+              Elegir archivo
+            </button>
+            <button
+              onClick={handleDownloadTemplate}
+              className="px-4 py-3 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-sm font-semibold rounded-2xl flex items-center justify-center gap-1 hover:bg-slate-200 dark:hover:bg-slate-700"
+              title="Descargar plantilla"
+            >
+              <span className="material-icons-outlined text-[18px]">download</span>
+            </button>
+          </div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".csv,.xlsx,.xls,text/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            className="hidden"
+            onChange={handleImportFile}
+          />
+          {importMsg && (
+            <p className={`mt-3 text-xs ${importMsg.type === 'success' ? 'text-green-600 dark:text-green-400' : 'text-red-500'}`}>
+              {importMsg.text}
+            </p>
+          )}
+        </div>
+
         <div className="bg-white dark:bg-surface-dark p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 mb-8">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-12 h-12 rounded-full bg-orange-50 dark:bg-orange-900/20 flex items-center justify-center">
