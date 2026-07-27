@@ -429,6 +429,7 @@ const BookingCalendar: React.FC = () => {
             )}
           </div>
         </section>
+        <div className="h-32" />
       </main>
 
       <footer className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white dark:bg-surface-dark border-t border-slate-100 dark:border-slate-800 p-4 pb-8 flex items-center justify-between z-50">
