@@ -345,6 +345,7 @@ const BookingCalendar: React.FC = () => {
                     <span className="material-icons-round text-[18px]">remove</span>
                   </button>
                   <input
+                    ref={guestsRef}
                     type="number"
                     inputMode="numeric"
                     min={1}
