@@ -223,14 +223,7 @@ serve(async (req) => {
         },
         quantity: 1,
       },
-      {
-        price_data: {
-          currency: "mxn",
-          unit_amount: Math.round(stripeFee * 100),
-          product_data: { name: "Cargo por procesamiento" },
-        },
-        quantity: 1,
-      },
+      // Nota: Stripe fee NO se cobra al usuario; Lugare la absorbe.
     ];
 
     const session = await stripe.checkout.sessions.create({
