@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
 const PLACEHOLDER_IMAGE = 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?w=800';
@@ -37,6 +37,7 @@ const BookingCalendar: React.FC = () => {
   const [venue, setVenue] = useState<any>(null);
   const [blockedDates, setBlockedDates] = useState<Set<string>>(new Set());
   const [bookedDates, setBookedDates] = useState<Set<string>>(new Set());
+  const guestsRef = useRef<HTMLInputElement>(null);
 
   const isUuid = id ? /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id) : false;
 
@@ -69,6 +70,16 @@ const BookingCalendar: React.FC = () => {
         }
       });
   }, [id, isUuid]);
+
+  // Scroll guest input into view when a slot is selected
+  useEffect(() => {
+    if (selectedSlot && guestsRef.current) {
+      const timer = setTimeout(() => {
+        guestsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [selectedSlot]);
 
   // Load blocked + booked dates for the visible month
   useEffect(() => {
@@ -183,7 +194,7 @@ const BookingCalendar: React.FC = () => {
         <h1 className="text-lg font-semibold ml-2 font-display">Calendario de Disponibilidad</h1>
       </header>
 
-      <main className="pb-32 flex-1 overflow-y-auto">
+      <main className="pb-56 flex-1 overflow-y-auto">
         <section className="p-4 flex items-center space-x-4 border-b border-gray-100 dark:border-gray-800">
           <img alt="Venue" className="w-16 h-16 rounded-lg object-cover" src={venue.image} />
           <div className="flex-1">
@@ -327,15 +338,54 @@ const BookingCalendar: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setGuests(Math.max(1, guests - 1))}
-                    className="w-9 h-9 rounded-full border border-slate-200 dark:border-slate-700 flex items-center justify-center"
+                    disabled={guests <= 1}
+                    className="w-9 h-9 rounded-full border border-slate-200 dark:border-slate-700 flex items-center justify-center disabled:opacity-40"
+                    aria-label="Disminuir invitados"
                   >
                     <span className="material-icons-round text-[18px]">remove</span>
                   </button>
-                  <span className="w-10 text-center font-bold">{guests}</span>
+                  <input
+                    ref={guestsRef}
+                    type="number"
+                    inputMode="numeric"
+                    min={1}
+                    max={venue.maxCapacity || 9999}
+                    value={guests}
+                    onChange={(e) => {
+                      const raw = e.target.value;
+                      if (raw === '') {
+                        setGuests(0);
+                        return;
+                      }
+                      const val = parseInt(raw, 10);
+                      if (!Number.isNaN(val)) {
+                        setGuests(Math.max(0, val));
+                      }
+                    }}
+                    onBlur={(e) => {
+                      const val = parseInt(e.target.value, 10);
+                      const max = venue.maxCapacity || 9999;
+                      if (Number.isNaN(val) || val < 1) setGuests(1);
+                      else setGuests(Math.min(max, val));
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        const val = parseInt((e.target as HTMLInputElement).value, 10);
+                        const max = venue.maxCapacity || 9999;
+                        if (Number.isNaN(val) || val < 1) setGuests(1);
+                        else setGuests(Math.min(max, val));
+                        (e.target as HTMLInputElement).blur();
+                      }
+                    }}
+                    className="w-20 text-center text-base font-bold bg-transparent border-b-2 border-primary/30 focus:border-primary focus:outline-none py-1 appearance-none"
+                    aria-label="Número de invitados"
+                  />
                   <button
                     type="button"
                     onClick={() => setGuests(Math.min(venue.maxCapacity || 9999, guests + 1))}
-                    className="w-9 h-9 rounded-full border border-slate-200 dark:border-slate-700 flex items-center justify-center"
+                    disabled={guests >= (venue.maxCapacity || 9999)}
+                    className="w-9 h-9 rounded-full border border-slate-200 dark:border-slate-700 flex items-center justify-center disabled:opacity-40"
+                    aria-label="Aumentar invitados"
                   >
                     <span className="material-icons-round text-[18px]">add</span>
                   </button>
@@ -391,9 +441,10 @@ const BookingCalendar: React.FC = () => {
             )}
           </div>
         </section>
+        <div className="h-32" />
       </main>
 
-      <footer className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white dark:bg-surface-dark border-t border-slate-100 dark:border-slate-800 p-4 pb-8 flex items-center justify-between z-50">
+      <footer className="mt-auto bg-white dark:bg-surface-dark border-t border-slate-100 dark:border-slate-800 p-4 pb-8 flex items-center justify-between z-50">
         <div>
           <div className="text-[10px] text-gray-400">Precio estimado</div>
           <div className="text-lg font-bold text-slate-900 dark:text-white">${estimatedTotal.toLocaleString()} MXN</div>
