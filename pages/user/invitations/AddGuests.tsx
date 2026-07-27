@@ -1,8 +1,9 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../../../context/UserContext';
 import { Guest } from '../../../types';
+import * as XLSX from 'xlsx';
 
 const AddGuests: React.FC = () => {
   const navigate = useNavigate();
@@ -10,6 +11,76 @@ const AddGuests: React.FC = () => {
   const [guests, setGuests] = useState<Guest[]>(draftInvitation?.guests || []);
   const [newGuestName, setNewGuestName] = useState('');
   const [newGuestEmail, setNewGuestEmail] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [importMsg, setImportMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  const isValidEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+  const handleImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImportMsg(null);
+    try {
+      const data = await file.arrayBuffer();
+      const wb = XLSX.read(data, { type: 'array' });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows: any[][] = XLSX.utils.sheet_to_json(ws, { header: 1, blankrows: false, defval: '' });
+
+      let nameIdx = 0, emailIdx = 1, startRow = 0;
+      if (rows.length > 0) {
+        const header = rows[0].map((c: any) => String(c).toLowerCase().trim());
+        const nIdx = header.findIndex((h) => /nombre|name|invitado|guest/.test(h));
+        const eIdx = header.findIndex((h) => /correo|email|e-?mail/.test(h));
+        if (nIdx !== -1 || eIdx !== -1) {
+          nameIdx = nIdx !== -1 ? nIdx : (eIdx === 0 ? 1 : 0);
+          emailIdx = eIdx !== -1 ? eIdx : (nIdx === 0 ? 1 : 0);
+          startRow = 1;
+        } else {
+          const firstRow = rows[0].map((c: any) => String(c));
+          const detectedEmail = firstRow.findIndex((v) => isValidEmail(v));
+          if (detectedEmail !== -1) {
+            emailIdx = detectedEmail;
+            nameIdx = detectedEmail === 0 ? 1 : 0;
+          }
+        }
+      }
+
+      const existingEmails = new Set(guests.map((g) => g.email.toLowerCase()));
+      const imported: Guest[] = [];
+      let skipped = 0;
+      for (let i = startRow; i < rows.length; i++) {
+        const row = rows[i];
+        const name = String(row[nameIdx] ?? '').trim();
+        const email = String(row[emailIdx] ?? '').trim();
+        if (!email || !isValidEmail(email)) { skipped++; continue; }
+        if (existingEmails.has(email.toLowerCase())) { skipped++; continue; }
+        existingEmails.add(email.toLowerCase());
+        imported.push({ id: `${Date.now()}-${i}`, name: name || email.split('@')[0], email });
+      }
+
+      if (imported.length === 0) {
+        setImportMsg({ type: 'error', text: 'No se encontraron invitados válidos en el archivo.' });
+      } else {
+        setGuests((prev) => [...prev, ...imported]);
+        setImportMsg({ type: 'success', text: `Se importaron ${imported.length} invitado(s)${skipped ? `, ${skipped} omitido(s)` : ''}.` });
+      }
+    } catch (err) {
+      setImportMsg({ type: 'error', text: 'No se pudo leer el archivo. Usa CSV, XLSX o XLS.' });
+    } finally {
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const handleDownloadTemplate = () => {
+    const ws = XLSX.utils.aoa_to_sheet([
+      ['Nombre', 'Correo'],
+      ['María García', 'maria@ejemplo.com'],
+      ['Juan Pérez', 'juan@ejemplo.com'],
+    ]);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Invitados');
+    XLSX.writeFile(wb, 'plantilla-invitados.xlsx');
+  };
 
   const handleAddGuest = () => {
     if (newGuestName && newGuestEmail) {
