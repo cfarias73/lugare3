@@ -66,17 +66,19 @@ export const computeCommissions = (
   const vatOnUserCommission = pct(userCommission, s.vat_percent);
   const vatOnLugareCommission = vatOnHostCommission + vatOnUserCommission;
 
-  // Retenciones: sobre el IVA total (base + comisiones) e ISR sobre base host
-  const vatWithheld = pct(vatOnBase + vatOnLugareCommission, s.vat_withholding_percent);
+  // Retenciones:
+  //  - IVA retenido: SOLO sobre el IVA del precio base del espacio (no sobre IVA de comisiones)
+  //  - ISR y otras: sobre el precio base del anfitrión
+  const vatWithheld = pct(vatOnBase, s.vat_withholding_percent);
   const isrWithheld = pct(base, s.isr_withholding_percent);
   const otherWithheld = pct(base, s.other_withholding_percent);
   const taxesWithheldTotal = vatWithheld + isrWithheld + otherWithheld;
 
-  // Total al usuario: base + IVA base + comisión usuario + IVA de esa comisión + stripe
-  const subtotalBeforeStripe =
-    base + vatOnBase + userCommission + vatOnUserCommission;
-  const stripeFee = pct(subtotalBeforeStripe, s.stripe_percent) + (Number(s.stripe_fixed) || 0);
-  const userTotal = subtotalBeforeStripe + stripeFee;
+  // Total al usuario: base + IVA base + comisión usuario + IVA de la comisión usuario.
+  // La comisión de Stripe NO se traslada al usuario: es un costo interno de Lugare
+  // que se descuenta del ingreso neto de la plataforma.
+  const userTotal = base + vatOnBase + userCommission + vatOnUserCommission;
+  const stripeFee = pct(userTotal, s.stripe_percent) + (Number(s.stripe_fixed) || 0);
 
   // Neto anfitrión: recibe base + IVA base menos su comisión (con IVA) y retenciones
   const hostPayout =

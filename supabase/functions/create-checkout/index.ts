@@ -176,12 +176,13 @@ serve(async (req) => {
     const vatOnHostCommission = hostCommission * s.vat_percent / 100;
     const vatOnUserCommission = userCommission * s.vat_percent / 100;
     const vatOnLugareCommission = vatOnHostCommission + vatOnUserCommission;
-    const vatWithheld = (vatOnBase + vatOnLugareCommission) * s.vat_withholding_percent / 100;
+    // IVA retenido: solo sobre el IVA del precio base (no incluye IVA de comisiones)
+    const vatWithheld = vatOnBase * s.vat_withholding_percent / 100;
     const isrWithheld = basePrice * s.isr_withholding_percent / 100;
     const otherWithheld = basePrice * s.other_withholding_percent / 100;
-    const subtotalBeforeStripe = basePrice + vatOnBase + userCommission + vatOnUserCommission;
-    const stripeFee = subtotalBeforeStripe * s.stripe_percent / 100 + s.stripe_fixed;
-    const userTotal = subtotalBeforeStripe + stripeFee;
+    // Total al usuario: NO incluye Stripe (Stripe es costo interno de Lugare)
+    const userTotal = basePrice + vatOnBase + userCommission + vatOnUserCommission;
+    const stripeFee = userTotal * s.stripe_percent / 100 + s.stripe_fixed;
     const hostPayout = basePrice + vatOnBase - hostCommission - vatOnHostCommission - (vatWithheld + isrWithheld + otherWithheld);
     const lugareNet = hostCommission + userCommission + vatOnLugareCommission - stripeFee;
 
@@ -222,14 +223,7 @@ serve(async (req) => {
         },
         quantity: 1,
       },
-      {
-        price_data: {
-          currency: "mxn",
-          unit_amount: Math.round(stripeFee * 100),
-          product_data: { name: "Cargo por procesamiento" },
-        },
-        quantity: 1,
-      },
+      // Nota: Stripe fee NO se cobra al usuario; Lugare la absorbe.
     ];
 
     const session = await stripe.checkout.sessions.create({
