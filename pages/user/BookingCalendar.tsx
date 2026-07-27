@@ -365,7 +365,7 @@ const BookingCalendar: React.FC = () => {
                         (e.target as HTMLInputElement).blur();
                       }
                     }}
-                    className="w-16 text-center font-bold bg-transparent border-b-2 border-primary/30 focus:border-primary focus:outline-none py-1 appearance-none"
+                    className="w-20 text-center text-base font-bold bg-transparent border-b-2 border-primary/30 focus:border-primary focus:outline-none py-1 appearance-none"
                     aria-label="Número de invitados"
                   />
                   <button
