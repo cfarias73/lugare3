@@ -295,3 +295,37 @@ export const deleteReview = async (reviewId: string) => {
   const { error } = await supabase.from('reviews').delete().eq('id', reviewId);
   if (error) throw error;
 };
+
+// ===== Pagos a anfitriones =====
+export const getPayouts = async () => {
+  const { data, error } = await supabase
+    .from('bookings')
+    .select('id, event_date, status, total_price, host_paid_at, venues(name, provider_id)')
+    .in('status', ['confirmed', 'completed'])
+    .order('event_date', { ascending: false })
+    .limit(300);
+  if (error) throw error;
+
+  const rows = data || [];
+  const providerIds = unique(rows.map((r: any) => r.venues?.provider_id));
+  const hosts = await getProfilesByIds(providerIds, 'id, name, email, clabe, bank_name, account_holder');
+  const byId = new Map(hosts.map((h: any) => [h.id, h]));
+
+  return rows.map((r: any) => ({
+    ...r,
+    venue_name: r.venues?.name,
+    host: byId.get(r.venues?.provider_id) || null,
+  }));
+};
+
+export const markPayoutPaid = async (bookingId: string) => {
+  const { data, error } = await supabase
+    .from('bookings')
+    .update({ host_paid_at: new Date().toISOString() })
+    .eq('id', bookingId)
+    .select('id');
+  if (error) throw error;
+  if (!data || data.length === 0) {
+    throw new Error('No se actualizó ninguna fila. Falta política RLS de admin (UPDATE) en bookings.');
+  }
+};
