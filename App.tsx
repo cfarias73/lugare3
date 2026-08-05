@@ -61,6 +61,7 @@ import AdminSettings from './pages/admin/Settings';
 import AdminCategories from './pages/admin/Categories';
 import AdminFinance from './pages/admin/Finance';
 import AdminReviews from './pages/admin/Reviews';
+import AdminPayouts from './pages/admin/Payouts';
 
 const App: React.FC = () => {
   return (
@@ -119,6 +120,7 @@ const App: React.FC = () => {
         <Route path="/admin/settings" element={<ProtectedRoute allowedRole="admin"><RouteWrapper><AdminSettings /></RouteWrapper></ProtectedRoute>} />
         <Route path="/admin/categories" element={<ProtectedRoute allowedRole="admin"><RouteWrapper><AdminCategories /></RouteWrapper></ProtectedRoute>} />
         <Route path="/admin/finance" element={<ProtectedRoute allowedRole="admin"><RouteWrapper><AdminFinance /></RouteWrapper></ProtectedRoute>} />
+        <Route path="/admin/payouts" element={<ProtectedRoute allowedRole="admin"><RouteWrapper><AdminPayouts /></RouteWrapper></ProtectedRoute>} />
         <Route path="/admin/reviews" element={<ProtectedRoute allowedRole="admin"><RouteWrapper><AdminReviews /></RouteWrapper></ProtectedRoute>} />
 
 
