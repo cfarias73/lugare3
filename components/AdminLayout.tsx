@@ -20,6 +20,7 @@ const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     { name: 'Categorías', path: '/admin/categories' },
     { name: 'Reservas', path: '/admin/bookings' },
     { name: 'Finanzas', path: '/admin/finance' },
+    { name: 'Pagos a anfitriones', path: '/admin/payouts' },
     { name: 'Reseñas', path: '/admin/reviews' },
     { name: 'Disputas', path: '/admin/disputes' },
     { name: 'Configuración', path: '/admin/settings' },
