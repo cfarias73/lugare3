@@ -8,6 +8,7 @@ import { createVenue, updateVenue, getVenueForEdit, deleteVenueImages } from '..
 import { getCategories, Category } from '../../src/services/categoryService';
 import { validateSpaceName } from '../../src/utils/profanityFilter';
 import { AMENITIES } from '../../src/constants/amenities';
+import { FLEXIBLE_DAY_OPTIONS } from '../../src/utils/cancellation';
 
 const RULES = ['No mascotas', 'No fumar', 'Horarios de silencio'];
 
