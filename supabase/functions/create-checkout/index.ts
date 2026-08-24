@@ -187,6 +187,18 @@ serve(async (req) => {
     const hostPayout = basePrice + vatOnBase - hostCommission - vatOnHostCommission - (vatWithheld + isrWithheld + otherWithheld);
     const lugareNet = hostCommission + userCommission + vatOnLugareCommission - stripeFee;
 
+    // Guardarraíl: el importe cobrado en Stripe DEBE coincidir con el que vio el
+    // usuario en "Confirmar y pagar". Si difiere, abortamos en vez de cobrar mal.
+    if (expectedTotal != null && Math.abs(Number(expectedTotal) - userTotal) > 1) {
+      return json(
+        {
+          error:
+            `Inconsistencia de importe: la pantalla muestra $${Number(expectedTotal).toFixed(2)} y el servidor calculó $${userTotal.toFixed(2)}. Recarga la página e inténtalo de nuevo.`,
+        },
+        409
+      );
+    }
+
     // 4) Crear sesión de Stripe Checkout
     const stripe = new Stripe(stripeKey, { apiVersion: "2024-06-20" });
 
