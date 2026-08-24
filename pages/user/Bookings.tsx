@@ -22,6 +22,8 @@ interface UIBooking {
   status: string;
   statusColor: string;
   eventDate: string; // ISO yyyy-mm-dd
+  rawStatus: string;
+  policy: CancellationPolicy;
 }
 
 const STATUS_COLORS: Record<string, string> = {
