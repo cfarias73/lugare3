@@ -95,6 +95,11 @@ const CreateSpaceContent: React.FC = () => {
     if (!data.description.trim()) e.description = 'La descripción es requerida';
     else if (data.description.trim().length > 1000) e.description = 'La descripción no puede exceder 1000 caracteres';
     if (!data.category) e.category = 'La categoría es requerida';
+    if (data.cancellationType === 'custom') {
+      const valid = data.cancellationTiers.filter((t) => t.days !== '' && t.percent !== '');
+      if (valid.length === 0) e.cancellation = 'Agrega al menos una condición de cancelación';
+      else if (valid.some((t) => Number(t.percent) > 100)) e.cancellation = 'El reembolso no puede exceder 100%';
+    }
     setErrors(e);
     return Object.keys(e).length === 0;
   };
