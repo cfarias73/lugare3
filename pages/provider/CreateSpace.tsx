@@ -68,6 +68,11 @@ const CreateSpaceContent: React.FC = () => {
           sizeSqm: v.size_sqm?.toString() ?? '',
           rules: v.rules ?? [],
           amenities: Array.isArray(v.amenities) ? v.amenities : [],
+          cancellationType: (v.cancellation_type as any) ?? 'non_refundable',
+          cancellationDays: v.cancellation_days?.toString() ?? '30',
+          cancellationTiers: Array.isArray(v.cancellation_tiers) && v.cancellation_tiers.length > 0
+            ? v.cancellation_tiers.map((t: any) => ({ days: String(t.days ?? ''), percent: String(t.percent ?? '') }))
+            : [{ days: '60', percent: '100' }, { days: '30', percent: '50' }],
         });
       })
       .catch((e) => {
