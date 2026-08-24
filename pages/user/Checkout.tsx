@@ -103,6 +103,11 @@ const Checkout: React.FC = () => {
       toast.error('Debes iniciar sesión');
       return;
     }
+    const todayStr = new Date().toLocaleDateString('en-CA');
+    if (eventDate < todayStr) {
+      toast.error('No es posible reservar en fechas pasadas.');
+      return;
+    }
     setIsProcessing(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
