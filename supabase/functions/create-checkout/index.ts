@@ -80,6 +80,7 @@ serve(async (req) => {
       hours,
       service_ids = [],
       extras_total: extrasTotalFromClient = 0,
+      expected_total: expectedTotal,
       origin,
     } = body ?? {};
 
