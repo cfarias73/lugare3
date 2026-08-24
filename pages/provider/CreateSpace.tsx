@@ -174,6 +174,15 @@ const CreateSpaceContent: React.FC = () => {
         lng: data.lng ? Number(data.lng) : null,
         rules: data.rules,
         amenities: data.amenities,
+        cancellation_type: data.cancellationType,
+        cancellation_days: data.cancellationType === 'flexible' ? Number(data.cancellationDays) || 30 : null,
+        cancellation_tiers: data.cancellationType === 'custom'
+          ? data.cancellationTiers
+              .map((t) => ({ days: Number(t.days), percent: Number(t.percent) }))
+              .filter((t) => Number.isFinite(t.days) && t.days >= 0 && Number.isFinite(t.percent))
+              .map((t) => ({ days: Math.round(t.days), percent: Math.min(100, Math.max(0, Math.round(t.percent))) }))
+              .sort((a, b) => b.days - a.days)
+          : null,
       };
       if (isEdit && venueId) {
         if (removedExistingIds.length > 0) {
