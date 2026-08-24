@@ -27,6 +27,10 @@ export interface CreateSpaceData {
   // Reglas
   rules: string[];
   amenities: string[];
+  // Política de cancelación
+  cancellationType: 'non_refundable' | 'flexible' | 'custom';
+  cancellationDays: string;
+  cancellationTiers: { days: string; percent: string }[];
 }
 
 interface CreateSpaceContextType {
