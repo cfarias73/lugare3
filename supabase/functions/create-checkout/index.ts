@@ -88,6 +88,12 @@ serve(async (req) => {
       return json({ error: "Faltan datos de la reserva" }, 400);
     }
 
+    // No permitir reservas en fechas pasadas (hora de Ciudad de México)
+    const todayMx = new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    if (String(event_date) < todayMx) {
+      return json({ error: "No es posible reservar en fechas pasadas" }, 400);
+    }
+
     // 1) Leer venue (incluye campos de precio flexible)
     const { data: venue, error: venueErr } = await admin
       .from("venues")

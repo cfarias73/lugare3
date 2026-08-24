@@ -109,6 +109,12 @@ const BookingCalendar: React.FC = () => {
     return () => { cancelled = true; };
   }, [id, isUuid, year, month]);
 
+  // Fecha mínima reservable: hoy (no se permiten fechas pasadas)
+  const todayStr = toDateStr(today.getFullYear(), today.getMonth(), today.getDate());
+  const isPastDate = (dateStr: string) => dateStr < todayStr;
+  const isCurrentOrPastMonth =
+    year < today.getFullYear() || (year === today.getFullYear() && month <= today.getMonth());
+
   const daysInMonth = useMemo(() => new Date(year, month + 1, 0).getDate(), [year, month]);
   const firstDayOffset = useMemo(() => {
     const dow = new Date(year, month, 1).getDay();
@@ -116,6 +122,7 @@ const BookingCalendar: React.FC = () => {
   }, [year, month]);
 
   const goPrevMonth = () => {
+    if (isCurrentOrPastMonth) return;
     setSelectedDay(null);
     setSelectedSlot(null);
     if (month === 0) { setYear(y => y - 1); setMonth(11); }
@@ -130,6 +137,10 @@ const BookingCalendar: React.FC = () => {
 
   const handleContinue = () => {
     if (selectedDay && selectedSlot) {
+      if (isPastDate(toDateStr(year, month, selectedDay))) {
+        alert('No es posible reservar en fechas pasadas. Selecciona una fecha a partir de hoy.');
+        return;
+      }
       const slot = SLOT_TIMES[selectedSlot];
       const totalHours = slot.hours + extraHours;
       const [eh, em, es] = slot.end.split(':').map(Number);
@@ -214,7 +225,13 @@ const BookingCalendar: React.FC = () => {
 
         <section className="mt-4 px-4">
           <div className="flex items-center justify-between mb-6">
-            <button onClick={goPrevMonth} className="p-1"><span className="material-icons-round">chevron_left</span></button>
+            <button
+              onClick={goPrevMonth}
+              disabled={isCurrentOrPastMonth}
+              className="p-1 disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              <span className="material-icons-round">chevron_left</span>
+            </button>
             <h3 className="font-semibold text-base">{MONTH_NAMES[month]} {year}</h3>
             <button onClick={goNextMonth} className="p-1"><span className="material-icons-round">chevron_right</span></button>
           </div>
@@ -227,7 +244,8 @@ const BookingCalendar: React.FC = () => {
             ))}
             {Array.from({ length: daysInMonth }, (_, i) => i + 1).map((day) => {
               const dateStr = toDateStr(year, month, day);
-              const isUnavailable = blockedDates.has(dateStr) || bookedDates.has(dateStr);
+              const isPast = isPastDate(dateStr);
+              const isUnavailable = isPast || blockedDates.has(dateStr) || bookedDates.has(dateStr);
               return (
                 <button
                   key={day}
@@ -235,7 +253,7 @@ const BookingCalendar: React.FC = () => {
                   disabled={isUnavailable}
                   className={`h-10 flex items-center justify-center rounded-lg transition-all ${
                     isUnavailable
-                      ? 'text-slate-300 dark:text-slate-600 cursor-not-allowed line-through'
+                      ? `text-slate-300 dark:text-slate-600 cursor-not-allowed ${isPast ? '' : 'line-through'}`
                       : selectedDay === day
                         ? 'bg-primary text-white font-bold shadow-md'
                         : 'hover:bg-slate-100 dark:hover:bg-slate-800'
