@@ -207,6 +207,25 @@ const VenueDetail: React.FC = () => {
             )}
           </section>
 
+          <hr className="border-slate-100 dark:border-slate-800"/>
+
+          <section>
+            <div className="flex items-center gap-2 mb-3">
+              <h2 className="text-lg font-bold font-display">Política de cancelación</h2>
+              <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                {shortPolicyLabel(parsePolicy(venue.cancellationType, venue.cancellationDays, venue.cancellationTiers))}
+              </span>
+            </div>
+            <ul className="space-y-2">
+              {describePolicy(parsePolicy(venue.cancellationType, venue.cancellationDays, venue.cancellationTiers)).map((line, i) => (
+                <li key={i} className="flex gap-2 text-[13px] text-slate-600 dark:text-slate-300 leading-snug">
+                  <span className="material-icons-outlined text-secondary text-[18px] shrink-0">event_busy</span>
+                  <span>{line}</span>
+                </li>
+              ))}
+            </ul>
+          </section>
+
           {extras.length > 0 && (
             <>
               <hr className="border-slate-100 dark:border-slate-800"/>
