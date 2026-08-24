@@ -21,6 +21,9 @@ export interface VenuePayload {
   lng?: number | null;
   rules?: string[];
   amenities?: string[];
+  cancellation_type?: 'non_refundable' | 'flexible' | 'custom';
+  cancellation_days?: number | null;
+  cancellation_tiers?: { days: number; percent: number }[] | null;
 }
 
 export interface CreateVenueData extends VenuePayload {
