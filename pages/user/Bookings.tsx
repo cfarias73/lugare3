@@ -100,6 +100,76 @@ const BookingDetailModal: React.FC<{ booking: UIBooking; onClose: () => void }> 
   </AnimatePresence>
 );
 
+const CancelBookingModal: React.FC<{
+  booking: UIBooking;
+  onClose: () => void;
+  onConfirm: (percent: number, amount: number, reason: string) => Promise<void>;
+}> = ({ booking, onClose, onConfirm }) => {
+  const [reason, setReason] = useState('');
+  const [saving, setSaving] = useState(false);
+  const percent = refundPercentFor(booking.policy, booking.eventDate);
+  const amount = refundAmountFor(booking.policy, booking.eventDate, booking.totalPrice);
+
+  return (
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+        className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+        onClick={onClose}
+      >
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }}
+          className="bg-white dark:bg-surface-dark rounded-[32px] p-6 shadow-2xl w-full max-w-md"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <h2 className="text-xl font-bold mb-1 dark:text-white">Cancelar reserva</h2>
+          <p className="text-xs text-slate-400 mb-4">{booking.venueName} · {booking.date}</p>
+
+          <div className="rounded-2xl bg-slate-50 dark:bg-slate-800/60 p-4 mb-4">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">
+              Política: {shortPolicyLabel(booking.policy)}
+            </p>
+            <ul className="space-y-1">
+              {describePolicy(booking.policy).map((line, i) => (
+                <li key={i} className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">• {line}</li>
+              ))}
+            </ul>
+          </div>
+
+          <div className={`rounded-2xl p-4 mb-4 ${percent > 0 ? 'bg-green-50 dark:bg-green-900/20' : 'bg-red-50 dark:bg-red-900/20'}`}>
+            <p className={`text-sm font-bold ${percent > 0 ? 'text-green-700 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+              {percent > 0
+                ? `Reembolso estimado: $${amount.toLocaleString()} (${percent}%)`
+                : 'Esta cancelación no genera reembolso.'}
+            </p>
+          </div>
+
+          <textarea
+            className="w-full bg-slate-50 dark:bg-slate-800/50 rounded-2xl px-4 py-3 text-sm dark:text-white outline-none focus:ring-2 focus:ring-primary resize-none mb-4"
+            rows={3}
+            placeholder="Motivo de la cancelación (opcional)"
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+          />
+
+          <div className="flex gap-3">
+            <button onClick={onClose} disabled={saving} className="flex-1 py-3 border-2 border-slate-200 dark:border-slate-700 rounded-xl font-bold text-sm dark:text-white disabled:opacity-50">
+              Volver
+            </button>
+            <button
+              onClick={async () => { setSaving(true); await onConfirm(percent, amount, reason); setSaving(false); }}
+              disabled={saving}
+              className="flex-1 py-3 bg-[#E5484D] text-white rounded-xl font-bold text-sm disabled:opacity-50"
+            >
+              {saving ? 'Cancelando...' : 'Confirmar cancelación'}
+            </button>
+          </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
+  );
+};
+
 const Bookings: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useUser();
@@ -108,6 +178,24 @@ const Bookings: React.FC = () => {
   const [tab, setTab] = useState<'upcoming' | 'past'>('upcoming');
   const [selectedBooking, setSelectedBooking] = useState<UIBooking | null>(null);
   const [query, setQuery] = useState('');
+  const [cancelTarget, setCancelTarget] = useState<UIBooking | null>(null);
+
+  const handleCancel = async (percent: number, amount: number, reason: string) => {
+    if (!cancelTarget || !user) return;
+    try {
+      await cancelBooking(cancelTarget.id, user.id, { percent, amount }, reason);
+      setBookings((prev) => prev.map((b) => b.id === cancelTarget.id
+        ? { ...b, rawStatus: 'cancelled', status: STATUS_LABELS.cancelled, statusColor: STATUS_COLORS.cancelled }
+        : b));
+      toast.success(percent > 0
+        ? `Reserva cancelada. Reembolso de $${amount.toLocaleString()} (${percent}%) en proceso.`
+        : 'Reserva cancelada. Según la política del anfitrión no aplica reembolso.');
+      setCancelTarget(null);
+    } catch (e: any) {
+      console.error(e);
+      toast.error(e?.message || 'No se pudo cancelar la reserva');
+    }
+  };
 
   useEffect(() => {
     if (!user) { setLoading(false); return; }
@@ -133,6 +221,9 @@ const Bookings: React.FC = () => {
   return (
     <Layout>
       {selectedBooking && <BookingDetailModal booking={selectedBooking} onClose={() => setSelectedBooking(null)} />}
+      {cancelTarget && (
+        <CancelBookingModal booking={cancelTarget} onClose={() => setCancelTarget(null)} onConfirm={handleCancel} />
+      )}
       <header className="sticky top-0 z-50 bg-white dark:bg-background-dark border-b border-slate-100 dark:border-slate-800 px-4 pt-4">
         <div className="flex items-center justify-between mb-4">
           <h1 className="text-xl font-bold text-slate-800 dark:text-white">Historial de Reservas</h1>
@@ -227,6 +318,15 @@ const Bookings: React.FC = () => {
                         >
                           <span className="material-icons-outlined text-base">star</span>
                           Valorar
+                        </button>
+                      )}
+                      {tab === 'upcoming' && booking.rawStatus !== 'cancelled' && (
+                        <button
+                          onClick={() => setCancelTarget(booking)}
+                          className="bg-white dark:bg-transparent border-2 border-[#E5484D] text-[#E5484D] px-4 py-2 rounded-xl text-sm font-semibold transition-colors flex items-center gap-1 hover:bg-red-50 dark:hover:bg-red-900/20"
+                        >
+                          <span className="material-icons-outlined text-base">event_busy</span>
+                          Cancelar
                         </button>
                       )}
                       <button
