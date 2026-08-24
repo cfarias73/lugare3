@@ -24,6 +24,9 @@ export interface Venue {
   includedHours?: number;
   extraPersonPrice?: number;
   amenities?: string[];
+  cancellationType?: 'non_refundable' | 'flexible' | 'custom';
+  cancellationDays?: number;
+  cancellationTiers?: { days: number; percent: number }[];
 }
 
 export interface Review {

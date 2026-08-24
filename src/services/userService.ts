@@ -86,6 +86,9 @@ export const getUserBookings = async (userId: string) => {
       venues (
         name,
         location,
+        cancellation_type,
+        cancellation_days,
+        cancellation_tiers,
         venue_images (image_url)
       )
     `)
@@ -94,4 +97,26 @@ export const getUserBookings = async (userId: string) => {
 
   if (error) throw error;
   return data;
+};
+
+/** Cancela una reserva del usuario aplicando la política del espacio */
+export const cancelBooking = async (
+  bookingId: string,
+  userId: string,
+  refund: { percent: number; amount: number },
+  reason?: string,
+) => {
+  const { error } = await supabase
+    .from('bookings')
+    .update({
+      status: 'cancelled',
+      cancelled_at: new Date().toISOString(),
+      cancelled_by: 'user',
+      cancellation_reason: reason || null,
+      refund_percent: refund.percent,
+      refund_amount: refund.amount,
+    })
+    .eq('id', bookingId)
+    .eq('user_id', userId);
+  if (error) throw error;
 };

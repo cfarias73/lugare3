@@ -6,6 +6,7 @@ import { supabase } from '../../lib/supabaseClient';
 import { getServicesByIds, getVenueById, PublicVenueService } from '../../src/services/venueService';
 import { calcVenuePricing } from '../../src/utils/pricing';
 import { computeCommissions, loadPlatformSettings, DEFAULT_SETTINGS, PlatformSettings, fmtMXN } from '../../src/utils/commissions';
+import { parsePolicy, describePolicy, shortPolicyLabel } from '../../src/utils/cancellation';
 
 const Checkout: React.FC = () => {
   const navigate = useNavigate();
@@ -244,6 +245,20 @@ const Checkout: React.FC = () => {
               <span className="font-bold text-primary text-lg font-display">{fmtMXN(total)} MXN</span>
             </div>
           </div>
+        </div>
+
+        <div className="bg-white dark:bg-surface-dark border border-slate-100 dark:border-slate-800 rounded-2xl p-4 mb-4">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="material-icons-outlined text-secondary text-[20px]">event_busy</span>
+            <h5 className="font-bold text-sm dark:text-white">
+              Política de cancelación · {shortPolicyLabel(parsePolicy(venue.cancellation_type, venue.cancellation_days, venue.cancellation_tiers))}
+            </h5>
+          </div>
+          <ul className="space-y-1">
+            {describePolicy(parsePolicy(venue.cancellation_type, venue.cancellation_days, venue.cancellation_tiers)).map((line, i) => (
+              <li key={i} className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">• {line}</li>
+            ))}
+          </ul>
         </div>
 
         <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-2xl p-4 flex gap-3">

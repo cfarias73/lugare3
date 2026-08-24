@@ -27,6 +27,10 @@ export interface CreateSpaceData {
   // Reglas
   rules: string[];
   amenities: string[];
+  // Política de cancelación
+  cancellationType: 'non_refundable' | 'flexible' | 'custom';
+  cancellationDays: string;
+  cancellationTiers: { days: string; percent: string }[];
 }
 
 interface CreateSpaceContextType {
@@ -60,6 +64,9 @@ const defaultData: CreateSpaceData = {
   sizeSqm: '',
   rules: [],
   amenities: [],
+  cancellationType: 'non_refundable',
+  cancellationDays: '30',
+  cancellationTiers: [{ days: '60', percent: '100' }, { days: '30', percent: '50' }],
 };
 
 const CreateSpaceContext = createContext<CreateSpaceContextType | undefined>(undefined);

@@ -8,6 +8,7 @@ import { createVenue, updateVenue, getVenueForEdit, deleteVenueImages } from '..
 import { getCategories, Category } from '../../src/services/categoryService';
 import { validateSpaceName } from '../../src/utils/profanityFilter';
 import { AMENITIES } from '../../src/constants/amenities';
+import { FLEXIBLE_DAY_OPTIONS } from '../../src/utils/cancellation';
 
 const RULES = ['No mascotas', 'No fumar', 'Horarios de silencio'];
 
@@ -68,6 +69,11 @@ const CreateSpaceContent: React.FC = () => {
           sizeSqm: v.size_sqm?.toString() ?? '',
           rules: v.rules ?? [],
           amenities: Array.isArray(v.amenities) ? v.amenities : [],
+          cancellationType: (v.cancellation_type as any) ?? 'non_refundable',
+          cancellationDays: v.cancellation_days?.toString() ?? '30',
+          cancellationTiers: Array.isArray(v.cancellation_tiers) && v.cancellation_tiers.length > 0
+            ? v.cancellation_tiers.map((t: any) => ({ days: String(t.days ?? ''), percent: String(t.percent ?? '') }))
+            : [{ days: '60', percent: '100' }, { days: '30', percent: '50' }],
         });
       })
       .catch((e) => {
@@ -89,6 +95,11 @@ const CreateSpaceContent: React.FC = () => {
     if (!data.description.trim()) e.description = 'La descripción es requerida';
     else if (data.description.trim().length > 1000) e.description = 'La descripción no puede exceder 1000 caracteres';
     if (!data.category) e.category = 'La categoría es requerida';
+    if (data.cancellationType === 'custom') {
+      const valid = data.cancellationTiers.filter((t) => t.days !== '' && t.percent !== '');
+      if (valid.length === 0) e.cancellation = 'Agrega al menos una condición de cancelación';
+      else if (valid.some((t) => Number(t.percent) > 100)) e.cancellation = 'El reembolso no puede exceder 100%';
+    }
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -169,6 +180,15 @@ const CreateSpaceContent: React.FC = () => {
         lng: data.lng ? Number(data.lng) : null,
         rules: data.rules,
         amenities: data.amenities,
+        cancellation_type: data.cancellationType,
+        cancellation_days: data.cancellationType === 'flexible' ? Number(data.cancellationDays) || 30 : null,
+        cancellation_tiers: data.cancellationType === 'custom'
+          ? data.cancellationTiers
+              .map((t) => ({ days: Number(t.days), percent: Number(t.percent) }))
+              .filter((t) => Number.isFinite(t.days) && t.days >= 0 && Number.isFinite(t.percent))
+              .map((t) => ({ days: Math.round(t.days), percent: Math.min(100, Math.max(0, Math.round(t.percent))) }))
+              .sort((a, b) => b.days - a.days)
+          : null,
       };
       if (isEdit && venueId) {
         if (removedExistingIds.length > 0) {
@@ -347,6 +367,112 @@ const CreateSpaceContent: React.FC = () => {
                   ))}
                 </div>
               </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Política de cancelación</label>
+                <p className="text-[11px] text-slate-400 leading-snug ml-1 mb-2">Define qué pasa si el usuario cancela su reserva.</p>
+                <div className="space-y-3">
+                  {([
+                    { key: 'non_refundable', title: 'No reembolsable', desc: 'El usuario puede cancelar, pero no recibe reembolso.' },
+                    { key: 'flexible', title: 'Flexible', desc: 'Reembolso del 100% si cancela con cierta anticipación.' },
+                    { key: 'custom', title: 'Personalizada', desc: 'Define tus propios porcentajes por anticipación.' },
+                  ] as const).map((opt) => {
+                    const active = data.cancellationType === opt.key;
+                    return (
+                      <label
+                        key={opt.key}
+                        className={`flex items-start gap-3 p-4 rounded-2xl cursor-pointer border transition-all ${
+                          active ? 'bg-primary/10 border-primary' : 'bg-slate-50 dark:bg-slate-800/50 border-transparent'
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          className="accent-primary mt-1"
+                          checked={active}
+                          onChange={() => updateData({ cancellationType: opt.key })}
+                        />
+                        <span className="flex-1">
+                          <span className="block text-xs font-bold text-slate-800 dark:text-white">{opt.title}</span>
+                          <span className="block text-[11px] text-slate-500 dark:text-slate-400 leading-snug mt-0.5">{opt.desc}</span>
+                        </span>
+                      </label>
+                    );
+                  })}
+                </div>
+
+                {data.cancellationType === 'flexible' && (
+                  <div className="mt-3 space-y-2">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Cancelación gratuita hasta</label>
+                    <div className="flex flex-wrap gap-2">
+                      {FLEXIBLE_DAY_OPTIONS.map((d) => (
+                        <button
+                          key={d}
+                          type="button"
+                          onClick={() => updateData({ cancellationDays: String(d) })}
+                          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                            Number(data.cancellationDays) === d
+                              ? 'bg-primary text-white'
+                              : 'bg-slate-50 dark:bg-slate-800/50 text-slate-600 dark:text-slate-300'
+                          }`}
+                        >
+                          {d} días
+                        </button>
+                      ))}
+                    </div>
+                    <p className="text-[11px] text-slate-400 ml-1">
+                      Cancelación gratuita hasta {Number(data.cancellationDays) || 30} días antes. Dentro de ese plazo, sin reembolso.
+                    </p>
+                  </div>
+                )}
+
+                {data.cancellationType === 'custom' && (
+                  <div className="mt-3 space-y-3">
+                    {data.cancellationTiers.map((t, i) => (
+                      <div key={i} className="flex items-center gap-2">
+                        <input
+                          className={`${inputBase} !py-3 flex-1`}
+                          inputMode="numeric"
+                          placeholder="Días"
+                          value={t.days}
+                          onChange={(e) => {
+                            const v = e.target.value.replace(/[^0-9]/g, '');
+                            updateData({ cancellationTiers: data.cancellationTiers.map((x, j) => j === i ? { ...x, days: v } : x) });
+                          }}
+                        />
+                        <input
+                          className={`${inputBase} !py-3 flex-1`}
+                          inputMode="numeric"
+                          placeholder="% reembolso"
+                          value={t.percent}
+                          onChange={(e) => {
+                            const v = e.target.value.replace(/[^0-9]/g, '').slice(0, 3);
+                            updateData({ cancellationTiers: data.cancellationTiers.map((x, j) => j === i ? { ...x, percent: v } : x) });
+                          }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => updateData({ cancellationTiers: data.cancellationTiers.filter((_, j) => j !== i) })}
+                          className="p-2 text-slate-400 hover:text-red-500 transition-colors"
+                        >
+                          <span className="material-icons-outlined text-[20px]">delete</span>
+                        </button>
+                      </div>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() => updateData({ cancellationTiers: [...data.cancellationTiers, { days: '', percent: '' }] })}
+                      className="text-xs font-bold text-primary flex items-center gap-1"
+                    >
+                      <span className="material-icons-outlined text-[18px]">add</span> Agregar condición
+                    </button>
+                    <p className="text-[11px] text-slate-400 ml-1">
+                      Ejemplo: 60 días → 100%, 30 días → 50%. Fuera de estos plazos no hay reembolso.
+                    </p>
+                  </div>
+                )}
+                <ErrorMessage message={errors.cancellation} />
+              </div>
+
               <div className="space-y-2">
                 <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Servicios incluidos en el espacio</label>
                 <p className="text-[11px] text-slate-400 leading-snug ml-1 mb-2">Selecciona todo lo que el espacio ofrece sin costo extra.</p>

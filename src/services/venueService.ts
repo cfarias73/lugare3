@@ -30,6 +30,9 @@ const mapVenue = (v: any): Venue => ({
   includedHours: v.included_hours != null ? Number(v.included_hours) : undefined,
   extraPersonPrice: v.extra_person_price != null ? Number(v.extra_person_price) : 0,
   amenities: Array.isArray(v.amenities) ? v.amenities.filter((x: any) => typeof x === 'string') : [],
+  cancellationType: v.cancellation_type ?? 'non_refundable',
+  cancellationDays: v.cancellation_days != null ? Number(v.cancellation_days) : undefined,
+  cancellationTiers: Array.isArray(v.cancellation_tiers) ? v.cancellation_tiers : [],
 });
 
 export const getVenues = async (): Promise<Venue[]> => {
