@@ -6,6 +6,7 @@ import { supabase } from '../../lib/supabaseClient';
 import { getServicesByIds, getVenueById, PublicVenueService } from '../../src/services/venueService';
 import { calcVenuePricing } from '../../src/utils/pricing';
 import { computeCommissions, loadPlatformSettings, DEFAULT_SETTINGS, PlatformSettings, fmtMXN } from '../../src/utils/commissions';
+import { parsePolicy, describePolicy, shortPolicyLabel } from '../../src/utils/cancellation';
 
 const Checkout: React.FC = () => {
   const navigate = useNavigate();
