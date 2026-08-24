@@ -6,7 +6,16 @@ import { useUser } from '../../context/UserContext';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { motion, AnimatePresence } from 'motion/react';
-import { getUserBookings } from '../../src/services/userService';
+import { toast } from 'sonner';
+import { getUserBookings, cancelBooking } from '../../src/services/userService';
+import {
+  CancellationPolicy,
+  parsePolicy,
+  describePolicy,
+  shortPolicyLabel,
+  refundPercentFor,
+  refundAmountFor,
+} from '../../src/utils/cancellation';
 
 const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1519167758481-83f5e181dcc3?auto=format&fit=crop&q=80&w=800';
 
@@ -60,6 +69,8 @@ const mapBooking = (b: any): UIBooking => ({
   status: STATUS_LABELS[b.status] || b.status,
   statusColor: STATUS_COLORS[b.status] || '#00B4BB',
   eventDate: b.event_date,
+  rawStatus: b.status,
+  policy: parsePolicy(b.venues?.cancellation_type, b.venues?.cancellation_days, b.venues?.cancellation_tiers),
 });
 
 const BookingDetailModal: React.FC<{ booking: UIBooking; onClose: () => void }> = ({ booking, onClose }) => (
