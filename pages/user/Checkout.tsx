@@ -246,6 +246,20 @@ const Checkout: React.FC = () => {
           </div>
         </div>
 
+        <div className="bg-white dark:bg-surface-dark border border-slate-100 dark:border-slate-800 rounded-2xl p-4 mb-4">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="material-icons-outlined text-secondary text-[20px]">event_busy</span>
+            <h5 className="font-bold text-sm dark:text-white">
+              Política de cancelación · {shortPolicyLabel(parsePolicy(venue.cancellation_type, venue.cancellation_days, venue.cancellation_tiers))}
+            </h5>
+          </div>
+          <ul className="space-y-1">
+            {describePolicy(parsePolicy(venue.cancellation_type, venue.cancellation_days, venue.cancellation_tiers)).map((line, i) => (
+              <li key={i} className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">• {line}</li>
+            ))}
+          </ul>
+        </div>
+
         <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-2xl p-4 flex gap-3">
           <span className="material-icons-outlined text-blue-500">lock</span>
           <div>
