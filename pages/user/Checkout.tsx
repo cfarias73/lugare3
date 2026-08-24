@@ -123,6 +123,9 @@ const Checkout: React.FC = () => {
           hours,
           service_ids: serviceIds,
           extras_total: extrasTotal,
+          // Total mostrado al usuario: el servidor lo valida contra su propio
+          // cálculo para evitar cobrar un importe distinto al visualizado.
+          expected_total: Number(total.toFixed(2)),
           origin: window.location.origin,
         }),
 
