@@ -10,6 +10,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import RouteWrapper from './components/RouteWrapper';
 import Welcome from './pages/Welcome';
 import PublicInvitation from './pages/PublicInvitation';
+import Privacy from './pages/Privacy';
 
 const NotificationHandler = () => {
   useRealtimeNotifications();
@@ -75,6 +76,7 @@ const App: React.FC = () => {
           {/* Entry Point */}
           <Route path="/" element={<RouteWrapper><Welcome /></RouteWrapper>} />
           <Route path="/invite/:id" element={<RouteWrapper><PublicInvitation /></RouteWrapper>} />
+          <Route path="/aviso-de-privacidad" element={<RouteWrapper><Privacy /></RouteWrapper>} />
 
         {/* User Application Routes */}
         <Route path="/user/login" element={<RouteWrapper><UserLogin /></RouteWrapper>} />
