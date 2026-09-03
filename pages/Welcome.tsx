@@ -580,7 +580,7 @@ const Welcome: React.FC = () => {
               <ul className="space-y-2 text-sm text-slate-500 dark:text-slate-400">
                 <li><a href="#" className="hover:text-primary transition-colors">Centro de ayuda</a></li>
                 <li><a href="#" className="hover:text-primary transition-colors">Términos y condiciones</a></li>
-                <li><a href="#" className="hover:text-primary transition-colors">Política de privacidad</a></li>
+                <li><button onClick={() => navigate("/aviso-de-privacidad")} className="hover:text-primary transition-colors">Aviso de privacidad</button></li>
               </ul>
             </div>
 
