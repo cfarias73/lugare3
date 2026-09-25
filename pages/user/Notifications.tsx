@@ -71,7 +71,12 @@ const Notifications: React.FC = () => {
       <header className="sticky top-0 z-30 bg-white dark:bg-background-dark border-b border-gray-100 dark:border-slate-800">
         <div className="flex items-center justify-between px-3 py-3">
           <div className="flex items-center gap-2">
-            <button onClick={() => navigate(-1)} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-slate-800">
+            <button
+              type="button"
+              onClick={() => { if (window.history.length > 1) navigate(-1); else navigate('/user/home'); }}
+              className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-slate-800 active:scale-95 transition-all"
+              aria-label="Volver"
+            >
               <span className="material-icons-outlined text-slate-700 dark:text-white">arrow_back</span>
             </button>
             <h1 className="text-lg font-bold text-slate-800 dark:text-white">Notificaciones</h1>

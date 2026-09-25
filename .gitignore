@@ -10,6 +10,10 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
+ios-user/
+ios-host/
+android-user/
+android-host/
 .output
 .vinxi
 .tanstack/**

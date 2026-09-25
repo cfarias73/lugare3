@@ -1,6 +1,6 @@
 
-import React, { useState, useMemo, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import Layout from '../../components/Layout';
 import { getVenues } from '../../src/services/venueService';
 import { getCategories, Category } from '../../src/services/categoryService';
@@ -47,8 +47,11 @@ const RATING_OPTIONS = [3, 3.5, 4, 4.5];
 
 const ExploreMap: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const initialCity = searchParams.get('city')?.trim() || '';
+  const locationSearchRequested = useRef(false);
   const [selectedVenue, setSelectedVenue] = useState<Venue | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState(initialCity);
   const [openFilter, setOpenFilter] = useState<string | null>(null);
   const [priceRange, setPriceRange] = useState<PriceRange | null>(null);
   const [customMinPrice, setCustomMinPrice] = useState<string>('');
@@ -72,6 +75,7 @@ const ExploreMap: React.FC = () => {
     const q = raw.trim();
     setSearchError(null);
     if (!q) return;
+    locationSearchRequested.current = true;
     setSearching(true);
     try {
       const res = await fetch(
@@ -133,7 +137,7 @@ const ExploreMap: React.FC = () => {
   }, [dateFilter]);
 
 
-  const requestLocation = React.useCallback(() => {
+  const requestLocation = React.useCallback((forceCenter = true) => {
     if (!navigator.geolocation) {
       setLocationError('Geolocalización no soportada en este navegador');
       return;
@@ -144,8 +148,10 @@ const ExploreMap: React.FC = () => {
       (pos) => {
         const coords: [number, number] = [pos.coords.latitude, pos.coords.longitude];
         setUserLocation(coords);
-        setMapCenter(coords);
-        setZoom(14);
+        if (forceCenter || !locationSearchRequested.current) {
+          setMapCenter(coords);
+          setZoom(14);
+        }
         setLocating(false);
       },
       (err) => {
@@ -162,8 +168,13 @@ const ExploreMap: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    requestLocation();
+    requestLocation(false);
   }, [requestLocation]);
+
+  useEffect(() => {
+    if (!initialCity) return;
+    void runSearch(initialCity);
+  }, [initialCity, runSearch]);
 
   const filteredVenues = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
@@ -263,7 +274,7 @@ const ExploreMap: React.FC = () => {
                 onKeyDown={(e) => { if (e.key === 'Enter') runSearch(searchQuery); }}
               />
               <button
-                onClick={requestLocation}
+                onClick={() => requestLocation(true)}
                 disabled={locating}
                 title="Usar mi ubicación"
                 className="bg-primary text-white p-2 rounded-xl flex items-center justify-center shadow-md hover:bg-orange-600 transition-colors disabled:opacity-60"

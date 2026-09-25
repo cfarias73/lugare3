@@ -15,7 +15,7 @@ import { supabase } from '../../lib/supabaseClient';
 const DEFAULT_AVATAR = 'https://api.dicebear.com/7.x/initials/svg?seed=Anfitrion';
 
 const Profile: React.FC = () => {
-  const { user, logout } = useUser();
+  const { user, logout, updateName } = useUser();
   const navigate = useNavigate();
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const fiscalInputRef = useRef<HTMLInputElement>(null);
@@ -96,6 +96,7 @@ const Profile: React.FC = () => {
     setSaving(true);
     try {
       await updateProfile(user.id, form);
+      updateName(form.name.trim());
       setIsEditing(false);
       toast.success('Perfil actualizado');
     } catch (e: any) {

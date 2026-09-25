@@ -94,8 +94,15 @@ export const getAllUsers = async () => {
     getProviderIds(),
     getUserIdsByRole('admin'),
   ]);
-  const excludedFromUsers = new Set([...providerIds, ...adminIds]);
-  return profiles.filter((profile: any) => !excludedFromUsers.has(profile.id));
+  const providerIdSet = new Set(providerIds);
+  const adminIdSet = new Set(adminIds);
+
+  return profiles
+    .filter((profile: any) => adminIdSet.has(profile.id) || !providerIdSet.has(profile.id))
+    .map((profile: any) => ({
+      ...profile,
+      accountRole: adminIdSet.has(profile.id) ? 'Administrador' : 'Usuario',
+    }));
 };
 
 export const updateUserName = async (userId: string, name: string) => {

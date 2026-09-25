@@ -92,12 +92,17 @@ export const updateVenue = async (
 ) => {
   const { imageFiles, ...payload } = data;
 
-  const { error } = await supabase
+  const { data: updatedVenue, error } = await supabase
     .from('venues')
     .update(payload)
     .eq('id', venueId)
-    .eq('provider_id', providerId);
+    .eq('provider_id', providerId)
+    .select('id')
+    .maybeSingle();
   if (error) throw error;
+  if (!updatedVenue) {
+    throw new Error('No se guardaron los cambios. Verifica que el espacio sea tuyo y que Supabase permita actualizarlo.');
+  }
 
   if (imageFiles && imageFiles.length > 0) {
     const urls = await uploadImages(providerId, venueId, imageFiles);
@@ -134,12 +139,16 @@ export const deleteVenueImages = async (
   if (vErr) throw vErr;
   if (!venue) throw new Error('No autorizado');
 
-  const { error } = await supabase
+  const { data: deletedImages, error } = await supabase
     .from('venue_images')
     .delete()
     .in('id', imageIds)
-    .eq('venue_id', venueId);
+    .eq('venue_id', venueId)
+    .select('id');
   if (error) throw error;
+  if ((deletedImages || []).length !== imageIds.length) {
+    throw new Error('No se pudieron quitar todas las fotos. Verifica los permisos del espacio en Supabase.');
+  }
 };
 
 export const updateVenueStatus = async (
@@ -147,21 +156,31 @@ export const updateVenueStatus = async (
   venueId: string,
   status: 'approved' | 'paused' | 'pending'
 ) => {
-  const { error } = await supabase
+  const { data: updatedVenue, error } = await supabase
     .from('venues')
     .update({ status })
     .eq('id', venueId)
-    .eq('provider_id', providerId);
+    .eq('provider_id', providerId)
+    .select('id')
+    .maybeSingle();
   if (error) throw error;
+  if (!updatedVenue) {
+    throw new Error('No se pudo cambiar el estado. Verifica que el espacio sea tuyo y que Supabase permita actualizarlo.');
+  }
 };
 
 export const deleteVenue = async (providerId: string, venueId: string) => {
-  const { error } = await supabase
+  const { data: deletedVenue, error } = await supabase
     .from('venues')
     .delete()
     .eq('id', venueId)
-    .eq('provider_id', providerId);
+    .eq('provider_id', providerId)
+    .select('id')
+    .maybeSingle();
   if (error) throw error;
+  if (!deletedVenue) {
+    throw new Error('No se pudo eliminar el espacio. Verifica que sea tuyo y que Supabase permita eliminarlo.');
+  }
 };
 
 export const getProviderVenues = async (providerId: string) => {

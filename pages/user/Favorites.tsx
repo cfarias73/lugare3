@@ -37,8 +37,13 @@ const Favorites: React.FC = () => {
     <Layout>
       <header className="sticky top-0 z-30 bg-white/80 dark:bg-background-dark/80 backdrop-blur-md px-4 pt-12 pb-2">
         <div className="flex items-center justify-between mb-4">
-          <button onClick={() => navigate(-1)} className="p-2 -ml-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
-            <span className="material-icons-outlined">arrow_back</span>
+          <button
+            type="button"
+            onClick={() => { if (window.history.length > 1) navigate(-1); else navigate('/user/home'); }}
+            className="p-2 -ml-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-95 transition-all"
+            aria-label="Volver"
+          >
+            <span className="material-icons-outlined text-slate-800 dark:text-white">arrow_back</span>
           </button>
           <h1 className="text-xl font-bold font-display">Favoritos</h1>
           <div className="w-9" />

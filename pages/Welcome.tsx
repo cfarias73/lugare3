@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Capacitor } from "@capacitor/core";
 
 /**
  * Landing page de Lugare.
@@ -45,6 +46,94 @@ import { useNavigate } from "react-router-dom";
 const Welcome: React.FC = () => {
   const navigate = useNavigate();
   const [logoError, setLogoError] = useState(false);
+  const appTarget = (import.meta.env.VITE_APP_TARGET as string | undefined) || 'user';
+
+  // Mobile Native layout (Capacitor iOS & Android)
+  if (Capacitor.isNativePlatform()) {
+    return (
+      <div className="min-h-screen bg-white dark:bg-background-dark text-slate-900 dark:text-white flex flex-col justify-between pt-[env(safe-area-inset-top,20px)] pb-8 px-6 relative overflow-hidden select-none">
+        {/* Background ambient glows */}
+        <div className="absolute -top-32 -left-32 w-80 h-80 bg-primary/15 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-1/3 -right-32 w-80 h-80 bg-secondary/15 rounded-full blur-3xl pointer-events-none" />
+
+        {/* Top Header - Brand */}
+        <div className="pt-6 flex flex-col items-center text-center z-10">
+          <div className="flex items-center gap-3 mb-4">
+            {!logoError ? (
+              <img
+                src="/logolugare.png"
+                alt="Lugare"
+                className="h-11 w-11 rounded-2xl object-contain shadow-sm shadow-primary/10"
+                onError={() => setLogoError(true)}
+              />
+            ) : (
+              <div className="h-11 w-11 rounded-2xl bg-primary flex items-center justify-center shadow-md shadow-primary/30">
+                <span className="material-icons-round text-white text-2xl">location_on</span>
+              </div>
+            )}
+            <span className="font-display font-extrabold text-2xl tracking-tight text-slate-900 dark:text-white">
+              LUGARE
+            </span>
+          </div>
+
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold tracking-wide">
+            <span className="material-icons-round text-sm">auto_awesome</span>
+            Marketplace de eventos
+          </span>
+        </div>
+
+        {/* Main Hero Content */}
+        <div className="my-auto py-4 flex flex-col items-center text-center z-10 space-y-4">
+          <h1 className="text-3xl sm:text-4xl font-display font-extrabold leading-snug tracking-tight max-w-xs">
+            El <span className="text-primary">lugar ideal</span> para tu evento
+          </h1>
+
+          <p className="text-sm sm:text-base text-slate-500 dark:text-slate-400 max-w-xs leading-normal">
+            Terrazas, jardines, salones y quintas al alcance de tu mano.
+          </p>
+
+          {/* Action Buttons - Always offer both User and Host entries with single-line labels */}
+          <div className="w-full max-w-xs pt-4 space-y-3">
+            <button
+              onClick={() => navigate('/user/home')}
+              className="w-full inline-flex items-center justify-center gap-2 bg-primary text-white font-bold px-5 py-3.5 rounded-2xl shadow-lg shadow-primary/25 active:scale-95 transition-all text-base whitespace-nowrap"
+            >
+              <span className="material-icons-round text-xl">celebration</span>
+              <span>Explorar espacios</span>
+              <span className="material-icons-round text-lg">arrow_forward</span>
+            </button>
+
+            <button
+              onClick={() => navigate('/provider/login')}
+              className="w-full inline-flex items-center justify-center gap-2 bg-white dark:bg-surface-dark border-2 border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white font-bold px-5 py-3.5 rounded-2xl hover:border-slate-300 active:scale-95 transition-all text-base whitespace-nowrap shadow-sm"
+            >
+              <span className="material-icons-round text-secondary text-xl">apartment</span>
+              <span>Soy anfitrión</span>
+            </button>
+
+            <button
+              onClick={() => navigate('/user/login')}
+              className="w-full text-center text-xs font-semibold text-slate-500 hover:text-primary py-1 active:opacity-80 transition-opacity"
+            >
+              ¿Ya tienes cuenta? <span className="text-primary font-bold">Inicia sesión</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Bottom Trust Badges */}
+        <div className="pt-4 pb-2 z-10 flex items-center justify-center gap-6 text-xs font-medium text-slate-500 dark:text-slate-400">
+          <div className="flex items-center gap-1.5">
+            <span className="material-icons-round text-primary text-base">verified</span>
+            Anfitriones verificados
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="material-icons-round text-primary text-base">lock</span>
+            Pago seguro
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Imágenes de stock (Unsplash CDN) — placeholder hasta tener imágenes reales.
   const STOCK = {
@@ -204,11 +293,11 @@ const Welcome: React.FC = () => {
             </p>
             <div className="flex flex-col sm:flex-row gap-3">
               <button
-                onClick={() => navigate("/user/login")}
+                onClick={() => navigate("/user/home")}
                 className="group inline-flex items-center justify-center gap-2 bg-primary text-white font-bold px-6 py-4 rounded-2xl shadow-xl shadow-primary/25 hover:shadow-2xl hover:shadow-primary/40 active:scale-95 transition-all"
               >
                 <span className="material-icons-round">celebration</span>
-                Busco un lugar
+                Explorar espacios
                 <span className="material-icons-round transition-transform group-hover:translate-x-1">
                   arrow_forward
                 </span>
@@ -283,7 +372,7 @@ const Welcome: React.FC = () => {
             {categories.map((c) => (
               <button
                 key={c.label}
-                onClick={() => navigate("/user/login")}
+                onClick={() => navigate("/user/home")}
                 className="group bg-white dark:bg-surface-dark border border-slate-100 dark:border-slate-800 rounded-3xl overflow-hidden text-left hover:border-primary hover:shadow-xl hover:shadow-primary/10 hover:-translate-y-1 active:scale-95 transition-all"
               >
                 <div className="relative h-28 bg-cover bg-center" style={{ backgroundImage: `url(${c.img})` }}>

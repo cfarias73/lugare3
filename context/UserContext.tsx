@@ -4,6 +4,8 @@ import { supabase } from '../lib/supabaseClient';
 
 interface UserContextType {
   user: User | null;
+  authReady: boolean;
+  updateName: (name: string) => void;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signUp: (email: string, password: string, name: string, role: 'user' | 'provider') => Promise<{ error: any }>;
   logout: () => Promise<void>;
@@ -57,6 +59,7 @@ const hydrateUser = async (sessionUser: any): Promise<User> => {
 
 export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [authReady, setAuthReady] = useState(false);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [draftInvitation, setDraftInvitation] = useState<Partial<Invitation> | null>(null);
@@ -74,28 +77,66 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const toggleFavorite = (venueId: string) => {
     setFavorites((prev) => prev.includes(venueId) ? prev.filter((id) => id !== venueId) : [...prev, venueId]);
   };
+  const updateName = (name: string) => {
+    setUser((currentUser) => currentUser ? { ...currentUser, name } : currentUser);
+  };
   const isFavorite = (venueId: string) => favorites.includes(venueId);
 
   useEffect(() => {
-    // IMPORTANT: set up listener BEFORE getSession (avoids race conditions)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session?.user) {
-        // Defer Supabase calls to avoid deadlock inside the callback
-        setTimeout(() => {
-          hydrateUser(session.user).then(setUser);
-        }, 0);
-      } else {
+    let mounted = true;
+    let authChangeVersion = 0;
+
+    const applySession = (session: any) => {
+      const version = ++authChangeVersion;
+      if (!session?.user) {
         setUser(null);
+        setAuthReady(true);
+        return;
       }
+
+      // Defer Supabase calls to avoid deadlock inside the auth callback.
+      setTimeout(async () => {
+        try {
+          const hydratedUser = await hydrateUser(session.user);
+          if (mounted && version === authChangeVersion) setUser(hydratedUser);
+        } catch (error) {
+          console.error('[auth] could not restore user profile', error);
+          if (mounted && version === authChangeVersion) {
+            setUser({
+              id: session.user.id,
+              email: session.user.email || '',
+              name: session.user.user_metadata?.name || 'Usuario',
+              isAuthenticated: true,
+              role: session.user.user_metadata?.role === 'provider' ? 'provider' : 'user',
+            });
+          }
+        } finally {
+          if (mounted && version === authChangeVersion) setAuthReady(true);
+        }
+      }, 0);
+    };
+
+    // Subscribe before reading the session so sign-in/sign-out events can't be missed.
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      applySession(session);
     });
 
+    const versionBeforeGetSession = authChangeVersion;
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        hydrateUser(session.user).then(setUser);
-      }
+      if (!mounted || authChangeVersion !== versionBeforeGetSession) return;
+      applySession(session);
+    }).catch((error) => {
+      if (!mounted || authChangeVersion !== versionBeforeGetSession) return;
+      console.error('[auth] could not restore session', error);
+      setUser(null);
+      setAuthReady(true);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      authChangeVersion++;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signIn = async (email: string, password: string) => {
@@ -143,7 +184,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <UserContext.Provider value={{ user, signIn, signUp, logout, bookings, addBooking, invitations, addInvitation, draftInvitation, updateDraftInvitation, favorites, toggleFavorite, isFavorite }}>
+    <UserContext.Provider value={{ user, authReady, updateName, signIn, signUp, logout, bookings, addBooking, invitations, addInvitation, draftInvitation, updateDraftInvitation, favorites, toggleFavorite, isFavorite }}>
       {children}
     </UserContext.Provider>
   );

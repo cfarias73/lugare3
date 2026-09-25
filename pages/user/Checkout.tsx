@@ -165,8 +165,13 @@ const Checkout: React.FC = () => {
     <div className="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen max-w-md mx-auto flex flex-col">
       <header className="sticky top-0 z-50 bg-white dark:bg-background-dark border-b border-gray-100 dark:border-gray-800 px-4 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <button onClick={() => navigate(-1)} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full">
-            <span className="material-icons-outlined">arrow_back</span>
+          <button
+            type="button"
+            onClick={() => { if (window.history.length > 1) navigate(-1); else navigate(`/user/venue/${id}`); }}
+            className="p-2 -ml-2 min-h-[44px] min-w-[44px] flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full active:scale-95 transition-transform"
+            aria-label="Volver"
+          >
+            <span className="material-icons-outlined text-xl">arrow_back</span>
           </button>
           <h1 className="text-lg font-bold font-display">Confirmar y Pagar</h1>
         </div>

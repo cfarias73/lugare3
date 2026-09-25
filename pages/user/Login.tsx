@@ -1,13 +1,14 @@
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../../context/UserContext';
 import { ErrorMessage } from '../../components/ui/ErrorMessage';
 import Logo from '../../components/Logo';
+import { getRoleHomePath } from '../../src/utils/authRoutes';
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
-  const { signIn, signUp } = useUser();
+  const { signIn, signUp, user, authReady } = useUser();
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -16,6 +17,20 @@ const Login: React.FC = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [name, setName] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    if (authReady && user) {
+      navigate(getRoleHomePath(user.role), { replace: true });
+    }
+  }, [authReady, user, navigate]);
+
+  if (!authReady || user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-background-dark text-sm font-medium text-slate-500">
+        Restaurando tu sesión…
+      </div>
+    );
+  }
 
   const validate = () => {
     const newErrors: Record<string, string> = {};
@@ -51,12 +66,13 @@ const Login: React.FC = () => {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-white dark:bg-background-dark transition-colors duration-200">
       <button
+        type="button"
         onClick={() => navigate('/')}
-        className="fixed top-4 left-4 z-50 flex items-center gap-1 px-4 py-2 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-sm font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors shadow-sm"
+        className="fixed top-[calc(env(safe-area-inset-top,0px)+0.75rem)] left-4 z-50 flex items-center gap-1.5 px-4 py-2 rounded-full bg-slate-100/90 dark:bg-slate-800/90 backdrop-blur-md text-slate-700 dark:text-slate-200 text-sm font-semibold hover:bg-slate-200 dark:hover:bg-slate-700 active:scale-95 transition-all shadow-sm"
         aria-label="Volver al inicio"
       >
         <span className="material-icons-round text-lg">arrow_back</span>
-        Inicio
+        <span>Inicio</span>
       </button>
       <div className="w-full max-w-[400px] flex flex-col items-center space-y-8">
         <div className="flex flex-col items-center space-y-4">
@@ -175,6 +191,21 @@ const Login: React.FC = () => {
             {isLogin ? 'Iniciar Sesión' : 'Registrarse'}
           </button>
         </form>
+
+        <div className="w-full flex items-center gap-3">
+          <div className="flex-1 border-t border-slate-200 dark:border-slate-800"></div>
+          <span className="text-xs font-semibold text-slate-400 uppercase">o</span>
+          <div className="flex-1 border-t border-slate-200 dark:border-slate-800"></div>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => navigate('/user/home')}
+          className="w-full flex items-center justify-center gap-2 py-4 px-6 rounded-full border-2 border-slate-200 dark:border-slate-700 hover:border-primary text-slate-700 dark:text-slate-200 font-bold text-sm active:scale-[0.98] transition-all bg-white dark:bg-surface-dark shadow-sm"
+        >
+          <span className="material-icons-round text-primary text-lg">explore</span>
+          <span>Continuar como invitado</span>
+        </button>
 
         <footer className="pt-8 text-center">
           <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">

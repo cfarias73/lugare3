@@ -75,7 +75,7 @@ const Dashboard: React.FC = () => {
 
   return (
     <ProviderLayout>
-      <header className="px-6 pt-10 pb-6 flex items-center justify-between">
+      <header className="px-6 pt-[calc(env(safe-area-inset-top,0px)+1rem)] pb-6 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-14 h-14 bg-primary rounded-[20px] flex items-center justify-center text-white shadow-lg shadow-primary/20 overflow-hidden">
             {hostAvatar ? (

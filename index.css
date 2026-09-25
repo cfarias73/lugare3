@@ -1,1 +1,27 @@
 /* Estilos globales — Tailwind se carga vía CDN en index.html */
+
+/* Safe area insets support for iOS notch, Dynamic Island, and home indicators */
+:root {
+  --sat: env(safe-area-inset-top, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  --sal: env(safe-area-inset-left, 0px);
+  --sar: env(safe-area-inset-right, 0px);
+}
+
+/* Ensure sticky and fixed top headers automatically respect the iOS status bar */
+header.sticky.top-0,
+header.fixed.top-0 {
+  padding-top: max(1rem, calc(env(safe-area-inset-top, 0px) + 0.75rem)) !important;
+  z-index: 50 !important;
+}
+
+/* Ensure buttons in headers and top action areas are reliably touchable */
+header button,
+header a,
+.safe-top-btn {
+  touch-action: manipulation;
+  pointer-events: auto !important;
+  -webkit-tap-highlight-color: transparent;
+  min-height: 40px;
+  min-width: 40px;
+}

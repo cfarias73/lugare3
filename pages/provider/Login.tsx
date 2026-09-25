@@ -1,13 +1,14 @@
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../../context/UserContext';
 import { ErrorMessage } from '../../components/ui/ErrorMessage';
 import Logo from '../../components/Logo';
+import { getRoleHomePath } from '../../src/utils/authRoutes';
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
-  const { signIn, signUp } = useUser();
+  const { signIn, signUp, user, authReady } = useUser();
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -16,6 +17,20 @@ const Login: React.FC = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [name, setName] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    if (authReady && user) {
+      navigate(getRoleHomePath(user.role), { replace: true });
+    }
+  }, [authReady, user, navigate]);
+
+  if (!authReady || user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background-light dark:bg-background-dark text-sm font-medium text-slate-500">
+        Restaurando tu sesión…
+      </div>
+    );
+  }
 
   const validate = () => {
     const newErrors: Record<string, string> = {};
@@ -51,12 +66,13 @@ const Login: React.FC = () => {
   return (
     <div className="bg-background-light dark:bg-background-dark min-h-screen flex flex-col items-center justify-center p-4 max-w-md mx-auto">
       <button
+        type="button"
         onClick={() => navigate('/')}
-        className="fixed top-4 left-4 z-50 flex items-center gap-1 px-4 py-2 rounded-full bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-sm font-bold hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors shadow-md"
+        className="fixed top-[calc(env(safe-area-inset-top,0px)+0.75rem)] left-4 z-50 flex items-center gap-1.5 px-4 py-2 rounded-full bg-white/90 dark:bg-slate-800/90 backdrop-blur-md text-slate-700 dark:text-slate-200 text-sm font-semibold hover:bg-slate-100 dark:hover:bg-slate-700 active:scale-95 transition-all shadow-md"
         aria-label="Volver al inicio"
       >
         <span className="material-icons-round text-lg">arrow_back</span>
-        Inicio
+        <span>Inicio</span>
       </button>
       <div className="w-full bg-white dark:bg-surface-dark rounded-[40px] shadow-2xl overflow-hidden px-8 py-10 flex flex-col relative transition-all duration-300">
         <div className="flex flex-col items-center mb-8">

@@ -1,20 +1,29 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { sendPasswordRecoveryEmail } from '../../src/services/authService';
 
 const ForgotPassword: React.FC = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [emailSent, setEmailSent] = useState(false);
   const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.includes('@')) {
       setError('Por favor, ingresa un correo válido.');
       return;
     }
     setError('');
+    setIsSubmitting(true);
+    const { error: requestError } = await sendPasswordRecoveryEmail(email.trim());
+    setIsSubmitting(false);
+    if (requestError) {
+      setError('No pudimos enviar el enlace. Inténtalo de nuevo en unos minutos.');
+      return;
+    }
     setEmailSent(true);
   };
 
@@ -62,8 +71,8 @@ const ForgotPassword: React.FC = () => {
               {error && <p className="text-red-500 text-xs mt-1 ml-4">{error}</p>}
             </div>
 
-            <button className="w-full bg-primary hover:bg-orange-600 text-white font-bold py-5 rounded-full shadow-lg shadow-primary/20 transition-all active:scale-[0.98] text-sm uppercase tracking-widest" type="submit">
-              Enviar Instrucciones
+            <button disabled={isSubmitting} className="w-full bg-primary hover:bg-orange-600 text-white font-bold py-5 rounded-full shadow-lg shadow-primary/20 transition-all active:scale-[0.98] text-sm uppercase tracking-widest disabled:opacity-60" type="submit">
+              {isSubmitting ? 'Enviando…' : 'Enviar Instrucciones'}
             </button>
           </form>
         ) : (

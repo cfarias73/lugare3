@@ -22,16 +22,11 @@ const ProviderLayout: React.FC<ProviderLayoutProps> = ({ children, hideLogout })
 
   return (
     <div className="flex flex-col min-h-screen bg-background-light dark:bg-background-dark max-w-md mx-auto shadow-2xl relative transition-colors overflow-hidden border-x border-slate-100 dark:border-slate-800">
-      {!hideLogout && (
-        <header className="absolute top-4 right-4 z-50">
-          <button onClick={handleLogout} className="bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">Salir</button>
-        </header>
-      )}
       <main className="flex-1 pb-24 overflow-y-auto no-scrollbar">
         {children}
       </main>
 
-      <nav className="fixed bottom-0 inset-x-0 max-w-md mx-auto bg-white/95 dark:bg-surface-dark/95 backdrop-blur-xl border-t border-slate-100 dark:border-slate-800 px-6 py-4 pb-8 flex justify-between items-center z-50">
+      <nav className="fixed bottom-0 inset-x-0 max-w-md mx-auto bg-white/95 dark:bg-surface-dark/95 backdrop-blur-xl border-t border-slate-100 dark:border-slate-800 px-6 pt-3 pb-[calc(env(safe-area-inset-bottom,0px)+0.75rem)] flex justify-between items-center z-50">
         <button 
           onClick={() => navigate('/provider/dashboard')}
           className={`flex flex-col items-center gap-1 transition-colors ${isActive('/provider/dashboard') ? 'text-primary' : 'text-slate-400'}`}

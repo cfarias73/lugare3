@@ -63,27 +63,58 @@ import AdminCategories from './pages/admin/Categories';
 import AdminFinance from './pages/admin/Finance';
 import AdminReviews from './pages/admin/Reviews';
 import AdminPayouts from './pages/admin/Payouts';
+import SplashScreen from './components/SplashScreen';
+import { Capacitor } from '@capacitor/core';
+import AuthRecoveryHandler from './components/AuthRecoveryHandler';
+import ResetPassword from './pages/ResetPassword';
+import { useUser } from './context/UserContext';
+import { getRoleHomePath } from './src/utils/authRoutes';
+
+const EntryPoint: React.FC = () => {
+  const { user, authReady } = useUser();
+
+  if (!authReady) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-background-dark text-sm font-medium text-slate-500">
+        Restaurando tu sesión…
+      </div>
+    );
+  }
+
+  if (user) {
+    return <Navigate to={getRoleHomePath(user.role)} replace />;
+  }
+
+  return <RouteWrapper><Welcome /></RouteWrapper>;
+};
 
 const App: React.FC = () => {
+  const [showSplash, setShowSplash] = React.useState(() => Capacitor.isNativePlatform());
+
   return (
     <UserProvider>
+      {showSplash && <SplashScreen durationMs={3000} onFinish={() => setShowSplash(false)} />}
       <NotificationHandler />
       <Toaster position="top-center" richColors />
       <ErrorBoundary>
         <Router>
+          <AuthRecoveryHandler />
           <AnalyticsTracker />
           <Routes>
           {/* Entry Point */}
-          <Route path="/" element={<RouteWrapper><Welcome /></RouteWrapper>} />
+          <Route path="/" element={<EntryPoint />} />
           <Route path="/invite/:id" element={<RouteWrapper><PublicInvitation /></RouteWrapper>} />
           <Route path="/aviso-de-privacidad" element={<RouteWrapper><Privacy /></RouteWrapper>} />
 
         {/* User Application Routes */}
         <Route path="/user/login" element={<RouteWrapper><UserLogin /></RouteWrapper>} />
-        <Route path="/user/forgot-password" element={<RouteWrapper><UserForgotPassword /></RouteWrapper>} />
-        <Route path="/user/home" element={<ProtectedRoute allowedRole="user"><RouteWrapper><UserHome /></RouteWrapper></ProtectedRoute>} />
-        <Route path="/user/explore" element={<ProtectedRoute allowedRole="user"><RouteWrapper><ExploreMap /></RouteWrapper></ProtectedRoute>} />
-        <Route path="/user/venue/:id" element={<ProtectedRoute allowedRole="user"><RouteWrapper><VenueDetail /></RouteWrapper></ProtectedRoute>} />
+          <Route path="/user/forgot-password" element={<RouteWrapper><UserForgotPassword /></RouteWrapper>} />
+          <Route path="/reset-password" element={<RouteWrapper><ResetPassword /></RouteWrapper>} />
+        {/* Public Browsing Routes (Guest Mode) */}
+        <Route path="/user/home" element={<RouteWrapper><UserHome /></RouteWrapper>} />
+        <Route path="/user/explore" element={<RouteWrapper><ExploreMap /></RouteWrapper>} />
+        <Route path="/user/venue/:id" element={<RouteWrapper><VenueDetail /></RouteWrapper>} />
+        {/* Account-based Protected Routes */}
         <Route path="/user/booking/:id" element={<ProtectedRoute allowedRole="user"><RouteWrapper><BookingCalendar /></RouteWrapper></ProtectedRoute>} />
         <Route path="/user/favorites" element={<ProtectedRoute allowedRole="user"><RouteWrapper><Favorites /></RouteWrapper></ProtectedRoute>} />
         <Route path="/user/checkout/:id" element={<ProtectedRoute allowedRole="user"><RouteWrapper><Checkout /></RouteWrapper></ProtectedRoute>} />

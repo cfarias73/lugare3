@@ -199,13 +199,18 @@ const BookingCalendar: React.FC = () => {
   return (
     <div className="bg-background-light dark:bg-background-dark text-slate-800 dark:text-slate-100 min-h-screen max-w-md mx-auto flex flex-col transition-colors">
       <header className="sticky top-0 z-50 bg-white dark:bg-background-dark border-b border-gray-100 dark:border-gray-800 px-4 py-4 flex items-center">
-        <button onClick={() => navigate(-1)} className="p-2 -ml-2">
-          <span className="material-icons-round align-middle">arrow_back_ios_new</span>
+        <button
+          type="button"
+          onClick={() => { if (window.history.length > 1) navigate(-1); else navigate(`/user/venue/${id}`); }}
+          className="p-2 -ml-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-95 transition-transform"
+          aria-label="Volver"
+        >
+          <span className="material-icons-round text-xl">arrow_back_ios_new</span>
         </button>
         <h1 className="text-lg font-semibold ml-2 font-display">Calendario de Disponibilidad</h1>
       </header>
 
-      <main className="pb-56 flex-1 overflow-y-auto">
+      <main className="pb-28 flex-1 overflow-y-auto">
         <section className="p-4 flex items-center space-x-4 border-b border-gray-100 dark:border-gray-800">
           <img alt="Venue" className="w-16 h-16 rounded-lg object-cover" src={venue.image} />
           <div className="flex-1">
@@ -459,15 +464,15 @@ const BookingCalendar: React.FC = () => {
             )}
           </div>
         </section>
-        <div className="h-32" />
       </main>
 
-      <footer className="mt-auto bg-white dark:bg-surface-dark border-t border-slate-100 dark:border-slate-800 p-4 pb-8 flex items-center justify-between z-50">
+      <footer className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/95 dark:bg-surface-dark/95 backdrop-blur-md border-t border-slate-100 dark:border-slate-800 px-4 pt-3 pb-[calc(env(safe-area-inset-bottom,0px)+0.75rem)] flex items-center justify-between z-50">
         <div>
-          <div className="text-[10px] text-gray-400">Precio estimado</div>
+          <div className="text-[10px] text-gray-400 font-medium">Precio estimado</div>
           <div className="text-lg font-bold text-slate-900 dark:text-white">${estimatedTotal.toLocaleString()} MXN</div>
         </div>
         <button
+          type="button"
           onClick={handleContinue}
           disabled={!selectedDay || !selectedSlot}
           className={`font-semibold px-8 py-3.5 rounded-2xl shadow-lg transition-transform ${

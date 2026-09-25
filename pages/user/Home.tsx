@@ -6,6 +6,8 @@ import { useUser } from '../../context/UserContext';
 import { getVenues } from '../../src/services/venueService';
 import { getProfile } from '../../src/services/profileService';
 import { getCategories, Category } from '../../src/services/categoryService';
+import { shareVenue } from '../../src/utils/shareVenue';
+import { toast } from 'sonner';
 import { Venue } from '../../types';
 
 const Home: React.FC = () => {
@@ -64,22 +66,20 @@ const Home: React.FC = () => {
 
   const nextBooking = bookings.length > 0 ? bookings[0] : null;
 
-  const handleShare = (e: React.MouseEvent, name: string) => {
+  const handleShare = async (e: React.MouseEvent, venue: Venue) => {
     e.stopPropagation();
-    if (navigator.share) {
-      navigator.share({
-        title: name,
-        text: `Mira este lugar para eventos: ${name}`,
-        url: window.location.href,
-      }).catch(console.error);
-    } else {
-      alert(`Enlace de ${name} copiado`);
+    try {
+      const result = await shareVenue(venue.id, venue.name);
+      if (result === 'copied') toast.success('Enlace del espacio copiado');
+    } catch (error) {
+      console.error('Error al compartir espacio:', error);
+      toast.error('No se pudo compartir el espacio. Inténtalo de nuevo.');
     }
   };
 
   return (
     <Layout>
-      <header className="px-6 pt-12 pb-4 flex justify-between items-center bg-white dark:bg-surface-dark sticky top-0 z-40 shadow-sm transition-colors">
+      <header className="px-6 pt-[calc(env(safe-area-inset-top,0px)+1rem)] pb-4 flex justify-between items-center bg-white dark:bg-surface-dark sticky top-0 z-40 shadow-sm transition-colors">
         <div>
           <h1 className="text-xl font-bold text-slate-800 dark:text-white font-display">Hola, {user?.name || 'Bienvenido'}</h1>
         </div>
@@ -256,8 +256,14 @@ const Home: React.FC = () => {
             )}
           </div>
           <button
-            onClick={() => navigate('/user/explore')}
+            onClick={() => {
+              const params = new URLSearchParams();
+              if (selectedCity !== 'all') params.set('city', selectedCity);
+              const query = params.toString();
+              navigate(`/user/explore${query ? `?${query}` : ''}`);
+            }}
             className="bg-slate-100 dark:bg-slate-800 p-3.5 rounded-2xl flex items-center justify-center hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+            aria-label="Ver espacios en el mapa"
           >
             <span className="material-icons-outlined text-primary">map</span>
           </button>
@@ -293,11 +299,10 @@ const Home: React.FC = () => {
           })}
         </div>
 
-        {/* Featured Section */}
+        {/* Approved spaces available for browsing */}
         <section>
           <div className="flex justify-between items-end mb-4">
-            <h2 className="text-lg font-bold font-display">Espacios destacados</h2>
-            <button className="text-secondary font-semibold text-sm">Ver todos</button>
+            <h2 className="text-lg font-bold font-display">Espacios disponibles</h2>
           </div>
           <div className="flex overflow-x-auto no-scrollbar gap-5 -mx-5 px-5 pb-4 snap-x snap-mandatory">
             {isLoading ? (
@@ -320,16 +325,10 @@ const Home: React.FC = () => {
               >
                 <div className="relative h-48">
                   <img alt={venue.name} className="w-full h-full object-cover" src={venue.image} loading="lazy" />
-                  {venue.isFeatured && (
-                    <div className="absolute top-4 left-4 bg-[#FFB347] text-white text-[10px] font-bold px-3 py-1 rounded-lg uppercase tracking-wider">Destacado</div>
-                  )}
-                  {venue.discount && (
-                    <div className="absolute top-4 left-4 bg-primary text-white text-[10px] font-bold px-3 py-1 rounded-lg uppercase tracking-wider">{venue.discount}</div>
-                  )}
                   <div className="absolute top-4 right-4 flex gap-2 z-10">
                     <button 
                       className="bg-white/90 p-2 rounded-full shadow-md hover:text-primary transition-colors" 
-                      onClick={(e) => handleShare(e, venue.name)}
+                      onClick={(e) => void handleShare(e, venue)}
                     >
                       <span className="material-icons-outlined text-slate-700 text-xl">share</span>
                     </button>
@@ -346,7 +345,7 @@ const Home: React.FC = () => {
                   <div className="flex justify-between items-start mb-1">
                     <h3 className="font-bold text-slate-800 dark:text-white truncate flex-1 mr-2">{venue.name}</h3>
                     <div className="flex items-center gap-1 shrink-0">
-                      <span className="material-icons text-yellow-400 text-sm">star</span>
+                      <span className="material-icons-round text-yellow-400 text-sm">star</span>
                       <span className="text-xs font-bold dark:text-white">{venue.rating}</span>
                     </div>
                   </div>
@@ -363,65 +362,6 @@ const Home: React.FC = () => {
           </div>
         </section>
 
-        {/* Special Offer Banner */}
-        <section>
-          <div className="relative rounded-3xl overflow-hidden h-48 mb-6 group cursor-pointer active:scale-95 transition-transform">
-            <img alt="Oferta Especial" className="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBJCcVSxHXMqWL1D4Ap0yOFvrwRYhqXowDMsbrTsgHOtCkR_vzmhL0MO_1853LQo0OgIRqUpRAeX5rdG8k86F_5Oa_I_qv5jqeemhAKIeR8IFUZn0K2LDcyt25oPvlkrEykml9JS7WUgzz2kIrCqXwRsMAqM7uLZnX2ctNyXwDnlBlNe2zIzL1f8c1qeJ36DeHGd9_J3zVsrxJoEGZuJ0DV5KaRkpBsOPvPpVwsOOCKFXXHkQL2jSUJW96Xmrt8qOEwixUqi9ahkIqq" loading="lazy" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
-            <div className="absolute bottom-5 left-5 text-white">
-              <div className="bg-primary text-[10px] font-bold px-3 py-1 rounded-lg uppercase inline-block mb-2">Exclusivo</div>
-              <h3 className="text-xl font-bold font-display">20% en Jardín Botánico</h3>
-              <p className="text-white/80 text-xs">Para eventos de fin de semana</p>
-            </div>
-          </div>
-        </section>
-
-        {/* Recommended List */}
-        <section className="pb-8">
-          <div className="flex justify-between items-end mb-4">
-            <h2 className="text-lg font-bold font-display">Recomendados para ti</h2>
-            <button className="text-secondary font-semibold text-sm">Ver todos</button>
-          </div>
-          <div className="flex overflow-x-auto no-scrollbar gap-5 -mx-5 px-5 pb-4 snap-x snap-mandatory">
-            {filteredVenues.slice().reverse().map((venue) => (
-              <div 
-                key={`rec-${venue.id}`} 
-                onClick={() => navigate(`/user/venue/${venue.id}`)}
-                className="snap-center shrink-0 w-[calc(100vw-2.5rem)] max-w-[320px] bg-white dark:bg-surface-dark rounded-3xl overflow-hidden shadow-sm border border-slate-100 dark:border-slate-800 cursor-pointer"
-              >
-                <div className="relative h-48">
-                  <img alt={venue.name} className="w-full h-full object-cover" src={venue.image} loading="lazy" />
-                  <div className="absolute bottom-4 left-4 bg-secondary text-white text-[10px] font-bold px-3 py-1 rounded-lg uppercase tracking-wider">Popular</div>
-                  <div className="absolute top-4 right-4 flex gap-2 z-10">
-                    <button 
-                      className="bg-white/90 p-2 rounded-full shadow-md hover:text-primary transition-colors"
-                      onClick={(e) => handleShare(e, venue.name)}
-                    >
-                      <span className="material-icons-outlined text-slate-700 text-xl">share</span>
-                    </button>
-                    <button className="bg-white/90 p-2 rounded-full shadow-md" onClick={(e) => { e.stopPropagation(); toggleFavorite(venue.id); }} aria-label={isFavorite(venue.id) ? 'Quitar de favoritos' : 'Añadir a favoritos'}>
-                      <span className="material-icons-outlined text-primary text-xl">{isFavorite(venue.id) ? 'favorite' : 'favorite_border'}</span>
-                    </button>
-                  </div>
-                </div>
-                <div className="p-4">
-                  <div className="flex justify-between items-start mb-1">
-                    <h3 className="font-bold text-slate-800 dark:text-white truncate flex-1 mr-2">{venue.name}</h3>
-                    <div className="flex items-center gap-1 shrink-0">
-                      <span className="material-icons text-yellow-400 text-sm">star</span>
-                      <span className="text-xs font-bold dark:text-white">{venue.rating}</span>
-                    </div>
-                  </div>
-                  <p className="text-slate-400 text-xs mb-4">{venue.city}</p>
-                  <div className="flex justify-between items-center">
-                    <p className="font-bold text-primary font-display">${venue.price.toLocaleString()}<span className="text-[10px] text-slate-400 font-normal">/hora</span></p>
-                    <button onClick={(e) => { e.stopPropagation(); navigate(`/user/venue/${venue.id}`); }} className="bg-secondary text-white px-5 py-2 rounded-xl text-xs font-bold">Reservar</button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
       </div>
     </Layout>
   );

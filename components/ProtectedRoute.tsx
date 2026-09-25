@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
+import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useUser } from '../context/UserContext';
 import { supabase } from '../lib/supabaseClient';
+import { getRoleHomePath, getRoleLoginPath } from '../src/utils/authRoutes';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -9,8 +10,9 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRole }) => {
-  const { user } = useUser();
+  const { user, logout } = useUser();
   const location = useLocation();
+  const navigate = useNavigate();
   const [sessionChecked, setSessionChecked] = useState(false);
   const [hasSession, setHasSession] = useState(false);
 
@@ -57,12 +59,46 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRole }
     return null;
   }
 
-  // Role mismatch → send to their own home
+  // A session for another role must not continue into this protected flow.
   if (allowedRole && user.role !== allowedRole) {
-    let homePath = '/user/home';
-    if (user.role === 'provider') homePath = '/provider/dashboard';
-    if (user.role === 'admin') homePath = '/admin/dashboard';
-    return <Navigate to={homePath} replace />;
+    const roleLabels = {
+      user: 'cliente',
+      provider: 'anfitrión',
+      admin: 'administrador',
+    };
+
+    const switchAccount = async () => {
+      await logout();
+      navigate(getRoleLoginPath(allowedRole), { replace: true });
+    };
+
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-background-dark p-6">
+        <div className="w-full max-w-sm space-y-5 rounded-3xl bg-white dark:bg-surface-dark p-7 text-center shadow-xl">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+            <span className="material-icons-round text-3xl">switch_account</span>
+          </div>
+          <h1 className="text-xl font-bold text-slate-800 dark:text-white">Cambia de tipo de cuenta</h1>
+          <p className="text-sm leading-relaxed text-slate-500 dark:text-slate-400">
+            Tienes abierta una cuenta de {roleLabels[user.role]}. Para continuar aquí necesitas una cuenta de {roleLabels[allowedRole]}.
+          </p>
+          <button
+            type="button"
+            onClick={() => void switchAccount()}
+            className="w-full rounded-full bg-primary py-4 text-sm font-bold uppercase tracking-widest text-white"
+          >
+            Cambiar de cuenta
+          </button>
+          <button
+            type="button"
+            onClick={() => navigate(getRoleHomePath(user.role), { replace: true })}
+            className="w-full rounded-full border border-slate-200 py-4 text-sm font-bold text-slate-700 dark:border-slate-700 dark:text-slate-200"
+          >
+            Volver a mi cuenta de {roleLabels[user.role]}
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return <>{children}</>;

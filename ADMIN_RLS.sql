@@ -56,3 +56,8 @@ CREATE POLICY "Admins can update any review" ON public.reviews
 DROP POLICY IF EXISTS "Admins can delete any review" ON public.reviews;
 CREATE POLICY "Admins can delete any review" ON public.reviews
   FOR DELETE TO authenticated USING (public.has_role(auth.uid(), 'admin'));
+
+-- USER ROLES (needed to classify user/admin accounts in the admin panel)
+DROP POLICY IF EXISTS "Admins can view all user roles" ON public.user_roles;
+CREATE POLICY "Admins can view all user roles" ON public.user_roles
+  FOR SELECT TO authenticated USING (public.has_role(auth.uid(), 'admin'));

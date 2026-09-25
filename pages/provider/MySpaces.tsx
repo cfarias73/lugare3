@@ -58,7 +58,7 @@ const MySpaces: React.FC = () => {
       })
       .catch((e) => {
         console.error(e);
-        toast.error('Error al cargar espacios');
+        toast.error(e?.message || 'Error al cargar espacios');
       })
       .finally(() => setLoading(false));
   };

@@ -6,6 +6,8 @@ import { useUser } from '../../context/UserContext';
 import { Venue } from '../../types';
 import { getAmenity } from '../../src/constants/amenities';
 import { parsePolicy, describePolicy, shortPolicyLabel } from '../../src/utils/cancellation';
+import { shareVenue } from '../../src/utils/shareVenue';
+import { toast } from 'sonner';
 
 const VenueDetail: React.FC = () => {
   const navigate = useNavigate();
@@ -49,18 +51,12 @@ const VenueDetail: React.FC = () => {
 
   const handleShare = async () => {
     if (!venue) return;
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: venue.name,
-          text: `¡Mira este increíble lugar para eventos en LUGARE: ${venue.name}!`,
-          url: window.location.href,
-        });
-      } catch (err) {
-        console.log('Error al compartir:', err);
-      }
-    } else {
-      alert('Enlace copiado al portapapeles');
+    try {
+      const result = await shareVenue(venue.id, venue.name);
+      if (result === 'copied') toast.success('Enlace del espacio copiado');
+    } catch (error) {
+      console.error('Error al compartir espacio:', error);
+      toast.error('No se pudo compartir el espacio. Inténtalo de nuevo.');
     }
   };
 
@@ -86,20 +82,32 @@ const VenueDetail: React.FC = () => {
   const address = venue.location;
   const embedUrl = `https://maps.google.com/maps?q=${encodeURIComponent(address)}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
   const directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}`;
+  const handleBack = () => {
+    if (window.history.length > 1) {
+      navigate(-1);
+    } else {
+      navigate('/user/home');
+    }
+  };
   const fav = isFavorite(venue.id);
 
   return (
     <div className="bg-white dark:bg-background-dark text-slate-800 dark:text-slate-100 antialiased max-w-md mx-auto min-h-screen">
-      <div className="fixed top-0 left-0 right-0 z-50 flex justify-between items-center p-4 max-w-md mx-auto">
+      <div className="fixed top-0 left-0 right-0 z-50 flex justify-between items-center px-4 pt-[calc(env(safe-area-inset-top,0px)+0.75rem)] pb-2 max-w-md mx-auto pointer-events-none">
         <button
-          onClick={() => navigate(-1)}
-          className="w-10 h-10 flex items-center justify-center bg-white/90 dark:bg-slate-800/90 rounded-full shadow-lg backdrop-blur-sm active:scale-90 transition-transform"
+          type="button"
+          onClick={handleBack}
+          aria-label="Volver"
+          className="w-11 h-11 flex items-center justify-center bg-white/95 dark:bg-slate-800/95 text-slate-800 dark:text-white rounded-full shadow-lg backdrop-blur-md active:scale-90 transition-transform pointer-events-auto"
         >
-          <span className="material-icons-outlined text-slate-800 dark:text-white">chevron_left</span>
+          <span className="material-icons-round text-2xl">chevron_left</span>
         </button>
-        <div className="flex gap-2">
+        <div className="flex gap-2 pointer-events-auto">
           <button
+            type="button"
             onClick={handleShare}
+            aria-label="Compartir espacio"
+            title="Compartir espacio"
             className="w-10 h-10 flex items-center justify-center bg-white/90 dark:bg-slate-800/90 rounded-full shadow-lg backdrop-blur-sm hover:text-primary active:scale-90 transition-all"
           >
             <span className="material-icons-outlined text-[20px]">share</span>
@@ -114,7 +122,7 @@ const VenueDetail: React.FC = () => {
         </div>
       </div>
 
-      <main className="pb-32">
+      <main className="pb-36">
         <div className="relative w-full h-[320px] bg-slate-200 overflow-hidden">
           <img alt={venue.name} className="w-full h-full object-cover" src={venue.image} loading="lazy"/>
         </div>
@@ -302,7 +310,7 @@ const VenueDetail: React.FC = () => {
         </div>
       </main>
 
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-t border-slate-100 dark:border-slate-800 z-50 max-w-md mx-auto">
+      <div className="fixed bottom-0 left-0 right-0 px-4 pt-3 pb-[calc(env(safe-area-inset-bottom,0px)+0.75rem)] bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-t border-slate-100 dark:border-slate-800 z-50 max-w-md mx-auto">
         <div className="flex justify-between items-center gap-3">
           <div className="min-w-0">
             <span className="text-xs text-slate-400 uppercase font-bold tracking-wider">Precio base</span>

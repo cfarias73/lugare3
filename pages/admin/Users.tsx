@@ -99,6 +99,7 @@ const Users: React.FC = () => {
             <tr>
               <th className="p-4">Nombre</th>
               <th className="p-4">Email</th>
+              <th className="p-4">Tipo de cuenta</th>
               <th className="p-4">Fecha de registro</th>
               <th className="p-4 text-right">Acciones</th>
             </tr>
@@ -110,13 +111,14 @@ const Users: React.FC = () => {
                   <td className="p-4"><Skeleton className="h-4 w-32" /></td>
                   <td className="p-4"><Skeleton className="h-4 w-48" /></td>
                   <td className="p-4"><Skeleton className="h-4 w-24" /></td>
+                  <td className="p-4"><Skeleton className="h-4 w-24" /></td>
                   <td className="p-4"><Skeleton className="h-4 w-20" /></td>
                 </tr>
               ))
             ) : filtered.length === 0 ? (
               <tr>
-                <td colSpan={4} className="p-8">
-                  <EmptyState title="No hay usuarios" description="No se encontraron usuarios con los filtros aplicados." icon="people" />
+                <td colSpan={5} className="p-8">
+                  <EmptyState title="No hay cuentas" description="No se encontraron usuarios ni administradores con los filtros aplicados." icon="people" />
                 </td>
               </tr>
             ) : (
@@ -124,6 +126,11 @@ const Users: React.FC = () => {
                 <tr key={user.id} className="text-sm dark:text-slate-300">
                   <td className="p-4 font-medium">{user.name || '—'}</td>
                   <td className="p-4">{user.email}</td>
+                  <td className="p-4">
+                    <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${user.accountRole === 'Administrador' ? 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'}`}>
+                      {user.accountRole}
+                    </span>
+                  </td>
                   <td className="p-4 text-slate-500">{user.created_at ? new Date(user.created_at).toLocaleDateString() : '—'}</td>
                   <td className="p-4 text-right">
                     <div className="flex justify-end gap-2">
@@ -134,13 +141,15 @@ const Users: React.FC = () => {
                       >
                         <span className="material-icons-round text-base">edit</span>
                       </button>
-                      <button
-                        onClick={() => setToDelete(user)}
-                        className="p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-red-500"
-                        title="Eliminar"
-                      >
-                        <span className="material-icons-round text-base">delete</span>
-                      </button>
+                      {user.accountRole !== 'Administrador' && (
+                        <button
+                          onClick={() => setToDelete(user)}
+                          className="p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-red-500"
+                          title="Eliminar"
+                        >
+                          <span className="material-icons-round text-base">delete</span>
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>

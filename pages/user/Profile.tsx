@@ -149,11 +149,13 @@ const Profile: React.FC = () => {
       localStorage.removeItem('user_avatar');
       localStorage.removeItem('user_notifications');
       localStorage.removeItem('user_language');
+      localStorage.removeItem('user_favorites');
       toast.success('Cuenta eliminada');
       setShowDeleteConfirm(false);
       navigate('/user/login');
     } catch (err: any) {
-      toast.error(err?.message || 'No se pudo eliminar la cuenta');
+      console.error('Account deletion failed:', err);
+      toast.error('No se pudo eliminar tu cuenta. Inténtalo de nuevo; si continúa, contacta a soporte.');
     } finally {
       setIsDeleting(false);
     }

@@ -37,7 +37,7 @@ const AdminDashboard: React.FC = () => {
   ];
 
   const quickActions = [
-    { label: 'Revisar espacios pendientes', path: '/admin/spaces', icon: 'pending_actions' },
+    { label: 'Aprobar espacios pendientes', path: '/admin/spaces', icon: 'pending_actions' },
     { label: 'Gestionar categorías', path: '/admin/categories', icon: 'category' },
     { label: 'Ver todas las reservas', path: '/admin/bookings', icon: 'event_note' },
     { label: 'Configuración de plataforma', path: '/admin/settings', icon: 'settings' },
