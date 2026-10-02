@@ -16,7 +16,7 @@ const TABS: { key: TabKey; label: string; status: BookingStatus }[] = [
   { key: 'cancelled', label: 'Canceladas', status: 'cancelled' },
 ];
 
-const fallbackAvatar = 'https://i.pravatar.cc/150';
+import { getInitialsAvatar } from '../../src/utils/avatar';
 
 const ReceivedBookings: React.FC = () => {
   const navigate = useNavigate();
@@ -191,7 +191,7 @@ const ReceivedBookings: React.FC = () => {
                 <img
                   alt={booking.profiles?.name || 'Invitado'}
                   className="w-16 h-16 rounded-full object-cover ring-2 ring-slate-100 dark:ring-slate-800"
-                  src={booking.profiles?.avatar_url || fallbackAvatar}
+                  src={booking.profiles?.avatar_url || getInitialsAvatar(booking.profiles?.name, 'Invitado')}
                   loading="lazy"
                 />
                 <div className="flex-1 min-w-0">

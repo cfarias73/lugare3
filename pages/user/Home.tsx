@@ -7,6 +7,7 @@ import { getVenues } from '../../src/services/venueService';
 import { getProfile } from '../../src/services/profileService';
 import { getCategories, Category } from '../../src/services/categoryService';
 import { shareVenue } from '../../src/utils/shareVenue';
+import { getInitialsAvatar } from '../../src/utils/avatar';
 import { toast } from 'sonner';
 import { Venue } from '../../types';
 
@@ -106,7 +107,7 @@ const Home: React.FC = () => {
             <img 
               alt="Avatar" 
               className="w-10 h-10 rounded-full object-cover ring-2 ring-primary/20 cursor-pointer bg-slate-100" 
-              src={avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'U')}&background=E5E7EB&color=475569`} 
+              src={avatarUrl || getInitialsAvatar(user?.name, 'Usuario')} 
               loading="lazy"
             />
           </button>

@@ -1,11 +1,11 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../../components/Layout';
 import { toast } from 'sonner';
 import { supabase } from '../../lib/supabaseClient';
-
-const DEFAULT_AVATAR = 'https://lh3.googleusercontent.com/aida-public/AB6AXuCAkY7AviIRiCpv8Koe6LoTyPAt1AJqCGkHEjpFdo4D8JlpGdzUheoCp65Ss2T4-6h5KivvUSvZTqKeC7TsGwEjRb7Oz4do6MpDaKU2HIAu8ZHw7Ohu2ZqkuaCgIOwbm-7nMP_2Rrlf2f1OmMl58h1G4x13DAmAb-De3dxfsK6EPpaol91SSNHQm1YRIwDjPQ36zWMi5cCqel-vSp5_fr14NVk8YSKipiYZwaPbKnTijIAfYrFYafCkd1TLCs1HI5yIgudbnm9F9spC';
+import { useUser } from '../../context/UserContext';
+import { getProfile, updateProfile, uploadAvatar } from '../../src/services/profileService';
+import { getInitialsAvatar } from '../../src/utils/avatar';
 
 const FIELD_LABELS: Record<string, string> = {
   name: 'Nombre completo',
@@ -18,85 +18,120 @@ const LANGUAGES = ['Español', 'English', 'Português', 'Français'];
 
 const Profile: React.FC = () => {
   const navigate = useNavigate();
+  const { user, authReady, logout, updateName } = useUser();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [avatar, setAvatar] = useState<string>(() => {
-    return localStorage.getItem('user_avatar') || DEFAULT_AVATAR;
+  const [avatar, setAvatar] = useState<string>('');
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    location: '',
   });
-  const [formData, setFormData] = useState(() => {
-    const stored = localStorage.getItem('user_profile');
-    return stored ? JSON.parse(stored) : {
-      name: '',
-      email: '',
-      phone: '',
-      location: '',
-    };
-  });
+
   const PLACEHOLDERS: Record<string, string> = {
     name: 'Ej. Juan Pérez',
     email: 'Ej. juan.perez@gmail.com',
     phone: 'Ej. +52 55 1234 5678',
     location: 'Ej. Ciudad de México, México',
   };
+
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [language, setLanguage] = useState<string>(() => localStorage.getItem('user_language') || 'Español');
+  const [language, setLanguage] = useState<string>('Español');
   const [showLangModal, setShowLangModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [notifications, setNotifications] = useState(() => {
-    const stored = localStorage.getItem('user_notifications');
-    return stored ? JSON.parse(stored) : { email: true, push: true, promos: false };
-  });
+  const [notifications, setNotifications] = useState({ email: true, push: true, promos: false });
 
-  useEffect(() => { localStorage.setItem('user_notifications', JSON.stringify(notifications)); }, [notifications]);
+  // Si no está autenticado una vez listo el estado de auth, redirigir
+  useEffect(() => {
+    if (authReady && !user) {
+      navigate('/user/login', { replace: true });
+    }
+  }, [authReady, user, navigate]);
+
+  // Cargar datos reales del perfil desde Supabase
+  useEffect(() => {
+    if (!user?.id) {
+      if (authReady) setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    Promise.all([
+      getProfile(user.id),
+      supabase.auth.getUser(),
+    ])
+      .then(([profile, authRes]) => {
+        const emailVal = authRes.data.user?.email || user.email || '';
+        if (profile) {
+          setFormData({
+            name: profile.name ?? user.name ?? '',
+            email: emailVal,
+            phone: profile.phone ?? '',
+            location: profile.location ?? '',
+          });
+          if (profile.avatar_url) {
+            setAvatar(profile.avatar_url);
+          }
+        } else {
+          setFormData({
+            name: user.name ?? '',
+            email: emailVal,
+            phone: '',
+            location: '',
+          });
+        }
+      })
+      .catch((err) => {
+        console.error('Error loading profile:', err);
+        toast.error('No se pudo cargar el perfil');
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, [user?.id, authReady]);
 
   const validate = () => {
     const newErrors: Record<string, string> = {};
     if (!formData.name.trim()) newErrors.name = 'Nombre requerido';
     if (!formData.email.includes('@')) newErrors.email = 'Correo inválido';
-    if (formData.phone.length < 8) newErrors.phone = 'Teléfono inválido';
+    if (formData.phone && formData.phone.length < 8) newErrors.phone = 'Teléfono inválido';
     if (!formData.location.trim()) newErrors.location = 'Ubicación requerida';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSave = () => {
-    if (validate()) {
-      localStorage.setItem('user_profile', JSON.stringify(formData));
+  const handleSave = async () => {
+    if (!validate()) {
+      toast.error('Revisa los campos marcados');
+      return;
+    }
+    if (!user?.id) return;
+
+    setSaving(true);
+    try {
+      await updateProfile(user.id, {
+        name: formData.name.trim(),
+        phone: formData.phone.trim(),
+        location: formData.location.trim(),
+      });
+      updateName(formData.name.trim());
       setIsEditing(false);
       toast.success('Perfil actualizado');
-    } else {
-      toast.error('Revisa los campos marcados');
+    } catch (err: any) {
+      console.error('Error updating profile:', err);
+      toast.error(err.message || 'Error al actualizar el perfil');
+    } finally {
+      setSaving(false);
     }
   };
 
   const handleAvatarClick = () => {
     fileInputRef.current?.click();
   };
-
-  const compressImage = (file: File, maxSize = 320, quality = 0.82): Promise<string> =>
-    new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onerror = () => reject(new Error('No se pudo leer la imagen'));
-      reader.onload = (ev) => {
-        const img = new Image();
-        img.onerror = () => reject(new Error('Imagen inválida'));
-        img.onload = () => {
-          const scale = Math.min(1, maxSize / Math.max(img.width, img.height));
-          const w = Math.round(img.width * scale);
-          const h = Math.round(img.height * scale);
-          const canvas = document.createElement('canvas');
-          canvas.width = w;
-          canvas.height = h;
-          const ctx = canvas.getContext('2d');
-          if (!ctx) return reject(new Error('Canvas no disponible'));
-          ctx.drawImage(img, 0, 0, w, h);
-          resolve(canvas.toDataURL('image/jpeg', quality));
-        };
-        img.src = ev.target?.result as string;
-      };
-      reader.readAsDataURL(file);
-    });
 
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -110,49 +145,59 @@ const Profile: React.FC = () => {
       toast.error('La imagen debe pesar menos de 10MB');
       return;
     }
+    if (!user?.id) return;
+
     try {
-      const dataUrl = await compressImage(file);
-      setAvatar(dataUrl);
-      try {
-        localStorage.setItem('user_avatar', dataUrl);
-        toast.success('Foto actualizada');
-      } catch {
-        toast.error('No se pudo guardar (almacenamiento lleno). La foto se verá solo en esta sesión.');
-      }
+      const publicUrl = await uploadAvatar(user.id, file);
+      await updateProfile(user.id, { avatar_url: publicUrl });
+      setAvatar(publicUrl);
+      toast.success('Foto actualizada');
     } catch (err: any) {
-      toast.error(err?.message || 'No se pudo procesar la imagen');
+      console.error('Error uploading avatar:', err);
+      toast.error(err?.message || 'No se pudo subir la imagen');
     }
   };
 
-  const handleRemoveAvatar = () => {
-    setAvatar(DEFAULT_AVATAR);
-    localStorage.removeItem('user_avatar');
-    toast.success('Foto restablecida');
+  const handleRemoveAvatar = async () => {
+    if (!user?.id) return;
+    try {
+      await updateProfile(user.id, { avatar_url: null });
+      setAvatar('');
+      toast.success('Foto restablecida');
+    } catch (err: any) {
+      console.error('Error resetting avatar:', err);
+      toast.error('Error al restablecer la foto');
+    }
   };
 
   const handleLanguageSelect = (lang: string) => {
     setLanguage(lang);
-    localStorage.setItem('user_language', lang);
     setShowLangModal(false);
     toast.success(`Idioma: ${lang}`);
   };
 
   const [isDeleting, setIsDeleting] = useState(false);
 
+  const handleLogout = async () => {
+    try {
+      await logout();
+      toast.success('Sesión cerrada');
+    } catch (e) {
+      console.error('Logout error:', e);
+    } finally {
+      navigate('/user/login', { replace: true });
+    }
+  };
+
   const handleDeleteAccount = async () => {
     setIsDeleting(true);
     try {
       const { error } = await supabase.rpc('delete_my_account');
       if (error) throw error;
-      await supabase.auth.signOut();
-      localStorage.removeItem('user_profile');
-      localStorage.removeItem('user_avatar');
-      localStorage.removeItem('user_notifications');
-      localStorage.removeItem('user_language');
-      localStorage.removeItem('user_favorites');
+      await logout();
       toast.success('Cuenta eliminada');
       setShowDeleteConfirm(false);
-      navigate('/user/login');
+      navigate('/user/login', { replace: true });
     } catch (err: any) {
       console.error('Account deletion failed:', err);
       toast.error('No se pudo eliminar tu cuenta. Inténtalo de nuevo; si continúa, contacta a soporte.');
@@ -161,12 +206,30 @@ const Profile: React.FC = () => {
     }
   };
 
+  if (!authReady || (loading && !formData.email)) {
+    return (
+      <Layout>
+        <div className="min-h-[60vh] flex items-center justify-center">
+          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (!user) {
+    return null;
+  }
+
   return (
     <Layout>
       <header className="sticky top-0 z-10 bg-white/80 dark:bg-background-dark/80 backdrop-blur-md px-4 py-4 flex items-center justify-between">
         <h1 className="text-xl font-bold text-slate-800 dark:text-white">Mi Perfil</h1>
-        <button onClick={() => isEditing ? handleSave() : setIsEditing(true)} className="text-primary font-bold">
-          {isEditing ? 'Guardar' : 'Editar'}
+        <button 
+          onClick={() => isEditing ? handleSave() : setIsEditing(true)} 
+          disabled={saving}
+          className="text-primary font-bold disabled:opacity-50"
+        >
+          {saving ? 'Guardando…' : isEditing ? 'Guardar' : 'Editar'}
         </button>
       </header>
 
@@ -176,10 +239,15 @@ const Profile: React.FC = () => {
             <button
               type="button"
               onClick={handleAvatarClick}
-              className="block w-24 h-24 rounded-full border-4 border-white dark:border-slate-800 overflow-hidden shadow-lg active:scale-95 transition-transform"
+              className="block w-24 h-24 rounded-full border-4 border-white dark:border-slate-800 overflow-hidden shadow-lg active:scale-95 transition-transform bg-slate-100"
               aria-label="Cambiar foto de perfil"
             >
-              <img alt="Profile" className="w-full h-full object-cover" src={avatar} loading="lazy" />
+              <img 
+                alt="Profile" 
+                className="w-full h-full object-cover" 
+                src={avatar || getInitialsAvatar(formData.name || user?.name, 'Usuario')} 
+                loading="lazy" 
+              />
             </button>
             <button
               type="button"
@@ -197,7 +265,7 @@ const Profile: React.FC = () => {
               onChange={handleAvatarChange}
             />
           </div>
-          {avatar !== DEFAULT_AVATAR && (
+          {avatar && (
             <button
               onClick={handleRemoveAvatar}
               className="mt-3 text-xs text-slate-500 dark:text-slate-400 underline"
@@ -218,7 +286,7 @@ const Profile: React.FC = () => {
               <div key={key}>
                 <label className="text-xs text-slate-400 uppercase font-bold">{FIELD_LABELS[key] || key}</label>
                 <input
-                  disabled={!isEditing}
+                  disabled={!isEditing || key === 'email'}
                   value={value as string}
                   onChange={(e) => setFormData({ ...formData, [key]: e.target.value })}
                   placeholder={PLACEHOLDERS[key]}
@@ -229,8 +297,6 @@ const Profile: React.FC = () => {
             ))}
           </div>
         </section>
-
-        {/* Tarjeta de Idioma oculta por ahora */}
 
         <section className="space-y-4">
           <h3 className="text-lg font-bold text-slate-800 dark:text-white">Mi actividad</h3>
@@ -277,7 +343,6 @@ const Profile: React.FC = () => {
           </div>
         </section>
 
-
         <section className="space-y-4">
           <h3 className="text-lg font-bold text-slate-800 dark:text-white">Notificaciones</h3>
           <div className="bg-white dark:bg-surface-dark rounded-xl border border-slate-100 dark:border-slate-800 divide-y divide-slate-100 dark:divide-slate-800 shadow-sm overflow-hidden">
@@ -307,7 +372,7 @@ const Profile: React.FC = () => {
 
         <section className="space-y-2 pt-4">
           <button
-            onClick={() => navigate('/user/login')}
+            onClick={handleLogout}
             className="w-full flex items-center gap-3 p-4 text-red-500 font-medium bg-red-50 dark:bg-red-900/10 rounded-xl active:scale-[0.99] transition-transform"
           >
             <span className="material-icons-round">logout</span>

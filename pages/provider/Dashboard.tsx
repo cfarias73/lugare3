@@ -7,6 +7,7 @@ import { EmptyState } from '../../components/ui/EmptyState';
 import { useUser } from '../../context/UserContext';
 import { getProviderDashboard, DashboardPeriod } from '../../src/services/providerService';
 import { getProfile } from '../../src/services/profileService';
+import { getInitialsAvatar } from '../../src/utils/avatar';
 
 const PERIOD_LABEL: Record<DashboardPeriod, string> = {
   hoy: 'HOY',
@@ -78,11 +79,12 @@ const Dashboard: React.FC = () => {
       <header className="px-6 pt-[calc(env(safe-area-inset-top,0px)+1rem)] pb-6 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-14 h-14 bg-primary rounded-[20px] flex items-center justify-center text-white shadow-lg shadow-primary/20 overflow-hidden">
-            {hostAvatar ? (
-              <img src={hostAvatar} className="w-full h-full object-cover" alt={hostName} loading="lazy" />
-            ) : (
-              <span className="material-icons-round text-2xl">person</span>
-            )}
+            <img 
+              src={hostAvatar || getInitialsAvatar(hostName || user?.name, 'Anfitrión')} 
+              className="w-full h-full object-cover" 
+              alt={hostName || 'Anfitrión'} 
+              loading="lazy" 
+            />
           </div>
           <div>
             <h1 className="text-xl font-bold leading-tight dark:text-white font-display uppercase tracking-tight">

@@ -36,6 +36,14 @@ export const updateProfile = async (
     .update(patch)
     .eq('id', userId);
   if (error) throw error;
+
+  if (patch.name !== undefined) {
+    try {
+      await supabase.auth.updateUser({ data: { name: patch.name } });
+    } catch (e) {
+      console.warn('[updateProfile] auth metadata update error:', e);
+    }
+  }
 };
 
 const uploadToProfiles = async (userId: string, file: File, prefix: string): Promise<string> => {

@@ -82,6 +82,20 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
   const isFavorite = (venueId: string) => favorites.includes(venueId);
 
+  const clearUserData = () => {
+    setUser(null);
+    setBookings([]);
+    setInvitations([]);
+    setDraftInvitation(null);
+    setFavorites([]);
+    try {
+      localStorage.removeItem('user_profile');
+      localStorage.removeItem('user_avatar');
+      localStorage.removeItem('user_notifications');
+      localStorage.removeItem('user_favorites');
+    } catch {}
+  };
+
   useEffect(() => {
     let mounted = true;
     let authChangeVersion = 0;
@@ -89,7 +103,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const applySession = (session: any) => {
       const version = ++authChangeVersion;
       if (!session?.user) {
-        setUser(null);
+        clearUserData();
         setAuthReady(true);
         return;
       }
@@ -128,7 +142,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }).catch((error) => {
       if (!mounted || authChangeVersion !== versionBeforeGetSession) return;
       console.error('[auth] could not restore session', error);
-      setUser(null);
+      clearUserData();
       setAuthReady(true);
     });
 
@@ -173,7 +187,12 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
 
   const logout = async () => {
-    await supabase.auth.signOut();
+    clearUserData();
+    try {
+      await supabase.auth.signOut();
+    } catch (err) {
+      console.warn('[auth] error during signOut:', err);
+    }
   };
 
   const addBooking = (booking: Booking) => setBookings((prev) => [booking, ...prev]);

@@ -11,8 +11,7 @@ import {
   ProfileData,
 } from '../../src/services/profileService';
 import { supabase } from '../../lib/supabaseClient';
-
-const DEFAULT_AVATAR = 'https://api.dicebear.com/7.x/initials/svg?seed=Anfitrion';
+import { getInitialsAvatar } from '../../src/utils/avatar';
 
 const Profile: React.FC = () => {
   const { user, logout, updateName } = useUser();
@@ -205,7 +204,7 @@ const Profile: React.FC = () => {
               <img
                 alt={form.name || 'Anfitrión'}
                 className="w-full h-full object-cover"
-                src={avatarUrl || DEFAULT_AVATAR}
+                src={avatarUrl || getInitialsAvatar(form.name || user?.name, 'Anfitrión')}
               />
             </div>
             <input
