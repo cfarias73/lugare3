@@ -51,13 +51,28 @@ export const createNotification = async (params: {
   type?: 'info' | 'success' | 'warning' | 'error';
   link?: string | null;
 }) => {
-  const { error } = await supabase.from('notifications').insert({
+  const { data, error } = await supabase.from('notifications').insert({
     user_id: params.userId,
     title: params.title,
     message: params.message,
     type: params.type ?? 'info',
     link: params.link ?? null,
     read: false,
+  }).select().single();
+  if (error) {
+    console.error('createNotification error', error);
+    throw error;
+  }
+  return data;
+};
+
+export const sendTestNotification = async (userId: string, role: 'user' | 'provider' = 'user') => {
+  const isProvider = role === 'provider';
+  return createNotification({
+    userId,
+    title: isProvider ? 'Prueba: Nueva reserva recibida' : 'Prueba: Notificación del sistema',
+    message: `Esta es una notificación de prueba para verificar el envío funcional (${new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}).`,
+    type: 'success',
+    link: isProvider ? '/provider/received-bookings' : '/user/notifications',
   });
-  if (error) console.error('createNotification error', error);
 };

@@ -13,7 +13,7 @@ import { Venue } from '../../types';
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
-  const { user, bookings, invitations, isFavorite, toggleFavorite } = useUser();
+  const { user, updateName, bookings, invitations, isFavorite, toggleFavorite } = useUser();
   const [venues, setVenues] = useState<Venue[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [activeCategory, setActiveCategory] = useState<string>('all');
@@ -26,8 +26,16 @@ const Home: React.FC = () => {
 
   useEffect(() => {
     if (!user?.id) return;
-    getProfile(user.id).then(p => { if (p) setAvatarUrl(p.avatar_url || null); }).catch(() => {});
-  }, [user?.id]);
+    getProfile(user.id)
+      .then((p) => {
+        if (!p) return;
+        if (p.avatar_url) setAvatarUrl(p.avatar_url);
+        if (p.name && p.name !== user.name) {
+          updateName(p.name);
+        }
+      })
+      .catch(() => {});
+  }, [user?.id, user?.name, updateName]);
 
   useEffect(() => {
     const load = async () => {

@@ -64,6 +64,7 @@ const CreateSpaceContent: React.FC = () => {
           includedHours: v.included_hours?.toString() ?? v.min_hours?.toString() ?? '5',
           extraPersonPrice: v.extra_person_price?.toString() ?? '0',
           extraHourPrice: v.extra_hour_price?.toString() ?? '',
+          maxExtraHours: v.max_extra_hours?.toString() ?? '6',
           pricePerHour: v.price_per_hour?.toString() ?? '',
           minHours: v.min_hours?.toString() ?? '5',
           sizeSqm: v.size_sqm?.toString() ?? '',
@@ -176,6 +177,7 @@ const CreateSpaceContent: React.FC = () => {
         max_capacity: maxCapacity,
         included_hours: includedHours,
         extra_person_price: extraPersonPrice,
+        max_extra_hours: data.maxExtraHours !== '' ? Math.max(0, parseInt(data.maxExtraHours)) : 6,
         lat: data.lat ? Number(data.lat) : null,
         lng: data.lng ? Number(data.lng) : null,
         rules: data.rules,
@@ -672,6 +674,27 @@ const CreateSpaceContent: React.FC = () => {
                     />
                     <ErrorMessage message={errors.extraHourPrice} />
                   </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Límite de horas extra permitidas</label>
+                  <input
+                    className={inputBase}
+                    type="number"
+                    min={0}
+                    max={24}
+                    step={1}
+                    placeholder="Ej: 6 (por defecto 6h)"
+                    value={data.maxExtraHours}
+                    onKeyDown={(e) => { if (e.key === '-' || e.key === 'e' || e.key === '+') e.preventDefault(); }}
+                    onChange={(e) => {
+                      const v = e.target.value.replace(/[^0-9]/g, '');
+                      updateData({ maxExtraHours: v });
+                    }}
+                  />
+                  <p className="text-[11px] text-slate-400 ml-1">
+                    Cantidad máxima de horas adicionales que el usuario puede solicitar en este espacio (0 para no permitir horas extra).
+                  </p>
                 </div>
 
                 <div className="bg-orange-50 dark:bg-orange-900/10 border border-orange-100 dark:border-orange-900/30 rounded-2xl p-4 text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">

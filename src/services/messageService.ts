@@ -89,17 +89,19 @@ export const getOrCreateConversation = async (
 
   const { data: venue, error: vErr } = await supabase
     .from('venues')
-    .select('owner_id')
+    .select('provider_id, owner_id')
     .eq('id', venueId)
     .maybeSingle();
-  if (vErr || !venue?.owner_id) {
-    console.error('Venue has no owner; cannot start conversation', vErr);
+
+  const hostId = venue?.provider_id || venue?.owner_id;
+  if (vErr || !hostId) {
+    console.error('Venue has no host (provider_id or owner_id); cannot start conversation', vErr);
     return null;
   }
 
   const { data, error } = await supabase
     .from('conversations')
-    .insert({ user_id: userId, venue_id: venueId, provider_id: venue.owner_id })
+    .insert({ user_id: userId, venue_id: venueId, provider_id: hostId })
     .select('*')
     .single();
   if (error) {

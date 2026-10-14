@@ -21,6 +21,31 @@ const formatTime = (iso: string | null) => {
   return d.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
 };
 
+const formatDateSeparator = (iso: string | null) => {
+  if (!iso) return '';
+  const date = new Date(iso);
+  const now = new Date();
+
+  // Reset hours to compare calendar days
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const msgDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const diffTime = today.getTime() - msgDate.getTime();
+  const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+
+  if (diffDays === 0) return 'Hoy';
+  if (diffDays === 1) return 'Ayer';
+  if (diffDays > 1 && diffDays < 7) {
+    const weekday = date.toLocaleDateString('es-MX', { weekday: 'long' });
+    return weekday.charAt(0).toUpperCase() + weekday.slice(1);
+  }
+
+  return date.toLocaleDateString('es-MX', {
+    day: 'numeric',
+    month: 'short',
+    year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined,
+  });
+};
+
 const Messages: React.FC = () => {
   const { user } = useUser();
   const navigate = useNavigate();
@@ -56,10 +81,13 @@ const Messages: React.FC = () => {
     (async () => {
       const conv = await getOrCreateConversation(user.id, openVenueId);
       if (conv) {
-        await loadConversations();
+        setConversations((prev) => {
+          const exists = prev.some((c) => c.id === conv.id);
+          return exists ? prev : [conv, ...prev];
+        });
         setActiveId(conv.id);
-        // clear state so refresh doesn't re-open
         navigate(location.pathname, { replace: true });
+        await loadConversations();
       }
     })();
   }, [user, openVenueId, loadConversations, navigate, location.pathname]);
@@ -180,23 +208,37 @@ const Messages: React.FC = () => {
               Empieza la conversación con {activeConversation.provider_name}.
             </p>
           ) : (
-            thread.map((b) => {
+            thread.map((b, idx) => {
               const mine = b.sender_id === user?.id;
+              const prevMsg = idx > 0 ? thread[idx - 1] : null;
+              const currentDateStr = b.created_at ? new Date(b.created_at).toDateString() : '';
+              const prevDateStr = prevMsg?.created_at ? new Date(prevMsg.created_at).toDateString() : '';
+              const showDateSeparator = idx === 0 || currentDateStr !== prevDateStr;
+
               return (
-                <div key={b.id} className={`flex ${mine ? 'justify-end' : 'justify-start'}`}>
-                  <div
-                    className={`max-w-[78%] px-4 py-2.5 rounded-2xl shadow-sm text-[14px] leading-snug ${
-                      mine
-                        ? 'bg-primary text-white rounded-br-md'
-                        : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-bl-md border border-slate-100 dark:border-slate-700'
-                    }`}
-                  >
-                    <p className="whitespace-pre-wrap break-words">{b.content}</p>
-                    <p className={`text-[10.5px] mt-1 text-right ${mine ? 'text-white/70' : 'text-slate-400'}`}>
-                      {formatTime(b.created_at)}
-                    </p>
+                <React.Fragment key={b.id}>
+                  {showDateSeparator && (
+                    <div className="flex justify-center my-3">
+                      <span className="px-3 py-1 text-[11px] font-medium text-slate-500 dark:text-slate-400 bg-white/80 dark:bg-slate-800/80 rounded-full shadow-xs border border-slate-200/60 dark:border-slate-700/60 backdrop-blur-xs">
+                        {formatDateSeparator(b.created_at)}
+                      </span>
+                    </div>
+                  )}
+                  <div className={`flex ${mine ? 'justify-end' : 'justify-start'}`}>
+                    <div
+                      className={`max-w-[78%] px-4 py-2.5 rounded-2xl shadow-sm text-[14px] leading-snug ${
+                        mine
+                          ? 'bg-primary text-white rounded-br-md'
+                          : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-bl-md border border-slate-100 dark:border-slate-700'
+                      }`}
+                    >
+                      <p className="whitespace-pre-wrap break-words">{b.content}</p>
+                      <p className={`text-[10.5px] mt-1 text-right ${mine ? 'text-white/70' : 'text-slate-400'}`}>
+                        {formatTime(b.created_at)}
+                      </p>
+                    </div>
                   </div>
-                </div>
+                </React.Fragment>
               );
             })
           )}

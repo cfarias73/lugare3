@@ -9,8 +9,10 @@ import {
   markAllNotificationsAsRead,
   markNotificationAsRead,
   deleteNotification,
+  sendTestNotification,
   Notification,
 } from '../../src/services/notificationService';
+import { toast } from 'sonner';
 
 type TabKey = 'todas' | 'reservas' | 'mensajes' | 'pagos';
 type SortKey = 'recientes' | 'antiguas' | 'no_leidas';
@@ -95,6 +97,17 @@ const Notifications: React.FC = () => {
 
   const sortLabel = SORT_OPTIONS.find(s => s.key === sort)?.label || 'Recientes';
 
+  const handleTest = async () => {
+    if (!user) return;
+    try {
+      const created = await sendTestNotification(user.id, 'provider');
+      if (created) setItems((prev) => [created, ...prev]);
+      toast.success('Notificación de prueba enviada exitosamente');
+    } catch (e: any) {
+      toast.error('Error al enviar: ' + (e.message || 'RLS error'));
+    }
+  };
+
   return (
     <ProviderLayout>
       <header className="sticky top-0 z-50 bg-white dark:bg-card-dark shadow-sm px-4 pt-10 pb-3 transition-colors">
@@ -105,13 +118,21 @@ const Notifications: React.FC = () => {
             </button>
             <h1 className="text-xl font-bold dark:text-white font-display tracking-tight">Centro de Notificaciones</h1>
           </div>
-          <button
-            onClick={handleMarkAll}
-            title="Marcar todas como leídas"
-            className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full"
-          >
-            <span className="material-icons-round text-slate-800 dark:text-slate-100">done_all</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleTest}
+              className="text-xs font-semibold text-slate-500 hover:text-primary dark:text-slate-400 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1 transition-colors"
+            >
+              Probar envío
+            </button>
+            <button
+              onClick={handleMarkAll}
+              title="Marcar todas como leídas"
+              className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full"
+            >
+              <span className="material-icons-round text-slate-800 dark:text-slate-100">done_all</span>
+            </button>
+          </div>
         </div>
         <div className="flex justify-between items-center text-[13px] font-bold uppercase tracking-wider border-b border-slate-100 dark:border-slate-800 no-scrollbar overflow-x-auto">
           {TABS.map(t => (

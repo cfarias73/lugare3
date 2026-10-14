@@ -33,6 +33,7 @@ const mapVenue = (v: any): Venue => ({
   cancellationType: v.cancellation_type ?? 'non_refundable',
   cancellationDays: v.cancellation_days != null ? Number(v.cancellation_days) : undefined,
   cancellationTiers: Array.isArray(v.cancellation_tiers) ? v.cancellation_tiers : [],
+  maxExtraHours: v.max_extra_hours != null ? Number(v.max_extra_hours) : 6,
 });
 
 export const getVenues = async (): Promise<Venue[]> => {

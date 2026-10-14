@@ -64,6 +64,7 @@ const BookingCalendar: React.FC = () => {
             maxCapacity: data.max_capacity != null ? Number(data.max_capacity) : (data.capacity ?? null),
             includedHours: Math.max(Number(data.included_hours) || 0, Number(data.min_hours) || 0) || 5,
             extraPersonPrice: data.extra_person_price != null ? Number(data.extra_person_price) : 0,
+            maxExtraHours: data.max_extra_hours != null ? Number(data.max_extra_hours) : 6,
           };
           setVenue(mapped);
           if (mapped.baseCapacity) setGuests(mapped.baseCapacity);
@@ -325,8 +326,11 @@ const BookingCalendar: React.FC = () => {
                   <span className="w-8 text-center font-bold">{extraHours}</span>
                   <button
                     type="button"
-                    onClick={() => setExtraHours(Math.min(6, extraHours + 1))}
-                    disabled={extraHours >= 6}
+                    onClick={() => {
+                      const maxLimit = venue?.maxExtraHours != null ? venue.maxExtraHours : 6;
+                      setExtraHours(Math.min(maxLimit, extraHours + 1));
+                    }}
+                    disabled={extraHours >= (venue?.maxExtraHours != null ? venue.maxExtraHours : 6)}
                     className="w-9 h-9 rounded-full border border-slate-200 dark:border-slate-700 flex items-center justify-center disabled:opacity-40"
                     aria-label="Agregar hora extra"
                   >

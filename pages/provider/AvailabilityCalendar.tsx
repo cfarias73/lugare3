@@ -231,22 +231,22 @@ const AvailabilityCalendar: React.FC = () => {
           })}
         </div>
 
-        <div className="mt-12 flex flex-wrap justify-center gap-x-6 gap-y-4">
-          <div className="flex items-center gap-2">
-            <div className="w-2.5 h-2.5 rounded-full border-2 border-primary"></div>
-            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Hoy</span>
+        <div className="mt-8 flex flex-wrap justify-center gap-x-5 gap-y-3 px-2">
+          <div className="flex items-center gap-1.5">
+            <div className="w-3 h-3 rounded-full border-2 border-primary"></div>
+            <span className="text-[10px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">Hoy</span>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-2.5 h-2.5 rounded-sm bg-primary"></div>
-            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Reservado</span>
+          <div className="flex items-center gap-1.5">
+            <div className="w-3 h-3 rounded-md bg-primary"></div>
+            <span className="text-[10px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">Reservado</span>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-2.5 h-2.5 rounded-sm bg-slate-900 dark:bg-slate-700"></div>
-            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Bloqueado</span>
+          <div className="flex items-center gap-1.5">
+            <div className="w-3 h-3 rounded-md bg-slate-900 dark:bg-slate-700"></div>
+            <span className="text-[10px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">Bloqueado</span>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-2.5 h-2.5 rounded-full bg-slate-200 dark:bg-slate-700"></div>
-            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Disponible</span>
+          <div className="flex items-center gap-1.5">
+            <div className="w-3 h-3 rounded-full bg-slate-200 dark:bg-slate-700"></div>
+            <span className="text-[10px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">Disponible</span>
           </div>
         </div>
 

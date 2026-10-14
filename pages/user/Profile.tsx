@@ -97,9 +97,10 @@ const Profile: React.FC = () => {
   const validate = () => {
     const newErrors: Record<string, string> = {};
     if (!formData.name.trim()) newErrors.name = 'Nombre requerido';
-    if (!formData.email.includes('@')) newErrors.email = 'Correo inválido';
-    if (formData.phone && formData.phone.length < 8) newErrors.phone = 'Teléfono inválido';
-    if (!formData.location.trim()) newErrors.location = 'Ubicación requerida';
+    if (formData.email && !formData.email.includes('@')) newErrors.email = 'Correo inválido';
+    if (formData.phone && formData.phone.trim().length > 0 && formData.phone.trim().length < 8) {
+      newErrors.phone = 'Teléfono inválido (mínimo 8 dígitos)';
+    }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };

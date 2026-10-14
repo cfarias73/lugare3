@@ -27,6 +27,7 @@ export interface Venue {
   cancellationType?: 'non_refundable' | 'flexible' | 'custom';
   cancellationDays?: number;
   cancellationTiers?: { days: number; percent: number }[];
+  maxExtraHours?: number;
 }
 
 export interface Review {

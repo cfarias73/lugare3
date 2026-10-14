@@ -22,7 +22,7 @@ const ProviderLayout: React.FC<ProviderLayoutProps> = ({ children, hideLogout })
 
   return (
     <div className="flex flex-col min-h-screen bg-background-light dark:bg-background-dark max-w-md mx-auto shadow-2xl relative transition-colors overflow-hidden border-x border-slate-100 dark:border-slate-800">
-      <main className="flex-1 pb-24 overflow-y-auto no-scrollbar">
+      <main className="flex-1 pb-[calc(env(safe-area-inset-bottom,0px)+6.5rem)] overflow-y-auto no-scrollbar">
         {children}
       </main>
 

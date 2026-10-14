@@ -9,8 +9,10 @@ import {
   markAllNotificationsAsRead,
   markNotificationAsRead,
   deleteNotification,
+  sendTestNotification,
   Notification,
 } from '../../src/services/notificationService';
+import { toast } from 'sonner';
 
 const typeIcon = (t: Notification['type']) => {
   switch (t) {
@@ -64,6 +66,17 @@ const Notifications: React.FC = () => {
     setItems((prev) => prev.filter((x) => x.id !== id));
   };
 
+  const handleTest = async () => {
+    if (!user) return;
+    try {
+      const created = await sendTestNotification(user.id, 'user');
+      if (created) setItems((prev) => [created, ...prev]);
+      toast.success('Notificación de prueba enviada exitosamente');
+    } catch (e: any) {
+      toast.error('Error al enviar: ' + (e.message || 'RLS error'));
+    }
+  };
+
   const unread = items.filter((i) => !i.read).length;
 
   return (
@@ -84,11 +97,19 @@ const Notifications: React.FC = () => {
               <span className="bg-primary text-white text-[10px] font-bold px-2 py-0.5 rounded-full">{unread}</span>
             )}
           </div>
-          {unread > 0 && (
-            <button onClick={handleMarkAll} className="text-xs font-semibold text-primary hover:underline px-2">
-              Marcar todas leídas
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleTest}
+              className="text-xs font-semibold text-slate-500 hover:text-primary dark:text-slate-400 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1 transition-colors"
+            >
+              Probar envío
             </button>
-          )}
+            {unread > 0 && (
+              <button onClick={handleMarkAll} className="text-xs font-semibold text-primary hover:underline px-1">
+                Marcar leídas
+              </button>
+            )}
+          </div>
         </div>
       </header>
 

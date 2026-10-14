@@ -7,6 +7,8 @@ import { getServicesByIds, getVenueById, PublicVenueService } from '../../src/se
 import { calcVenuePricing } from '../../src/utils/pricing';
 import { computeCommissions, loadPlatformSettings, DEFAULT_SETTINGS, PlatformSettings, fmtMXN } from '../../src/utils/commissions';
 import { parsePolicy, describePolicy, shortPolicyLabel } from '../../src/utils/cancellation';
+import { Capacitor } from '@capacitor/core';
+import { Browser } from '@capacitor/browser';
 
 const Checkout: React.FC = () => {
   const navigate = useNavigate();
@@ -53,6 +55,33 @@ const Checkout: React.FC = () => {
     getServicesByIds(serviceIds).then(setExtras).catch(() => setExtras([]));
   }, [params.get('services')]);
 
+  // Si el usuario regresa a esta pantalla tras haber pagado en Stripe
+  useEffect(() => {
+    const raw = sessionStorage.getItem('pending_checkout_session');
+    if (!raw || !user?.id || !id) return;
+    try {
+      const pending = JSON.parse(raw);
+      if (pending.venue_id === id && pending.user_id === user.id) {
+        supabase
+          .from('bookings')
+          .select('id, status')
+          .eq('venue_id', id)
+          .eq('user_id', user.id)
+          .eq('event_date', pending.event_date)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle()
+          .then(({ data }) => {
+            if (data?.status === 'confirmed') {
+              sessionStorage.removeItem('pending_checkout_session');
+              toast.success('¡Tu reserva ya está confirmada!');
+              navigate('/user/bookings', { replace: true });
+            }
+          });
+      }
+    } catch {}
+  }, [user?.id, id, navigate]);
+
   if (!venue) {
     return <div className="p-6 text-center">Cargando...</div>;
   }
@@ -71,7 +100,7 @@ const Checkout: React.FC = () => {
         baseCapacity: baseCapacityResolved,
         includedHours: includedHoursResolved,
         extraPersonPrice: Number(venue.extra_person_price) || 0,
-        extraHourPrice: Number(venue.extra_hour_price) || 0,
+        extraHourPrice: venue.extra_hour_price != null ? Number(venue.extra_hour_price) : (Number(venue.price_per_hour) || 0),
         guests: guestCount,
         hours,
       })
@@ -84,7 +113,7 @@ const Checkout: React.FC = () => {
         extraHours: snapshotExtraHours != null ? snapshotExtraHours : computedBreakdown.extraHours,
         extraHoursCost:
           snapshotExtraHours != null
-            ? snapshotExtraHours * (Number(venue.extra_hour_price) || 0)
+            ? snapshotExtraHours * (venue.extra_hour_price != null ? Number(venue.extra_hour_price) : (Number(venue.price_per_hour) || 0))
             : computedBreakdown.extraHoursCost,
       }
     : null;
@@ -140,19 +169,73 @@ const Checkout: React.FC = () => {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Error creando checkout');
 
-      // Redirect to Stripe Checkout.
-      // En el preview de Lovable estamos dentro de un iframe con Permissions-Policy
-      // que bloquea la navegación a dominios externos (checkout.stripe.com),
-      // por lo que intentamos navegar el top frame y, si falla, abrimos en nueva pestaña.
-      try {
-        if (window.top && window.top !== window.self) {
-          window.top.location.href = data.url;
-        } else {
+      // Guardamos la sesión pendiente localmente para poder verificar el pago
+      // si el usuario regresa manualmente a la app.
+      sessionStorage.setItem('pending_checkout_session', JSON.stringify({
+        venue_id: venue.id,
+        user_id: user.id,
+        event_date: eventDate,
+        start_time: startTime,
+        created_at: Date.now(),
+      }));
+
+      // Si estamos en Capacitor (iOS o Android), abrimos con el navegador nativo (In-App Browser)
+      if (Capacitor.isNativePlatform()) {
+        try {
+          await Browser.open({ url: data.url, presentationStyle: 'popover' });
+
+          // Monitorear cuando el usuario regrese o cierre el navegador
+          const checkBooking = async () => {
+            const { data: b } = await supabase
+              .from('bookings')
+              .select('id, status')
+              .eq('venue_id', venue.id)
+              .eq('user_id', user.id)
+              .eq('event_date', eventDate)
+              .order('created_at', { ascending: false })
+              .limit(1)
+              .maybeSingle();
+
+            if (b?.status === 'confirmed') {
+              sessionStorage.removeItem('pending_checkout_session');
+              toast.success('¡Pago confirmado!');
+              navigate('/user/bookings');
+              return true;
+            }
+            return false;
+          };
+
+          // Escuchar el evento de cierre del navegador nativo
+          const closeListener = await Browser.addListener('browserFinished', async () => {
+            setIsProcessing(true);
+            const confirmed = await checkBooking();
+            if (!confirmed) {
+              // Dar 3 segundos más por si el webhook tiene un leve retardo de red
+              setTimeout(async () => {
+                const retry = await checkBooking();
+                if (!retry) {
+                  setIsProcessing(false);
+                }
+              }, 3000);
+            }
+            closeListener.remove();
+          });
+        } catch (nativeErr) {
+          console.warn('Fallback opening url:', nativeErr);
           window.location.href = data.url;
         }
-      } catch {
-        const w = window.open(data.url, '_blank');
-        if (!w) window.location.href = data.url;
+      } else {
+        // En entorno Web / Iframe
+        try {
+          if (window.top && window.top !== window.self) {
+            window.top.location.href = data.url;
+          } else {
+            window.location.href = data.url;
+          }
+        } catch {
+          const w = window.open(data.url, '_blank');
+          if (!w) window.location.href = data.url;
+        }
       }
     } catch (e: any) {
       console.error(e);

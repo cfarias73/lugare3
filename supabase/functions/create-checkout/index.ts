@@ -127,7 +127,7 @@ serve(async (req) => {
         baseCapacity: Number(venue.base_capacity) || 0,
         includedHours: includedHoursResolved,
         extraPersonPrice: Number(venue.extra_person_price) || 0,
-        extraHourPrice: Number(venue.extra_hour_price) || 0,
+        extraHourPrice: venue.extra_hour_price != null ? Number(venue.extra_hour_price) : (Number(venue.price_per_hour) || 0),
         guests,
         hours: hrs,
       });

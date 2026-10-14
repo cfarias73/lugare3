@@ -20,6 +20,7 @@ export interface CreateSpaceData {
   includedHours: string;
   extraPersonPrice: string;
   extraHourPrice: string;
+  maxExtraHours: string;
   // Compatibilidad
   pricePerHour: string;
   minHours: string;
@@ -59,6 +60,7 @@ const defaultData: CreateSpaceData = {
   includedHours: '5',
   extraPersonPrice: '',
   extraHourPrice: '',
+  maxExtraHours: '6',
   pricePerHour: '',
   minHours: '5',
   sizeSqm: '',
