@@ -95,7 +95,15 @@ const App: React.FC = () => {
     <UserProvider>
       {showSplash && <SplashScreen durationMs={3000} onFinish={() => setShowSplash(false)} />}
       <NotificationHandler />
-      <Toaster position="top-center" richColors />
+      <Toaster
+        position="top-center"
+        richColors
+        toastOptions={{
+          style: {
+            marginTop: 'calc(env(safe-area-inset-top, 0px) + 0.75rem)',
+          },
+        }}
+      />
       <ErrorBoundary>
         <Router>
           <AuthRecoveryHandler />

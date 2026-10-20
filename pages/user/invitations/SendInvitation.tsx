@@ -2,6 +2,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { Capacitor } from '@capacitor/core';
+import { Share } from '@capacitor/share';
 import { useUser } from '../../../context/UserContext';
 import { Invitation } from '../../../types';
 import { createInvitation } from '../../../src/services/invitationService';
@@ -54,9 +56,9 @@ const SendInvitation: React.FC = () => {
     };
     addInvitation(newInvitation);
     updateDraftInvitation({});
-    const origin = window.location.origin + window.location.pathname;
+    const baseUrl = Capacitor.isNativePlatform() ? 'https://www.lugare.mx' : window.location.origin;
     // HashRouter URL
-    const url = `${origin}#/invite/${saved.id}`;
+    const url = `${baseUrl}/#/invite/${saved.id}`;
     setShareUrl(url);
     toast.success('¡Invitación lista para compartir!');
   };
@@ -64,7 +66,19 @@ const SendInvitation: React.FC = () => {
   const copyLink = async () => {
     if (!shareUrl) return;
     try {
-      await navigator.clipboard.writeText(shareUrl);
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(shareUrl);
+      } else {
+        const textArea = document.createElement('textarea');
+        textArea.value = shareUrl;
+        textArea.setAttribute('readonly', '');
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-9999px';
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+      }
       toast.success('Enlace copiado');
     } catch {
       toast.error('No se pudo copiar');
@@ -89,12 +103,23 @@ const SendInvitation: React.FC = () => {
 
   const shareNative = async () => {
     if (!shareUrl) return;
-    if (navigator.share) {
-      try {
+    try {
+      if (Capacitor.isNativePlatform()) {
+        await Share.share({
+          title: draftInvitation?.eventName || 'Invitación',
+          text: shareMessage(),
+          url: shareUrl,
+          dialogTitle: 'Compartir invitación',
+        });
+        return;
+      }
+      if (navigator.share) {
         await navigator.share({ title: draftInvitation?.eventName || 'Invitación', text: shareMessage(), url: shareUrl });
-      } catch { /* canceled */ }
-    } else {
-      copyLink();
+        return;
+      }
+      await copyLink();
+    } catch {
+      // User canceled or fallback
     }
   };
 

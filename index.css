@@ -25,3 +25,25 @@ header a,
   min-height: 40px;
   min-width: 40px;
 }
+
+/* Ensure toast notifications (Sonner) sit cleanly below the Dynamic Island / notch */
+[data-sonner-toaster] {
+  top: max(1rem, calc(env(safe-area-inset-top, 0px) + 0.85rem)) !important;
+  z-index: 99999 !important;
+}
+
+[data-sonner-toaster] [data-sonner-toast] {
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Ensure horizontal sliders scroll smoothly on iOS / WebKit */
+.overflow-x-auto,
+.horizontal-slider {
+  -webkit-overflow-scrolling: touch !important;
+  touch-action: pan-x pan-y !important;
+  overscroll-behavior-x: contain !important;
+}
+
+.horizontal-slider > * {
+  touch-action: pan-x pan-y !important;
+}

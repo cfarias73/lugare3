@@ -53,6 +53,11 @@ const BulkBlockDatesModal: React.FC<Props> = ({ open, venueId, onClose, onSaved 
       toast.error('Revisa las fechas (la fecha final debe ser igual o posterior a la inicial)');
       return;
     }
+    const todayStr = today();
+    if (start < todayStr) {
+      toast.error('No es posible bloquear fechas pasadas');
+      return;
+    }
     if (mode === 'recurring' && weekdays.length === 0) {
       toast.error('Selecciona al menos un día de la semana');
       return;
@@ -142,6 +147,7 @@ const BulkBlockDatesModal: React.FC<Props> = ({ open, venueId, onClose, onSaved 
             </label>
             <input
               type="date"
+              min={today()}
               value={start}
               onChange={(e) => setStart(e.target.value)}
               className="w-full bg-slate-50 dark:bg-slate-800 rounded-xl px-3 py-3 text-sm font-bold text-slate-900 dark:text-white outline-none"
@@ -153,6 +159,7 @@ const BulkBlockDatesModal: React.FC<Props> = ({ open, venueId, onClose, onSaved 
             </label>
             <input
               type="date"
+              min={start || today()}
               value={end}
               onChange={(e) => setEnd(e.target.value)}
               className="w-full bg-slate-50 dark:bg-slate-800 rounded-xl px-3 py-3 text-sm font-bold text-slate-900 dark:text-white outline-none"

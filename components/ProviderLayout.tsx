@@ -6,9 +6,10 @@ import { useUser } from '../context/UserContext';
 interface ProviderLayoutProps {
   children: React.ReactNode;
   hideLogout?: boolean;
+  hideNav?: boolean;
 }
 
-const ProviderLayout: React.FC<ProviderLayoutProps> = ({ children, hideLogout }) => {
+const ProviderLayout: React.FC<ProviderLayoutProps> = ({ children, hideLogout, hideNav = false }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { logout } = useUser();
@@ -22,11 +23,12 @@ const ProviderLayout: React.FC<ProviderLayoutProps> = ({ children, hideLogout })
 
   return (
     <div className="flex flex-col min-h-screen bg-background-light dark:bg-background-dark max-w-md mx-auto shadow-2xl relative transition-colors overflow-hidden border-x border-slate-100 dark:border-slate-800">
-      <main className="flex-1 pb-[calc(env(safe-area-inset-bottom,0px)+6.5rem)] overflow-y-auto no-scrollbar">
+      <main className={`flex-1 flex flex-col overflow-y-auto no-scrollbar ${hideNav ? '' : 'pb-[calc(env(safe-area-inset-bottom,0px)+6.5rem)]'}`}>
         {children}
       </main>
 
-      <nav className="fixed bottom-0 inset-x-0 max-w-md mx-auto bg-white/95 dark:bg-surface-dark/95 backdrop-blur-xl border-t border-slate-100 dark:border-slate-800 px-6 pt-3 pb-[calc(env(safe-area-inset-bottom,0px)+0.75rem)] flex justify-between items-center z-50">
+      {!hideNav && (
+        <nav className="fixed bottom-0 inset-x-0 max-w-md mx-auto bg-white/95 dark:bg-surface-dark/95 backdrop-blur-xl border-t border-slate-100 dark:border-slate-800 px-6 pt-3 pb-[calc(env(safe-area-inset-bottom,0px)+0.75rem)] flex justify-between items-center z-50">
         <button 
           onClick={() => navigate('/provider/dashboard')}
           className={`flex flex-col items-center gap-1 transition-colors ${isActive('/provider/dashboard') ? 'text-primary' : 'text-slate-400'}`}
@@ -56,6 +58,7 @@ const ProviderLayout: React.FC<ProviderLayoutProps> = ({ children, hideLogout })
           <span className="text-[10px] font-bold tracking-tight">Mensajes</span>
         </button>
       </nav>
+      )}
     </div>
   );
 };

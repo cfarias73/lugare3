@@ -75,6 +75,11 @@ const CreateSpaceContent: React.FC = () => {
           cancellationTiers: Array.isArray(v.cancellation_tiers) && v.cancellation_tiers.length > 0
             ? v.cancellation_tiers.map((t: any) => ({ days: String(t.days ?? ''), percent: String(t.percent ?? '') }))
             : [{ days: '60', percent: '100' }, { days: '30', percent: '50' }],
+          schedules: v.schedules || {
+            morning: { enabled: true, start: '08:00', end: '13:00' },
+            afternoon: { enabled: true, start: '14:00', end: '19:00' },
+            night: { enabled: true, start: '20:00', end: '02:00' },
+          },
         });
       })
       .catch((e) => {
@@ -191,6 +196,7 @@ const CreateSpaceContent: React.FC = () => {
               .map((t) => ({ days: Math.round(t.days), percent: Math.min(100, Math.max(0, Math.round(t.percent))) }))
               .sort((a, b) => b.days - a.days)
           : null,
+        schedules: data.schedules,
       };
       if (isEdit && venueId) {
         if (removedExistingIds.length > 0) {
@@ -702,6 +708,220 @@ const CreateSpaceContent: React.FC = () => {
                   <p>Si tu paquete es $15,000 / 150 personas / 5h, y persona extra $20 y hora extra $3,000:</p>
                   <p className="mt-1">• 155 personas, 6 h → $15,000 + (5×$20×6) + $3,000 = <span className="font-bold">$18,600</span></p>
                 </div>
+              </div>
+            </div>
+
+            <div>
+              <h2 className="text-lg font-bold mb-6 dark:text-white font-display tracking-tight">Horarios de turnos</h2>
+              <div className="bg-white dark:bg-surface-dark border border-slate-100 dark:border-slate-800 rounded-[32px] p-8 shadow-sm space-y-6">
+                <p className="text-xs text-slate-500 leading-relaxed">
+                  Configura las horas exactas en las que permites reservas para cada turno. Puedes desactivar turnos si no operas en ese horario.
+                </p>
+
+                {/* Turno Mañana */}
+                <div className="p-4 rounded-2xl border border-slate-100 dark:border-slate-800 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="material-icons-outlined text-amber-500 text-lg">wb_sunny</span>
+                      <span className="text-sm font-bold text-slate-800 dark:text-white">Turno Mañana</span>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={data.schedules?.morning.enabled ?? true}
+                        onChange={(e) => {
+                          const morning = { ...(data.schedules?.morning || { start: '08:00', end: '13:00' }), enabled: e.target.checked };
+                          updateData({
+                            schedules: {
+                              morning,
+                              afternoon: data.schedules?.afternoon || { enabled: true, start: '14:00', end: '19:00' },
+                              night: data.schedules?.night || { enabled: true, start: '20:00', end: '02:00' },
+                            },
+                          });
+                        }}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                    </label>
+                  </div>
+                  {(data.schedules?.morning.enabled ?? true) && (
+                    <div className="grid grid-cols-2 gap-3 pt-2">
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Inicio</label>
+                        <input
+                          type="time"
+                          value={data.schedules?.morning.start || '08:00'}
+                          onChange={(e) => {
+                            const morning = { ...(data.schedules?.morning || { enabled: true, end: '13:00' }), start: e.target.value };
+                            updateData({
+                              schedules: {
+                                morning,
+                                afternoon: data.schedules?.afternoon || { enabled: true, start: '14:00', end: '19:00' },
+                                night: data.schedules?.night || { enabled: true, start: '20:00', end: '02:00' },
+                              },
+                            });
+                          }}
+                          className={inputBase}
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Fin</label>
+                        <input
+                          type="time"
+                          value={data.schedules?.morning.end || '13:00'}
+                          onChange={(e) => {
+                            const morning = { ...(data.schedules?.morning || { enabled: true, start: '08:00' }), end: e.target.value };
+                            updateData({
+                              schedules: {
+                                morning,
+                                afternoon: data.schedules?.afternoon || { enabled: true, start: '14:00', end: '19:00' },
+                                night: data.schedules?.night || { enabled: true, start: '20:00', end: '02:00' },
+                              },
+                            });
+                          }}
+                          className={inputBase}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Turno Tarde */}
+                <div className="p-4 rounded-2xl border border-slate-100 dark:border-slate-800 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="material-icons-outlined text-orange-500 text-lg">wb_twilight</span>
+                      <span className="text-sm font-bold text-slate-800 dark:text-white">Turno Tarde</span>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={data.schedules?.afternoon.enabled ?? true}
+                        onChange={(e) => {
+                          const afternoon = { ...(data.schedules?.afternoon || { start: '14:00', end: '19:00' }), enabled: e.target.checked };
+                          updateData({
+                            schedules: {
+                              morning: data.schedules?.morning || { enabled: true, start: '08:00', end: '13:00' },
+                              afternoon,
+                              night: data.schedules?.night || { enabled: true, start: '20:00', end: '02:00' },
+                            },
+                          });
+                        }}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                    </label>
+                  </div>
+                  {(data.schedules?.afternoon.enabled ?? true) && (
+                    <div className="grid grid-cols-2 gap-3 pt-2">
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Inicio</label>
+                        <input
+                          type="time"
+                          value={data.schedules?.afternoon.start || '14:00'}
+                          onChange={(e) => {
+                            const afternoon = { ...(data.schedules?.afternoon || { enabled: true, end: '19:00' }), start: e.target.value };
+                            updateData({
+                              schedules: {
+                                morning: data.schedules?.morning || { enabled: true, start: '08:00', end: '13:00' },
+                                afternoon,
+                                night: data.schedules?.night || { enabled: true, start: '20:00', end: '02:00' },
+                              },
+                            });
+                          }}
+                          className={inputBase}
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Fin</label>
+                        <input
+                          type="time"
+                          value={data.schedules?.afternoon.end || '19:00'}
+                          onChange={(e) => {
+                            const afternoon = { ...(data.schedules?.afternoon || { enabled: true, start: '14:00' }), end: e.target.value };
+                            updateData({
+                              schedules: {
+                                morning: data.schedules?.morning || { enabled: true, start: '08:00', end: '13:00' },
+                                afternoon,
+                                night: data.schedules?.night || { enabled: true, start: '20:00', end: '02:00' },
+                              },
+                            });
+                          }}
+                          className={inputBase}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Turno Noche */}
+                <div className="p-4 rounded-2xl border border-slate-100 dark:border-slate-800 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="material-icons-outlined text-indigo-500 text-lg">nights_stay</span>
+                      <span className="text-sm font-bold text-slate-800 dark:text-white">Turno Noche</span>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={data.schedules?.night.enabled ?? true}
+                        onChange={(e) => {
+                          const night = { ...(data.schedules?.night || { start: '20:00', end: '02:00' }), enabled: e.target.checked };
+                          updateData({
+                            schedules: {
+                              morning: data.schedules?.morning || { enabled: true, start: '08:00', end: '13:00' },
+                              afternoon: data.schedules?.afternoon || { enabled: true, start: '14:00', end: '19:00' },
+                              night,
+                            },
+                          });
+                        }}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                    </label>
+                  </div>
+                  {(data.schedules?.night.enabled ?? true) && (
+                    <div className="grid grid-cols-2 gap-3 pt-2">
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Inicio</label>
+                        <input
+                          type="time"
+                          value={data.schedules?.night.start || '20:00'}
+                          onChange={(e) => {
+                            const night = { ...(data.schedules?.night || { enabled: true, end: '02:00' }), start: e.target.value };
+                            updateData({
+                              schedules: {
+                                morning: data.schedules?.morning || { enabled: true, start: '08:00', end: '13:00' },
+                                afternoon: data.schedules?.afternoon || { enabled: true, start: '14:00', end: '19:00' },
+                                night,
+                              },
+                            });
+                          }}
+                          className={inputBase}
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Fin</label>
+                        <input
+                          type="time"
+                          value={data.schedules?.night.end || '02:00'}
+                          onChange={(e) => {
+                            const night = { ...(data.schedules?.night || { enabled: true, start: '20:00' }), end: e.target.value };
+                            updateData({
+                              schedules: {
+                                morning: data.schedules?.morning || { enabled: true, start: '08:00', end: '13:00' },
+                                afternoon: data.schedules?.afternoon || { enabled: true, start: '14:00', end: '19:00' },
+                                night,
+                              },
+                            });
+                          }}
+                          className={inputBase}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
               </div>
             </div>
           </section>

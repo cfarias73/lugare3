@@ -33,6 +33,7 @@ export const createInvitation = async (
     event_date: payload.date,
     event_time: payload.time,
     location: payload.location,
+    location_text: payload.location,
   };
   if (payload.coverImage) insertPayload.cover_image_url = payload.coverImage;
 
@@ -42,7 +43,7 @@ export const createInvitation = async (
     .select('*')
     .single();
   if (error || !inv) {
-    console.error('createInvitation error', error);
+    console.error('createInvitation error', error?.message || error, error);
     return null;
   }
   if (payload.guests.length > 0) {
@@ -52,7 +53,7 @@ export const createInvitation = async (
       email: g.email,
     }));
     const { error: gErr } = await supabase.from('invitation_guests').insert(rows);
-    if (gErr) console.error('insert guests error', gErr);
+    if (gErr) console.error('insert guests error', gErr?.message || gErr, gErr);
   }
   return inv;
 };

@@ -279,7 +279,7 @@ const Home: React.FC = () => {
         </div>
 
         {/* Categories Scroller */}
-        <div className="flex overflow-x-auto no-scrollbar gap-3 -mx-5 px-5 pb-2 snap-x">
+        <div className="flex overflow-x-auto horizontal-slider no-scrollbar gap-3 -mx-5 px-5 pb-2 snap-x">
           <button
             onClick={() => setActiveCategory('all')}
             className={`snap-start shrink-0 flex items-center gap-2 px-5 py-2.5 rounded-full font-medium whitespace-nowrap transition-all ${
@@ -313,7 +313,7 @@ const Home: React.FC = () => {
           <div className="flex justify-between items-end mb-4">
             <h2 className="text-lg font-bold font-display">Espacios disponibles</h2>
           </div>
-          <div className="flex overflow-x-auto no-scrollbar gap-5 -mx-5 px-5 pb-4 snap-x snap-mandatory">
+          <div className="flex overflow-x-auto horizontal-slider no-scrollbar gap-5 -mx-5 px-5 pb-4 snap-x snap-mandatory">
             {isLoading ? (
               [1, 2].map((i) => (
                 <div key={i} className="snap-center shrink-0 w-[calc(100vw-2.5rem)] max-w-[320px] bg-white dark:bg-surface-dark rounded-3xl overflow-hidden shadow-sm border border-slate-100 dark:border-slate-800">
@@ -330,10 +330,10 @@ const Home: React.FC = () => {
               <div 
                 key={venue.id} 
                 onClick={() => navigate(`/user/venue/${venue.id}`)}
-                className="snap-center shrink-0 w-[calc(100vw-2.5rem)] max-w-[320px] bg-white dark:bg-surface-dark rounded-3xl overflow-hidden shadow-sm border border-slate-100 dark:border-slate-800 cursor-pointer transform hover:scale-[0.98] transition-transform"
+                className="snap-center shrink-0 w-[calc(100vw-2.5rem)] max-w-[320px] bg-white dark:bg-surface-dark rounded-3xl overflow-hidden shadow-sm border border-slate-100 dark:border-slate-800 cursor-pointer transition-transform"
               >
                 <div className="relative h-48">
-                  <img alt={venue.name} className="w-full h-full object-cover" src={venue.image} loading="lazy" />
+                  <img alt={venue.name} className="w-full h-full object-cover pointer-events-none select-none" src={venue.image} loading="lazy" />
                   <div className="absolute top-4 right-4 flex gap-2 z-10">
                     <button 
                       className="bg-white/90 p-2 rounded-full shadow-md hover:text-primary transition-colors" 

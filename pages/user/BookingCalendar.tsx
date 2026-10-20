@@ -7,11 +7,28 @@ import { supabase } from '../../lib/supabaseClient';
 import { getBlockedDatesForMonth } from '../../src/services/availabilityService';
 import { calcVenuePricing } from '../../src/utils/pricing';
 
-const SLOT_TIMES = {
+const DEFAULT_SLOT_TIMES = {
   morning: { start: '08:00:00', end: '13:00:00', hours: 5 },
   afternoon: { start: '14:00:00', end: '19:00:00', hours: 5 },
   night: { start: '20:00:00', end: '02:00:00', hours: 6 },
-} as const;
+};
+
+const calcSlotHours = (startStr: string, endStr: string): number => {
+  const [sh, sm] = startStr.split(':').map(Number);
+  const [eh, em] = endStr.split(':').map(Number);
+  let startMins = sh * 60 + (sm || 0);
+  let endMins = eh * 60 + (em || 0);
+  if (endMins <= startMins) {
+    endMins += 24 * 60; // cruza la medianoche (ej. 20:00 a 02:00)
+  }
+  const diffHours = (endMins - startMins) / 60;
+  return Math.max(1, Math.round(diffHours * 10) / 10);
+};
+
+const formatTimeShort = (timeStr: string) => {
+  const parts = timeStr.split(':');
+  return `${parts[0]}:${parts[1]}`;
+};
 
 const MONTH_NAMES = [
   'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
@@ -65,6 +82,7 @@ const BookingCalendar: React.FC = () => {
             includedHours: Math.max(Number(data.included_hours) || 0, Number(data.min_hours) || 0) || 5,
             extraPersonPrice: data.extra_person_price != null ? Number(data.extra_person_price) : 0,
             maxExtraHours: data.max_extra_hours != null ? Number(data.max_extra_hours) : 6,
+            schedules: data.schedules || null,
           };
           setVenue(mapped);
           if (mapped.baseCapacity) setGuests(mapped.baseCapacity);
@@ -136,13 +154,53 @@ const BookingCalendar: React.FC = () => {
     else setMonth(m => m + 1);
   };
 
+  const resolvedSlots = useMemo(() => {
+    const s = venue?.schedules;
+    const m = s?.morning;
+    const a = s?.afternoon;
+    const n = s?.night;
+
+    const morningStart = m?.start ? (m.start.length === 5 ? `${m.start}:00` : m.start) : DEFAULT_SLOT_TIMES.morning.start;
+    const morningEnd = m?.end ? (m.end.length === 5 ? `${m.end}:00` : m.end) : DEFAULT_SLOT_TIMES.morning.end;
+
+    const afternoonStart = a?.start ? (a.start.length === 5 ? `${a.start}:00` : a.start) : DEFAULT_SLOT_TIMES.afternoon.start;
+    const afternoonEnd = a?.end ? (a.end.length === 5 ? `${a.end}:00` : a.end) : DEFAULT_SLOT_TIMES.afternoon.end;
+
+    const nightStart = n?.start ? (n.start.length === 5 ? `${n.start}:00` : n.start) : DEFAULT_SLOT_TIMES.night.start;
+    const nightEnd = n?.end ? (n.end.length === 5 ? `${n.end}:00` : n.end) : DEFAULT_SLOT_TIMES.night.end;
+
+    return {
+      morning: {
+        enabled: m?.enabled ?? true,
+        start: morningStart,
+        end: morningEnd,
+        hours: calcSlotHours(morningStart, morningEnd),
+        label: `${formatTimeShort(morningStart)} - ${formatTimeShort(morningEnd)}`,
+      },
+      afternoon: {
+        enabled: a?.enabled ?? true,
+        start: afternoonStart,
+        end: afternoonEnd,
+        hours: calcSlotHours(afternoonStart, afternoonEnd),
+        label: `${formatTimeShort(afternoonStart)} - ${formatTimeShort(afternoonEnd)}`,
+      },
+      night: {
+        enabled: n?.enabled ?? true,
+        start: nightStart,
+        end: nightEnd,
+        hours: calcSlotHours(nightStart, nightEnd),
+        label: `${formatTimeShort(nightStart)} - ${formatTimeShort(nightEnd)}`,
+      },
+    };
+  }, [venue?.schedules]);
+
   const handleContinue = () => {
     if (selectedDay && selectedSlot) {
       if (isPastDate(toDateStr(year, month, selectedDay))) {
         alert('No es posible reservar en fechas pasadas. Selecciona una fecha a partir de hoy.');
         return;
       }
-      const slot = SLOT_TIMES[selectedSlot];
+      const slot = resolvedSlots[selectedSlot];
       const totalHours = slot.hours + extraHours;
       const [eh, em, es] = slot.end.split(':').map(Number);
       const endDate = new Date(2000, 0, 1, eh, em, es);
@@ -180,7 +238,7 @@ const BookingCalendar: React.FC = () => {
   }
 
   const extraPrice = Number(venue.extraHourPrice ?? venue.price) || 0;
-  const slotHours = selectedSlot ? SLOT_TIMES[selectedSlot].hours : 0;
+  const slotHours = selectedSlot ? resolvedSlots[selectedSlot].hours : 0;
   const usingFlexible = venue.basePrice != null;
   const flexibleBreakdown = usingFlexible && selectedSlot
     ? calcVenuePricing({
@@ -278,27 +336,33 @@ const BookingCalendar: React.FC = () => {
             <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">Selecciona la hora para tu reserva</p>
 
             <div className="grid grid-cols-3 gap-2">
-              <button
-                onClick={() => setSelectedSlot('morning')}
-                className={`p-3 rounded-xl text-center border transition-all ${selectedSlot === 'morning' ? 'border-secondary bg-secondary/5' : 'border-slate-100 dark:border-slate-800'}`}
-              >
-                <div className={`text-[10px] ${selectedSlot === 'morning' ? 'text-secondary font-medium' : 'text-slate-400'}`}>Mañana</div>
-                <div className={`text-xs font-bold mt-1 ${selectedSlot === 'morning' ? 'text-secondary' : ''}`}>8:00 - 13:00</div>
-              </button>
-              <button
-                onClick={() => setSelectedSlot('afternoon')}
-                className={`p-3 rounded-xl text-center border transition-all ${selectedSlot === 'afternoon' ? 'border-secondary bg-secondary/5' : 'border-slate-100 dark:border-slate-800'}`}
-              >
-                <div className={`text-[10px] ${selectedSlot === 'afternoon' ? 'text-secondary font-medium' : 'text-slate-400'}`}>Tarde</div>
-                <div className={`text-xs font-bold mt-1 ${selectedSlot === 'afternoon' ? 'text-secondary' : ''}`}>14:00 - 19:00</div>
-              </button>
-              <button
-                onClick={() => setSelectedSlot('night')}
-                className={`p-3 rounded-xl text-center border transition-all ${selectedSlot === 'night' ? 'border-secondary bg-secondary/5' : 'border-slate-100 dark:border-slate-800'}`}
-              >
-                <div className={`text-[10px] ${selectedSlot === 'night' ? 'text-secondary font-medium' : 'text-slate-400'}`}>Noche</div>
-                <div className={`text-xs font-bold mt-1 ${selectedSlot === 'night' ? 'text-secondary' : ''}`}>20:00 - 2:00</div>
-              </button>
+              {resolvedSlots.morning.enabled && (
+                <button
+                  onClick={() => setSelectedSlot('morning')}
+                  className={`p-3 rounded-xl text-center border transition-all ${selectedSlot === 'morning' ? 'border-secondary bg-secondary/5' : 'border-slate-100 dark:border-slate-800'}`}
+                >
+                  <div className={`text-[10px] ${selectedSlot === 'morning' ? 'text-secondary font-medium' : 'text-slate-400'}`}>Mañana</div>
+                  <div className={`text-xs font-bold mt-1 ${selectedSlot === 'morning' ? 'text-secondary' : ''}`}>{resolvedSlots.morning.label}</div>
+                </button>
+              )}
+              {resolvedSlots.afternoon.enabled && (
+                <button
+                  onClick={() => setSelectedSlot('afternoon')}
+                  className={`p-3 rounded-xl text-center border transition-all ${selectedSlot === 'afternoon' ? 'border-secondary bg-secondary/5' : 'border-slate-100 dark:border-slate-800'}`}
+                >
+                  <div className={`text-[10px] ${selectedSlot === 'afternoon' ? 'text-secondary font-medium' : 'text-slate-400'}`}>Tarde</div>
+                  <div className={`text-xs font-bold mt-1 ${selectedSlot === 'afternoon' ? 'text-secondary' : ''}`}>{resolvedSlots.afternoon.label}</div>
+                </button>
+              )}
+              {resolvedSlots.night.enabled && (
+                <button
+                  onClick={() => setSelectedSlot('night')}
+                  className={`p-3 rounded-xl text-center border transition-all ${selectedSlot === 'night' ? 'border-secondary bg-secondary/5' : 'border-slate-100 dark:border-slate-800'}`}
+                >
+                  <div className={`text-[10px] ${selectedSlot === 'night' ? 'text-secondary font-medium' : 'text-slate-400'}`}>Noche</div>
+                  <div className={`text-xs font-bold mt-1 ${selectedSlot === 'night' ? 'text-secondary' : ''}`}>{resolvedSlots.night.label}</div>
+                </button>
+              )}
             </div>
           </section>
         )}

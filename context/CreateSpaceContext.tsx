@@ -32,6 +32,12 @@ export interface CreateSpaceData {
   cancellationType: 'non_refundable' | 'flexible' | 'custom';
   cancellationDays: string;
   cancellationTiers: { days: string; percent: string }[];
+  // Horarios de turnos
+  schedules?: {
+    morning: { enabled: boolean; start: string; end: string };
+    afternoon: { enabled: boolean; start: string; end: string };
+    night: { enabled: boolean; start: string; end: string };
+  };
 }
 
 interface CreateSpaceContextType {
@@ -69,6 +75,11 @@ const defaultData: CreateSpaceData = {
   cancellationType: 'non_refundable',
   cancellationDays: '30',
   cancellationTiers: [{ days: '60', percent: '100' }, { days: '30', percent: '50' }],
+  schedules: {
+    morning: { enabled: true, start: '08:00', end: '13:00' },
+    afternoon: { enabled: true, start: '14:00', end: '19:00' },
+    night: { enabled: true, start: '20:00', end: '02:00' },
+  },
 };
 
 const CreateSpaceContext = createContext<CreateSpaceContextType | undefined>(undefined);

@@ -24,6 +24,11 @@ export interface VenuePayload {
   cancellation_type?: 'non_refundable' | 'flexible' | 'custom';
   cancellation_days?: number | null;
   cancellation_tiers?: { days: number; percent: number }[] | null;
+  schedules?: {
+    morning?: { enabled: boolean; start: string; end: string };
+    afternoon?: { enabled: boolean; start: string; end: string };
+    night?: { enabled: boolean; start: string; end: string };
+  } | null;
 }
 
 export interface CreateVenueData extends VenuePayload {

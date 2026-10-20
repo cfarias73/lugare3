@@ -30,8 +30,13 @@ const AvailabilityCalendar: React.FC = () => {
   const venueId = searchParams.get('venueId');
 
   const today = new Date();
+  const todayStr = `${today.getFullYear()}-${pad(today.getMonth() + 1)}-${pad(today.getDate())}`;
+  const isPastDate = (dateStr: string) => dateStr < todayStr;
+
   const [year, setYear] = useState(today.getFullYear());
   const [month, setMonth] = useState(today.getMonth()); // 0-indexed
+  const isCurrentOrPastMonth =
+    year < today.getFullYear() || (year === today.getFullYear() && month <= today.getMonth());
   const [blockedDates, setBlockedDates] = useState<Set<string>>(new Set());
   const [bookedDates, setBookedDates] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(false);
@@ -87,6 +92,7 @@ const AvailabilityCalendar: React.FC = () => {
   }, [year, month]);
 
   const goPrevMonth = () => {
+    if (isCurrentOrPastMonth) return;
     if (month === 0) { setYear(y => y - 1); setMonth(11); }
     else setMonth(m => m - 1);
   };
@@ -101,6 +107,10 @@ const AvailabilityCalendar: React.FC = () => {
       return;
     }
     const dateStr = toDateStr(year, month, day);
+    if (isPastDate(dateStr)) {
+      toast.error('No es posible bloquear o modificar fechas pasadas');
+      return;
+    }
     if (bookedDates.has(dateStr)) {
       toast.error('Este día ya tiene una reserva confirmada');
       return;
@@ -176,7 +186,9 @@ const AvailabilityCalendar: React.FC = () => {
       <div className="bg-white dark:bg-surface-dark rounded-[32px] p-6 shadow-sm border border-slate-100 dark:border-slate-800 flex items-center justify-between group transition-all">
         <button
           onClick={goPrevMonth}
-          className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-slate-50 dark:hover:bg-slate-800 transition-all text-slate-400 active:scale-75"
+          disabled={isCurrentOrPastMonth}
+          className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-slate-50 dark:hover:bg-slate-800 transition-all text-slate-400 active:scale-75 disabled:opacity-30 disabled:cursor-not-allowed"
+          aria-label="Mes anterior"
         >
           <span className="material-icons-outlined">chevron_left</span>
         </button>
@@ -187,6 +199,7 @@ const AvailabilityCalendar: React.FC = () => {
         <button
           onClick={goNextMonth}
           className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-slate-50 dark:hover:bg-slate-800 transition-all text-slate-400 active:scale-75"
+          aria-label="Mes siguiente"
         >
           <span className="material-icons-outlined">chevron_right</span>
         </button>
@@ -204,6 +217,7 @@ const AvailabilityCalendar: React.FC = () => {
             const dateStr = toDateStr(year, month, day);
             const isBlocked = blockedDates.has(dateStr);
             const isBooked = bookedDates.has(dateStr);
+            const isPast = isPastDate(dateStr);
             const isToday =
               day === today.getDate() &&
               month === today.getMonth() &&
@@ -212,6 +226,8 @@ const AvailabilityCalendar: React.FC = () => {
             let classes = "w-10 h-10 flex items-center justify-center mx-auto rounded-full transition-all cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-75";
             if (isBooked) {
               classes = "w-10 h-10 bg-primary text-white flex items-center justify-center mx-auto rounded-[14px] cursor-not-allowed";
+            } else if (isPast) {
+              classes = "w-10 h-10 text-slate-300 dark:text-slate-600 flex items-center justify-center mx-auto rounded-full cursor-not-allowed";
             } else if (isBlocked) {
               classes = "w-10 h-10 bg-slate-900 dark:bg-slate-700 text-white flex items-center justify-center mx-auto rounded-[14px] cursor-pointer active:scale-90 line-through";
             } else if (isToday) {
@@ -222,8 +238,8 @@ const AvailabilityCalendar: React.FC = () => {
               <div
                 key={day}
                 className={classes}
-                onClick={() => !loading && !isBooked && toggleBlockedDate(day)}
-                title={isBooked ? 'Reserva confirmada' : undefined}
+                onClick={() => !loading && !isBooked && !isPast && toggleBlockedDate(day)}
+                title={isBooked ? 'Reserva confirmada' : isPast ? 'Fecha pasada' : undefined}
               >
                 {day}
               </div>
