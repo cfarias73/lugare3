@@ -126,23 +126,74 @@ const Messages: React.FC = () => {
   // Realtime: incoming messages
   const convIds = useMemo(() => conversations.map((c) => c.id), [conversations]);
   useMessagesRealtime(
-    !!user && convIds.length > 0,
+    !!user,
     (msg) => {
       if (msg.sender_id === user?.id) return;
       if (msg.conversation_id === activeId) {
         setThread((prev) => (prev.some((m) => m.id === msg.id) ? prev : [...prev, msg]));
         setTimeout(() => scrollToBottom(true), 50);
       }
-      setConversations((prev) =>
-        prev.map((c) =>
+      setConversations((prev) => {
+        const exists = prev.some((c) => c.id === msg.conversation_id);
+        if (!exists) {
+          loadConversations();
+          return prev;
+        }
+        return prev.map((c) =>
           c.id === msg.conversation_id
             ? { ...c, last_message: msg.content, last_message_at: msg.created_at }
             : c
-        )
-      );
+        );
+      });
     },
     convIds
   );
+
+  // Polling de respaldo mientras un chat esté activo (por si la conexión WebSocket fluctúa en móviles)
+  useEffect(() => {
+    if (!activeId) return;
+    const interval = setInterval(async () => {
+      const fresh = await getMessages(activeId);
+      if (fresh) {
+        setThread((prev) => {
+          if (
+            prev.length === fresh.length &&
+            prev[prev.length - 1]?.id === fresh[fresh.length - 1]?.id
+          ) {
+            return prev;
+          }
+          return fresh;
+        });
+      }
+    }, 3500);
+    return () => clearInterval(interval);
+  }, [activeId]);
+
+  // Sincronizar al volver a la app o primer plano
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        loadConversations();
+        if (activeId) {
+          getMessages(activeId).then((fresh) => {
+            if (fresh) {
+              setThread((prev) => {
+                if (
+                  prev.length === fresh.length &&
+                  prev[prev.length - 1]?.id === fresh[fresh.length - 1]?.id
+                ) {
+                  return prev;
+                }
+                return fresh;
+              });
+            }
+          });
+        }
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => document.removeEventListener('visibilitychange', handleVisibility);
+  }, [activeId, loadConversations]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();

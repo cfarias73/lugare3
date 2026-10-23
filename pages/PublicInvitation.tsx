@@ -110,7 +110,7 @@ const PublicInvitation: React.FC = () => {
           )}
         </div>
         <div className="border-t border-slate-100 p-6 text-center">
-          <p className="text-xs text-slate-400">Invitación enviada a través de Eventify</p>
+          <p className="text-xs text-slate-400">Invitación enviada a través de Lugare</p>
         </div>
       </div>
     </div>

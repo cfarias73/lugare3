@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../../components/Layout';
 import { useUser } from '../../context/UserContext';
@@ -9,6 +9,7 @@ import { getCategories, Category } from '../../src/services/categoryService';
 import { shareVenue } from '../../src/utils/shareVenue';
 import { getInitialsAvatar } from '../../src/utils/avatar';
 import { toast } from 'sonner';
+import { Capacitor } from '@capacitor/core';
 import { Venue } from '../../types';
 
 const Home: React.FC = () => {
@@ -73,7 +74,17 @@ const Home: React.FC = () => {
     });
   }, [venues, activeCategory, selectedCity, searchQuery]);
 
-  const nextBooking = bookings.length > 0 ? bookings[0] : null;
+  const [showInvitationsModal, setShowInvitationsModal] = useState(false);
+
+  const nextBooking = useMemo(() => {
+    if (!bookings || bookings.length === 0) return null;
+    const todayStr = new Date().toISOString().split('T')[0];
+    const upcoming = bookings
+      .filter((b) => (b.eventDate ? b.eventDate >= todayStr : true) && b.rawStatus !== 'cancelled')
+      .sort((a, b) => (a.eventDate || '').localeCompare(b.eventDate || ''));
+    if (upcoming.length > 0) return upcoming[0];
+    return bookings[0] || null;
+  }, [bookings]);
 
   const handleShare = async (e: React.MouseEvent, venue: Venue) => {
     e.stopPropagation();
@@ -84,6 +95,64 @@ const Home: React.FC = () => {
       console.error('Error al compartir espacio:', error);
       toast.error('No se pudo compartir el espacio. Inténtalo de nuevo.');
     }
+  };
+
+  const copyInvitationLink = async (invitationId: string) => {
+    const baseUrl = Capacitor.isNativePlatform() ? 'https://www.lugare.mx' : window.location.origin;
+    const url = `${baseUrl}/#/invite/${invitationId}`;
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(url);
+      } else {
+        const textArea = document.createElement('textarea');
+        textArea.value = url;
+        textArea.setAttribute('readonly', '');
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-9999px';
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+      }
+      toast.success('Enlace de la invitación copiado');
+    } catch {
+      toast.error('No se pudo copiar el enlace');
+    }
+  };
+
+  const venuesSliderRef = useRef<HTMLDivElement | null>(null);
+  const dragStartRef = useRef<{ x: number; y: number } | null>(null);
+  const isDraggingCardRef = useRef(false);
+
+  const handleCardPointerDown = (e: React.PointerEvent) => {
+    dragStartRef.current = { x: e.clientX, y: e.clientY };
+    isDraggingCardRef.current = false;
+  };
+
+  const handleCardPointerMove = (e: React.PointerEvent) => {
+    if (!dragStartRef.current) return;
+    const dx = Math.abs(e.clientX - dragStartRef.current.x);
+    const dy = Math.abs(e.clientY - dragStartRef.current.y);
+    if (dx > 8 || dy > 8) {
+      isDraggingCardRef.current = true;
+    }
+  };
+
+  const handleCardClick = (venueId: string) => {
+    if (isDraggingCardRef.current) {
+      isDraggingCardRef.current = false;
+      return;
+    }
+    navigate(`/user/venue/${venueId}`);
+  };
+
+  const scrollSlider = (direction: 'left' | 'right') => {
+    if (!venuesSliderRef.current) return;
+    const scrollAmount = venuesSliderRef.current.clientWidth * 0.85;
+    venuesSliderRef.current.scrollBy({
+      left: direction === 'left' ? -scrollAmount : scrollAmount,
+      behavior: 'smooth',
+    });
   };
 
   return (
@@ -168,9 +237,17 @@ const Home: React.FC = () => {
           <section>
             <div className="flex justify-between items-end mb-4">
               <h2 className="text-lg font-bold font-display">Tus invitaciones</h2>
-              <button className="text-secondary font-semibold text-sm">Gestionar</button>
+              <button 
+                onClick={() => setShowInvitationsModal(true)} 
+                className="text-secondary font-semibold text-sm hover:underline"
+              >
+                Gestionar
+              </button>
             </div>
-            <div className="bg-white dark:bg-surface-dark rounded-3xl p-5 border border-slate-100 dark:border-slate-800 shadow-sm flex items-center gap-4">
+            <div 
+              onClick={() => setShowInvitationsModal(true)}
+              className="bg-white dark:bg-surface-dark rounded-3xl p-5 border border-slate-100 dark:border-slate-800 shadow-sm flex items-center gap-4 cursor-pointer hover:border-primary/30 transition-colors"
+            >
               <div className="bg-secondary/10 w-12 h-12 rounded-2xl flex items-center justify-center">
                 <span className="material-icons-outlined text-secondary">send</span>
               </div>
@@ -179,10 +256,15 @@ const Home: React.FC = () => {
                   {invitations.length} {invitations.length === 1 ? 'invitación enviada' : 'invitaciones enviadas'}
                 </p>
                 <p className="text-xs text-slate-500">
-                  {invitations[0].guests?.length || 0} invitados en total
+                  {invitations.reduce((acc, inv) => acc + (inv.guests?.length || 0), 0)} invitados en total
                 </p>
               </div>
-              <button className="text-primary font-bold text-xs">Ver estado</button>
+              <button 
+                onClick={(e) => { e.stopPropagation(); setShowInvitationsModal(true); }}
+                className="text-primary font-bold text-xs"
+              >
+                Ver estado
+              </button>
             </div>
           </section>
         )}
@@ -310,10 +392,33 @@ const Home: React.FC = () => {
 
         {/* Approved spaces available for browsing */}
         <section>
-          <div className="flex justify-between items-end mb-4">
+          <div className="flex justify-between items-center mb-4">
             <h2 className="text-lg font-bold font-display">Espacios disponibles</h2>
+            {filteredVenues.length > 1 && (
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => scrollSlider('left')}
+                  className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center hover:bg-slate-200 dark:hover:bg-slate-700 active:scale-95 transition-all shadow-xs"
+                  aria-label="Espacios anteriores"
+                >
+                  <span className="material-icons-round text-lg">chevron_left</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => scrollSlider('right')}
+                  className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center hover:bg-slate-200 dark:hover:bg-slate-700 active:scale-95 transition-all shadow-xs"
+                  aria-label="Espacios siguientes"
+                >
+                  <span className="material-icons-round text-lg">chevron_right</span>
+                </button>
+              </div>
+            )}
           </div>
-          <div className="flex overflow-x-auto horizontal-slider no-scrollbar gap-5 -mx-5 px-5 pb-4 snap-x snap-mandatory">
+          <div 
+            ref={venuesSliderRef}
+            className="flex overflow-x-auto horizontal-slider no-scrollbar gap-5 -mx-5 px-5 pb-4 snap-x snap-proximity scroll-smooth"
+          >
             {isLoading ? (
               [1, 2].map((i) => (
                 <div key={i} className="snap-center shrink-0 w-[calc(100vw-2.5rem)] max-w-[320px] bg-white dark:bg-surface-dark rounded-3xl overflow-hidden shadow-sm border border-slate-100 dark:border-slate-800">
@@ -329,8 +434,10 @@ const Home: React.FC = () => {
             ) : filteredVenues.map((venue) => (
               <div 
                 key={venue.id} 
-                onClick={() => navigate(`/user/venue/${venue.id}`)}
-                className="snap-center shrink-0 w-[calc(100vw-2.5rem)] max-w-[320px] bg-white dark:bg-surface-dark rounded-3xl overflow-hidden shadow-sm border border-slate-100 dark:border-slate-800 cursor-pointer transition-transform"
+                onPointerDown={handleCardPointerDown}
+                onPointerMove={handleCardPointerMove}
+                onClick={() => handleCardClick(venue.id)}
+                className="snap-center shrink-0 w-[calc(100vw-2.5rem)] max-w-[320px] bg-white dark:bg-surface-dark rounded-3xl overflow-hidden shadow-sm border border-slate-100 dark:border-slate-800 cursor-pointer select-none transition-transform active:scale-[0.99]"
               >
                 <div className="relative h-48">
                   <img alt={venue.name} className="w-full h-full object-cover pointer-events-none select-none" src={venue.image} loading="lazy" />
@@ -363,7 +470,17 @@ const Home: React.FC = () => {
                   </p>
                   <div className="flex justify-between items-center">
                     <p className="font-bold text-primary font-display">${venue.price.toLocaleString()}<span className="text-[10px] text-slate-400 font-normal">/hora</span></p>
-                    <button onClick={(e) => { e.stopPropagation(); navigate(`/user/venue/${venue.id}`); }} className="bg-secondary text-white px-6 py-3 rounded-xl text-xs font-bold hover:bg-secondary/90 transition-colors">Reservar</button>
+                    <button 
+                      onClick={(e) => { 
+                        e.stopPropagation(); 
+                        if (!isDraggingCardRef.current) {
+                          navigate(`/user/venue/${venue.id}`);
+                        }
+                      }} 
+                      className="bg-secondary text-white px-6 py-3 rounded-xl text-xs font-bold hover:bg-secondary/90 transition-colors"
+                    >
+                      Reservar
+                    </button>
                   </div>
                 </div>
               </div>
@@ -372,6 +489,128 @@ const Home: React.FC = () => {
         </section>
 
       </div>
+
+      {/* Modal de Gestión de Invitaciones */}
+      {showInvitationsModal && (
+        <div 
+          className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm animate-fadeIn"
+          onClick={() => setShowInvitationsModal(false)}
+        >
+          <div 
+            className="bg-white dark:bg-surface-dark w-full sm:max-w-lg rounded-t-[32px] sm:rounded-[32px] p-6 shadow-2xl max-h-[85vh] flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-secondary/10 flex items-center justify-center text-secondary">
+                  <span className="material-icons-outlined">mail</span>
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold font-display text-slate-800 dark:text-white">Tus invitaciones</h2>
+                  <p className="text-xs text-slate-500">
+                    {invitations.length} {invitations.length === 1 ? 'evento registrado' : 'eventos registrados'}
+                  </p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setShowInvitationsModal(false)}
+                className="w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 hover:text-slate-800 dark:hover:text-white transition-colors"
+                aria-label="Cerrar"
+              >
+                <span className="material-icons-outlined text-lg">close</span>
+              </button>
+            </div>
+
+            <div className="overflow-y-auto py-4 space-y-3 flex-1">
+              {invitations.length === 0 ? (
+                <div className="text-center py-8">
+                  <span className="material-icons-outlined text-4xl text-slate-300 dark:text-slate-600 mb-2">mark_email_read</span>
+                  <p className="text-sm font-semibold text-slate-600 dark:text-slate-400">No tienes invitaciones creadas aún</p>
+                  <p className="text-xs text-slate-400 mt-1">Crea una invitación digital para tu próximo evento y compártela con tus invitados.</p>
+                </div>
+              ) : (
+                invitations.map((inv) => {
+                  const guestCount = inv.guests?.length || 0;
+                  const confirmedCount = inv.guests?.filter((g) => g.status === 'confirmed').length || 0;
+                  return (
+                    <div 
+                      key={inv.id} 
+                      className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700/60 space-y-3"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-bold text-sm text-slate-800 dark:text-white truncate">
+                            {inv.eventName || 'Invitación a Evento'}
+                          </h3>
+                          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500 mt-1">
+                            {inv.date && (
+                              <span className="flex items-center gap-1">
+                                <span className="material-icons-outlined text-xs text-primary">calendar_today</span>
+                                {inv.date}
+                              </span>
+                            )}
+                            {inv.time && (
+                              <span className="flex items-center gap-1">
+                                <span className="material-icons-outlined text-xs text-primary">schedule</span>
+                                {inv.time}
+                              </span>
+                            )}
+                            {inv.location && (
+                              <span className="flex items-center gap-1 truncate max-w-[180px]">
+                                <span className="material-icons-outlined text-xs text-primary">place</span>
+                                {inv.location}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-secondary/10 text-secondary shrink-0">
+                          {confirmedCount}/{guestCount} conf.
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-2 pt-2 border-t border-slate-200/60 dark:border-slate-700/60">
+                        <button
+                          type="button"
+                          onClick={() => copyInvitationLink(inv.id)}
+                          className="flex-1 py-2 px-3 rounded-xl bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-xs font-bold text-slate-700 dark:text-slate-200 flex items-center justify-center gap-1.5 hover:bg-slate-100 dark:hover:bg-slate-600 transition-colors"
+                        >
+                          <span className="material-icons-outlined text-sm">content_copy</span>
+                          Copiar enlace
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowInvitationsModal(false);
+                            navigate(`/invite/${inv.id}`);
+                          }}
+                          className="flex-1 py-2 px-3 rounded-xl bg-primary text-white text-xs font-bold flex items-center justify-center gap-1.5 hover:bg-primary/90 transition-colors shadow-sm"
+                        >
+                          <span className="material-icons-outlined text-sm">visibility</span>
+                          Ver invitación
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+            <div className="pt-3 border-t border-slate-100 dark:border-slate-800">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowInvitationsModal(false);
+                  navigate('/user/invitations/create');
+                }}
+                className="w-full py-3.5 rounded-2xl bg-secondary text-white font-bold text-sm flex items-center justify-center gap-2 hover:bg-secondary/90 transition-colors shadow-md"
+              >
+                <span className="material-icons-outlined text-base">add_circle_outline</span>
+                Crear nueva invitación
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </Layout>
   );
 };

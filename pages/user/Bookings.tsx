@@ -337,7 +337,17 @@ const Bookings: React.FC = () => {
                         Mensaje
                       </button>
                       <button
-                        onClick={() => navigate('/user/invitations/create')}
+                        onClick={() => navigate('/user/invitations/create', {
+                          state: {
+                            bookingId: booking.id,
+                            venueId: booking.venueId,
+                            venueName: booking.venueName,
+                            location: [booking.venueName, booking.location].filter(Boolean).join(' — '),
+                            date: booking.eventDate,
+                            time: booking.time ? booking.time.split(' - ')[0]?.trim() : '',
+                            coverImage: booking.image,
+                          }
+                        })}
                         className="bg-[#5EB962] hover:bg-green-600 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-colors"
                       >
                         Invitaciones

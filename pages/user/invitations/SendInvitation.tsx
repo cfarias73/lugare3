@@ -11,7 +11,7 @@ import InvitationPreview from '../../../components/InvitationPreview';
 
 const SendInvitation: React.FC = () => {
   const navigate = useNavigate();
-  const { user, draftInvitation, addInvitation, updateDraftInvitation } = useUser();
+  const { user, draftInvitation, addInvitation, clearDraftInvitation } = useUser();
   const guests = draftInvitation?.guests || [];
   const [sending, setSending] = useState(false);
   const [shareUrl, setShareUrl] = useState<string | null>(null);
@@ -55,7 +55,7 @@ const SendInvitation: React.FC = () => {
       coverImage: saved.cover_image_url,
     };
     addInvitation(newInvitation);
-    updateDraftInvitation({});
+    clearDraftInvitation();
     const baseUrl = Capacitor.isNativePlatform() ? 'https://www.lugare.mx' : window.location.origin;
     // HashRouter URL
     const url = `${baseUrl}/#/invite/${saved.id}`;

@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useUser } from '../../../context/UserContext';
 import { getUserBookings } from '../../../src/services/userService';
 import InvitationPreview from '../../../components/InvitationPreview';
@@ -79,40 +79,75 @@ const resizeImageToDataUrl = (file: File, maxDim = 1200, quality = 0.82): Promis
     reader.readAsDataURL(file);
   });
 
+interface LocationBookingState {
+  bookingId?: string;
+  venueId?: string;
+  venueName?: string;
+  location?: string;
+  date?: string;
+  time?: string;
+  coverImage?: string;
+}
+
 const CreateInvitation: React.FC = () => {
   const navigate = useNavigate();
-  const { user, updateDraftInvitation, draftInvitation } = useUser();
+  const locationObj = useLocation();
+  const routeBookingState = (locationObj.state as LocationBookingState | null) || null;
+  const { user, updateDraftInvitation, clearDraftInvitation, draftInvitation } = useUser();
+
+  const [availableBookings, setAvailableBookings] = useState<any[]>([]);
+  const [selectedBookingId, setSelectedBookingId] = useState<string>(routeBookingState?.bookingId || '');
+
   const [selectedDesign, setSelectedDesign] = useState<string>(draftInvitation?.designId || 'romantico');
   const [eventName, setEventName] = useState(draftInvitation?.eventName || '');
-  const [date, setDate] = useState(draftInvitation?.date || '');
-  const [time, setTime] = useState(draftInvitation?.time || '');
-  const [location, setLocation] = useState(draftInvitation?.location || '');
-  const [coverImage, setCoverImage] = useState<string | null>(draftInvitation?.coverImage || null);
+  const [date, setDate] = useState(routeBookingState?.date || draftInvitation?.date || '');
+  const [time, setTime] = useState(routeBookingState?.time || draftInvitation?.time || '');
+  const [location, setLocation] = useState(routeBookingState?.location || draftInvitation?.location || '');
+  const [coverImage, setCoverImage] = useState<string | null>(routeBookingState?.coverImage || draftInvitation?.coverImage || null);
   const [showPreview, setShowPreview] = useState(false);
   const [uploading, setUploading] = useState(false);
 
-  // Auto-prefill from latest booking (venue name + address + date + time)
+  const applyBookingToForm = (b: any) => {
+    setSelectedBookingId(b.id);
+    const venueName = b.venues?.name || '';
+    const venueAddr = b.venues?.location || '';
+    const composed = [venueName, venueAddr].filter(Boolean).join(' — ');
+    if (composed) setLocation(composed);
+    if (b.event_date) setDate(b.event_date);
+    if (b.start_time) setTime(String(b.start_time).slice(0, 5));
+    if (b.venues?.venue_images?.[0]?.image_url) {
+      setCoverImage(b.venues.venue_images[0].image_url);
+    }
+  };
+
   useEffect(() => {
     if (!user) return;
-    if (location && date && time) return; // user already has data
     (async () => {
       try {
-        const bookings = await getUserBookings(user.id);
-        const latest = (bookings || []).find((b: any) =>
+        const bookingsData = await getUserBookings(user.id);
+        const validBookings = (bookingsData || []).filter((b: any) =>
           ['confirmed', 'paid', 'pending'].includes(b.status)
         );
-        if (!latest) return;
-        const venueName = latest.venues?.name || '';
-        const venueAddr = latest.venues?.location || '';
-        const composed = [venueName, venueAddr].filter(Boolean).join(' — ');
-        if (!location && composed) setLocation(composed);
-        if (!date && latest.event_date) setDate(latest.event_date);
-        if (!time && latest.start_time) setTime(String(latest.start_time).slice(0, 5));
+        setAvailableBookings(validBookings);
+
+        // Si venimos específicamente de una reserva:
+        if (routeBookingState && (routeBookingState.date || routeBookingState.location)) {
+          setSelectedBookingId(routeBookingState.bookingId || '');
+          if (routeBookingState.date) setDate(routeBookingState.date);
+          if (routeBookingState.time) setTime(routeBookingState.time);
+          if (routeBookingState.location) setLocation(routeBookingState.location);
+          if (routeBookingState.coverImage) setCoverImage(routeBookingState.coverImage);
+          return;
+        }
+
+        // Si no venimos de una reserva específica y no hay datos cargados, aplicar la primera activa:
+        if (!date && !location && validBookings.length > 0) {
+          applyBookingToForm(validBookings[0]);
+        }
       } catch (e) {
-        console.error('prefill from booking failed', e);
+        console.error('Error al cargar reservas para invitaciones:', e);
       }
     })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -236,6 +271,46 @@ const CreateInvitation: React.FC = () => {
 
           <div className="pt-8 space-y-6">
             <h2 className="text-xl font-bold text-slate-900 dark:text-white font-display">Datos Básicos</h2>
+
+            {availableBookings.length > 0 && (
+              <div className="bg-orange-50/60 dark:bg-orange-950/20 border border-orange-200/70 dark:border-orange-800/40 rounded-2xl p-4 space-y-2">
+                <div className="flex items-center gap-2">
+                  <span className="material-icons-outlined text-primary text-lg">event_available</span>
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider">
+                    Vincular a una de tus reservaciones
+                  </label>
+                </div>
+                <select
+                  value={selectedBookingId}
+                  onChange={(e) => {
+                    const id = e.target.value;
+                    setSelectedBookingId(id);
+                    if (!id) return;
+                    const found = availableBookings.find((b) => b.id === id);
+                    if (found) {
+                      applyBookingToForm(found);
+                      toast.success(`Datos vinculados con ${found.venues?.name || 'la reserva'}`);
+                    }
+                  }}
+                  className="w-full px-3 py-2.5 bg-white dark:bg-surface-dark border border-orange-200/80 dark:border-orange-800/60 rounded-xl text-xs font-medium text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-primary/30"
+                >
+                  <option value="">-- Elige una reservación o ingresa manual --</option>
+                  {availableBookings.map((b) => {
+                    const vName = b.venues?.name || 'Espacio';
+                    const vDate = b.event_date ? new Date(b.event_date + 'T00:00:00').toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
+                    return (
+                      <option key={b.id} value={b.id}>
+                        {vName} — {vDate}
+                      </option>
+                    );
+                  })}
+                </select>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                  Selecciona la reserva para cargar salón, fecha y horario automáticamente.
+                </p>
+              </div>
+            )}
+
             <div className="space-y-4">
               <div className="group">
                 <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-2 ml-1 uppercase tracking-widest">Nombre del evento</label>

@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getVenueById, getVenueServices, PublicVenueService } from '../../src/services/venueService';
 import { useUser } from '../../context/UserContext';
@@ -18,6 +18,8 @@ const VenueDetail: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [extras, setExtras] = useState<PublicVenueService[]>([]);
   const [selectedExtras, setSelectedExtras] = useState<Set<string>>(new Set());
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const galleryRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -123,9 +125,89 @@ const VenueDetail: React.FC = () => {
       </div>
 
       <main className="pb-36">
-        <div className="relative w-full h-[320px] bg-slate-200 overflow-hidden">
-          <img alt={venue.name} className="w-full h-full object-cover" src={venue.image} loading="lazy"/>
-        </div>
+        {(() => {
+          const gallery = venue.images && venue.images.length > 0 ? venue.images : [venue.image];
+          const handleGalleryScroll = () => {
+            if (!galleryRef.current) return;
+            const width = galleryRef.current.clientWidth;
+            if (width > 0) {
+              const idx = Math.round(galleryRef.current.scrollLeft / width);
+              setActiveImageIndex(idx);
+            }
+          };
+          const scrollToImage = (idx: number) => {
+            if (!galleryRef.current) return;
+            const width = galleryRef.current.clientWidth;
+            galleryRef.current.scrollTo({ left: idx * width, behavior: 'smooth' });
+            setActiveImageIndex(idx);
+          };
+
+          return (
+            <div className="relative w-full h-[320px] bg-slate-900 overflow-hidden select-none">
+              <div
+                ref={galleryRef}
+                onScroll={handleGalleryScroll}
+                className="flex w-full h-full overflow-x-auto snap-x snap-mandatory no-scrollbar"
+                style={{ WebkitOverflowScrolling: 'touch' }}
+              >
+                {gallery.map((imgUrl, i) => (
+                  <div key={i} className="w-full h-full flex-shrink-0 snap-center relative">
+                    <img
+                      alt={`${venue.name} foto ${i + 1}`}
+                      className="w-full h-full object-cover pointer-events-none"
+                      src={imgUrl}
+                      loading={i === 0 ? 'eager' : 'lazy'}
+                    />
+                  </div>
+                ))}
+              </div>
+
+              {gallery.length > 1 && (
+                <>
+                  {activeImageIndex > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => scrollToImage(activeImageIndex - 1)}
+                      className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-black/40 text-white rounded-full flex items-center justify-center backdrop-blur-md active:scale-90 transition-all z-20"
+                      aria-label="Foto anterior"
+                    >
+                      <span className="material-icons-round text-xl">chevron_left</span>
+                    </button>
+                  )}
+                  {activeImageIndex < gallery.length - 1 && (
+                    <button
+                      type="button"
+                      onClick={() => scrollToImage(activeImageIndex + 1)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-black/40 text-white rounded-full flex items-center justify-center backdrop-blur-md active:scale-90 transition-all z-20"
+                      aria-label="Foto siguiente"
+                    >
+                      <span className="material-icons-round text-xl">chevron_right</span>
+                    </button>
+                  )}
+
+                  <div className="absolute bottom-3 right-4 z-20 bg-black/60 backdrop-blur-md text-white text-[11px] font-semibold px-2.5 py-1 rounded-full flex items-center gap-1 shadow">
+                    <span className="material-icons-round text-xs">photo_camera</span>
+                    <span>{activeImageIndex + 1} / {gallery.length}</span>
+                  </div>
+
+                  <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5">
+                    {gallery.map((_, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => scrollToImage(i)}
+                        className={`h-1.5 rounded-full transition-all ${
+                          i === activeImageIndex ? 'w-5 bg-white' : 'w-1.5 bg-white/50'
+                        }`}
+                        aria-label={`Ir a foto ${i + 1}`}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          );
+        })()}
 
         <div className="px-5 pt-6 space-y-6">
           <div className="bg-orange-50/50 dark:bg-orange-900/10 rounded-3xl border border-orange-100/50 dark:border-orange-800/30 overflow-hidden transition-all duration-300 shadow-sm">

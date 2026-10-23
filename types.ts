@@ -8,6 +8,7 @@ export interface Venue {
   rating: number;
   reviewsCount: number;
   image: string;
+  images?: string[];
   capacity: number;
   size: number;
   lat: number;
@@ -60,12 +61,16 @@ export interface Booking {
   totalPrice: number;
   status: 'Confirmada' | 'Pendiente' | 'Cancelada';
   statusColor: string;
+  eventDate?: string;
+  rawStatus?: string;
 }
 
 export interface Guest {
   id: string;
   name: string;
   email: string;
+  phone?: string;
+  status?: 'confirmed' | 'pending' | 'declined';
 }
 
 export interface User {

@@ -1,6 +1,8 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { User, Booking, Invitation } from '../types';
 import { supabase } from '../lib/supabaseClient';
+import { listInvitations } from '../src/services/invitationService';
+import { getUserBookings } from '../src/services/userService';
 
 interface UserContextType {
   user: User | null;
@@ -11,10 +13,13 @@ interface UserContextType {
   logout: () => Promise<void>;
   bookings: Booking[];
   addBooking: (booking: Booking) => void;
+  refreshBookings: () => Promise<void>;
   invitations: Invitation[];
   addInvitation: (invitation: Invitation) => void;
+  refreshInvitations: () => Promise<void>;
   draftInvitation: Partial<Invitation> | null;
-  updateDraftInvitation: (data: Partial<Invitation>) => void;
+  updateDraftInvitation: (data: Partial<Invitation> | null) => void;
+  clearDraftInvitation: () => void;
   favorites: string[];
   toggleFavorite: (venueId: string) => void;
   isFavorite: (venueId: string) => boolean;
@@ -56,6 +61,64 @@ const hydrateUser = async (sessionUser: any): Promise<User> => {
   };
 };
 
+const mapDbBooking = (b: any): Booking => {
+  const STATUS_LABELS: Record<string, 'Confirmada' | 'Pendiente' | 'Cancelada'> = {
+    confirmed: 'Confirmada',
+    paid: 'Confirmada',
+    pending: 'Pendiente',
+    cancelled: 'Cancelada',
+  };
+  const STATUS_COLORS: Record<string, string> = {
+    confirmed: '#00B4BB',
+    paid: '#00B4BB',
+    pending: '#F59E0B',
+    cancelled: '#EF4444',
+  };
+
+  let formattedDate = b.event_date || '';
+  try {
+    if (b.event_date) {
+      formattedDate = new Date(b.event_date + 'T00:00:00').toLocaleDateString('es-MX', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      });
+    }
+  } catch {}
+
+  const startTime = b.start_time ? String(b.start_time).slice(0, 5) : '';
+  const endTime = b.end_time ? String(b.end_time).slice(0, 5) : '';
+  const timeStr = startTime && endTime ? `${startTime} - ${endTime}` : startTime;
+
+  return {
+    id: b.id,
+    venueName: b.venues?.name || 'Espacio',
+    location: b.venues?.location || '',
+    image: b.venues?.venue_images?.[0]?.image_url || 'https://images.unsplash.com/photo-1519167758481-83f5e181dcc3?auto=format&fit=crop&q=80&w=800',
+    date: formattedDate,
+    time: timeStr,
+    totalPrice: Number(b.total_price) || 0,
+    status: STATUS_LABELS[b.status] || 'Pendiente',
+    statusColor: STATUS_COLORS[b.status] || '#00B4BB',
+    eventDate: b.event_date || '',
+    rawStatus: b.status || '',
+  };
+};
+
+const mapDbInvitation = (r: any): Invitation => ({
+  id: r.id,
+  designId: r.design_id,
+  eventName: r.event_name,
+  date: r.event_date || '',
+  time: r.event_time || '',
+  location: r.location || '',
+  guests: (r.invitation_guests || r.guests || []).map((g: any) => ({
+    id: g.id,
+    name: g.name,
+    email: g.email,
+  })),
+  coverImage: r.cover_image_url,
+});
 
 export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -195,15 +258,57 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const addBooking = (booking: Booking) => setBookings((prev) => [booking, ...prev]);
-  const addInvitation = (invitation: Invitation) => setInvitations((prev) => [invitation, ...prev]);
+  const refreshInvitations = useCallback(async () => {
+    if (!user?.id) return;
+    try {
+      const data = await listInvitations(user.id);
+      setInvitations((data || []).map(mapDbInvitation));
+    } catch (e) {
+      console.error('[UserContext] Error al refrescar invitaciones:', e);
+    }
+  }, [user?.id]);
 
-  const updateDraftInvitation = (data: Partial<Invitation>) => {
-    setDraftInvitation((prev) => ({ ...prev, ...data }));
+  const refreshBookings = useCallback(async () => {
+    if (!user?.id) return;
+    try {
+      const data = await getUserBookings(user.id);
+      setBookings((data || []).map(mapDbBooking));
+    } catch (e) {
+      console.error('[UserContext] Error al refrescar reservas:', e);
+    }
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (user?.id) {
+      refreshInvitations();
+      refreshBookings();
+    }
+  }, [user?.id, refreshInvitations, refreshBookings]);
+
+  const addBooking = (booking: Booking) => {
+    setBookings((prev) => [booking, ...prev]);
+    refreshBookings();
+  };
+
+  const addInvitation = (invitation: Invitation) => {
+    setInvitations((prev) => [invitation, ...prev]);
+    refreshInvitations();
+  };
+
+  const clearDraftInvitation = () => {
+    setDraftInvitation(null);
+  };
+
+  const updateDraftInvitation = (data: Partial<Invitation> | null) => {
+    if (data === null || Object.keys(data).length === 0) {
+      setDraftInvitation(null);
+      return;
+    }
+    setDraftInvitation((prev) => ({ ...(prev || {}), ...data }));
   };
 
   return (
-    <UserContext.Provider value={{ user, authReady, updateName, signIn, signUp, logout, bookings, addBooking, invitations, addInvitation, draftInvitation, updateDraftInvitation, favorites, toggleFavorite, isFavorite }}>
+    <UserContext.Provider value={{ user, authReady, updateName, signIn, signUp, logout, bookings, addBooking, refreshBookings, invitations, addInvitation, refreshInvitations, draftInvitation, updateDraftInvitation, clearDraftInvitation, favorites, toggleFavorite, isFavorite }}>
       {children}
     </UserContext.Provider>
   );

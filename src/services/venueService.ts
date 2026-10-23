@@ -3,17 +3,21 @@ import { Venue } from '../../types';
 
 const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1519167758481-83f5e181dcc3?auto=format&fit=crop&q=80&w=800';
 
-const mapVenue = (v: any): Venue => ({
-  id: v.id,
-  name: v.name,
-  location: v.location,
-  city: v.city,
-  price: Number(v.price_per_hour) || 0,
-  rating: v.rating || 0,
-  reviewsCount: v.reviews_count || 0,
-  image: v.venue_images && v.venue_images.length > 0
-    ? v.venue_images[0].image_url
-    : FALLBACK_IMAGE,
+const mapVenue = (v: any): Venue => {
+  const images: string[] = Array.isArray(v.venue_images) && v.venue_images.length > 0
+    ? v.venue_images.map((img: any) => (typeof img === 'string' ? img : img?.image_url)).filter(Boolean)
+    : [FALLBACK_IMAGE];
+
+  return {
+    id: v.id,
+    name: v.name,
+    location: v.location,
+    city: v.city,
+    price: Number(v.price_per_hour) || 0,
+    rating: v.rating || 0,
+    reviewsCount: v.reviews_count || 0,
+    image: images[0] || FALLBACK_IMAGE,
+    images: images.length > 0 ? images : [FALLBACK_IMAGE],
   capacity: v.capacity,
   size: v.size_sqm,
   lat: v.lat || 19.4326,
@@ -34,7 +38,8 @@ const mapVenue = (v: any): Venue => ({
   cancellationDays: v.cancellation_days != null ? Number(v.cancellation_days) : undefined,
   cancellationTiers: Array.isArray(v.cancellation_tiers) ? v.cancellation_tiers : [],
   maxExtraHours: v.max_extra_hours != null ? Number(v.max_extra_hours) : 6,
-});
+  };
+};
 
 export const getVenues = async (): Promise<Venue[]> => {
   const { data, error } = await supabase
