@@ -1,4 +1,5 @@
 import React from 'react';
+import { formatLocalDate } from '../src/utils/date';
 
 export interface InvitationPreviewData {
   designId?: string;
@@ -20,9 +21,9 @@ const designStyles: Record<string, { gradient: string; icon: string; label: stri
 const formatDate = (d?: string) => {
   if (!d) return '';
   try {
-    return new Date(d + 'T00:00:00').toLocaleDateString('es-MX', {
+    return formatLocalDate(d, {
       weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
-    });
+    }, 'es-MX');
   } catch { return d; }
 };
 

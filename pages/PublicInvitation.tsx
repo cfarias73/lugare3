@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { getPublicInvitation, PublicInvitation as PI } from '../src/services/invitationService';
+import { formatLocalDate } from '../src/utils/date';
 
 const designStyles: Record<string, { gradient: string; icon: string; label: string }> = {
   romantico: { gradient: 'from-pink-400 via-rose-300 to-orange-300', icon: 'favorite', label: 'Romántico' },
@@ -13,9 +14,9 @@ const designStyles: Record<string, { gradient: string; icon: string; label: stri
 const formatDate = (d: string) => {
   if (!d) return '';
   try {
-    return new Date(d + 'T00:00:00').toLocaleDateString('es-MX', {
+    return formatLocalDate(d, {
       weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
-    });
+    }, 'es-MX');
   } catch { return d; }
 };
 

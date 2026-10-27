@@ -16,6 +16,7 @@ import {
   refundPercentFor,
   refundAmountFor,
 } from '../../src/utils/cancellation';
+import { formatLocalDate, getTodayDateStr } from '../../src/utils/date';
 
 const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1519167758481-83f5e181dcc3?auto=format&fit=crop&q=80&w=800';
 
@@ -51,7 +52,7 @@ const STATUS_LABELS: Record<string, string> = {
 
 const formatDate = (iso: string) => {
   try {
-    return new Date(iso).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
+    return formatLocalDate(iso, { day: 'numeric', month: 'long', year: 'numeric' }, 'es-ES');
   } catch { return iso; }
 };
 
@@ -206,7 +207,7 @@ const Bookings: React.FC = () => {
       .finally(() => setLoading(false));
   }, [user]);
 
-  const today = new Date().toISOString().slice(0, 10);
+  const today = getTodayDateStr();
   const tabFiltered = bookings.filter((b) => tab === 'upcoming' ? b.eventDate >= today : b.eventDate < today);
   const filteredBookings = tabFiltered.filter((b) => {
     const q = query.trim().toLowerCase();

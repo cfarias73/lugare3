@@ -12,6 +12,7 @@ import {
   loadPlatformSettings,
   fmtMXN,
 } from '../../src/utils/commissions';
+import { formatLocalDate } from '../../src/utils/date';
 
 type Filter = 'pending' | 'paid' | 'all';
 
@@ -112,7 +113,7 @@ const Payouts: React.FC = () => {
               {items.map((r) => (
                 <tr key={r.id} className="text-sm dark:text-slate-300">
                   <td className="p-4 whitespace-nowrap">
-                    {r.event_date ? new Date(r.event_date).toLocaleDateString('es-MX') : '—'}
+                    {r.event_date ? formatLocalDate(r.event_date, undefined, 'es-MX') : '—'}
                   </td>
                   <td className="p-4 font-medium">{r.venue_name || '—'}</td>
                   <td className="p-4">

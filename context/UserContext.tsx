@@ -3,6 +3,7 @@ import { User, Booking, Invitation } from '../types';
 import { supabase } from '../lib/supabaseClient';
 import { listInvitations } from '../src/services/invitationService';
 import { getUserBookings } from '../src/services/userService';
+import { formatLocalDate } from '../src/utils/date';
 
 interface UserContextType {
   user: User | null;
@@ -75,16 +76,11 @@ const mapDbBooking = (b: any): Booking => {
     cancelled: '#EF4444',
   };
 
-  let formattedDate = b.event_date || '';
-  try {
-    if (b.event_date) {
-      formattedDate = new Date(b.event_date + 'T00:00:00').toLocaleDateString('es-MX', {
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
-      });
-    }
-  } catch {}
+  const formattedDate = formatLocalDate(b.event_date, {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  }, 'es-MX');
 
   const startTime = b.start_time ? String(b.start_time).slice(0, 5) : '';
   const endTime = b.end_time ? String(b.end_time).slice(0, 5) : '';
