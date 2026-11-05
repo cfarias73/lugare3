@@ -68,6 +68,26 @@
     <link rel="stylesheet" href="/index.css">
   </head>
   <body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 antialiased">
+    <script>
+      (function() {
+        try {
+          var hash = window.location.hash || '';
+          var search = window.location.search || '';
+          var isRecovery = hash.indexOf('type=recovery') !== -1 || search.indexOf('type=recovery') !== -1;
+          if (isRecovery) {
+            try {
+              sessionStorage.setItem('lugare_password_recovery', 'true');
+            } catch (e) {}
+            if (hash.indexOf('access_token=') !== -1 && !hash.startsWith('#/')) {
+              var cleanHash = hash.replace(/^#/, '');
+              var cleanSearch = search ? search.replace(/^\?/, '') : '';
+              var combinedParams = cleanSearch ? (cleanSearch + '&' + cleanHash) : cleanHash;
+              window.location.replace('/?' + combinedParams + '#/reset-password');
+            }
+          }
+        } catch (e) {}
+      })();
+    </script>
     <div id="root"></div>
   <script type="module" src="/index.tsx"></script>
 </body>

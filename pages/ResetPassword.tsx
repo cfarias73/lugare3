@@ -25,15 +25,50 @@ const ResetPassword: React.FC = () => {
         // Fall through to the invalid-link state when storage cannot be checked.
       }
 
+      const urlHasRecoveryToken =
+        window.location.search.includes('type=recovery') ||
+        window.location.hash.includes('type=recovery') ||
+        window.location.search.includes('access_token') ||
+        window.location.hash.includes('access_token');
+
+      hasRecoveryMarker = hasRecoveryMarker || urlHasRecoveryToken;
+
       const { data: { session } } = await supabase.auth.getSession();
       if (isMounted) {
-        setIsRecoveryLinkValid(hasRecoveryMarker && Boolean(session));
-        setIsCheckingLink(false);
+        if (hasRecoveryMarker && session) {
+          setIsRecoveryLinkValid(true);
+          setIsCheckingLink(false);
+        } else if (!hasRecoveryMarker) {
+          setIsRecoveryLinkValid(false);
+          setIsCheckingLink(false);
+        }
       }
     };
 
     void checkRecoverySession();
-    return () => { isMounted = false; };
+
+    // Listen for Supabase recovery or signed-in events in case of async URL token parsing
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'PASSWORD_RECOVERY' || (Boolean(session) && sessionStorage.getItem(PASSWORD_RECOVERY_MARKER) === 'true')) {
+        if (isMounted) {
+          setIsRecoveryLinkValid(true);
+          setIsCheckingLink(false);
+        }
+      }
+    });
+
+    // Timeout safety fallback so it doesn't stay in "Validando el enlace..." forever
+    const timeoutId = window.setTimeout(() => {
+      if (isMounted) {
+        setIsCheckingLink(false);
+      }
+    }, 4000);
+
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+      window.clearTimeout(timeoutId);
+    };
   }, [location.state]);
 
   const handleSubmit = async (event: React.FormEvent) => {

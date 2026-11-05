@@ -81,6 +81,15 @@ const EntryPoint: React.FC = () => {
     );
   }
 
+  const isRecoveringPassword =
+    sessionStorage.getItem('lugare_password_recovery') === 'true' ||
+    window.location.search.includes('type=recovery') ||
+    window.location.hash.includes('type=recovery');
+
+  if (isRecoveringPassword) {
+    return <Navigate to="/reset-password" replace state={{ passwordRecovery: true }} />;
+  }
+
   if (user) {
     return <Navigate to={getRoleHomePath(user.role)} replace />;
   }
