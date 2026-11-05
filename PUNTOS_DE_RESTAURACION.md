@@ -34,6 +34,7 @@ A partir del punto `7e10a0b`, el desarrollo continúa con mejoras y nuevas solic
 | Commit | Descripción | Estado |
 | :--- | :--- | :--- |
 | `3ce85a5` | `fix(auth)`: Corrección de redirección y conflicto de tokens con `HashRouter` en recuperación de contraseña | 🟡 En pruebas de usuario |
+| `Pendiente` | `fix(admin)`: Corrección de `profiles.email` en Supabase y sincronización para desbloquear Usuarios, Anfitriones y Espacios | 🟢 Migración aplicada y en pruebas |
 | *Próximos* | Nuevos ajustes solicitados por el cliente en el tablero de administración | ⏳ Pendiente |
 
 ---

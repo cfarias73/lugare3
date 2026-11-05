@@ -125,7 +125,7 @@ const Users: React.FC = () => {
               filtered.map((user) => (
                 <tr key={user.id} className="text-sm dark:text-slate-300">
                   <td className="p-4 font-medium">{user.name || '—'}</td>
-                  <td className="p-4">{user.email}</td>
+                  <td className="p-4">{user.email || '—'}</td>
                   <td className="p-4">
                     <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${user.accountRole === 'Administrador' ? 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'}`}>
                       {user.accountRole}

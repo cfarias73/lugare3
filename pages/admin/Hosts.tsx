@@ -142,7 +142,7 @@ const Hosts: React.FC = () => {
               filtered.map((host) => (
                 <tr key={host.id} className="text-sm dark:text-slate-300">
                   <td className="p-4 font-medium">{host.name || '—'}</td>
-                  <td className="p-4">{host.email}</td>
+                  <td className="p-4">{host.email || '—'}</td>
                   <td className="p-4">{host.spaces}</td>
                   <td className="p-4">
                     {host.clabe ? (
