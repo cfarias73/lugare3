@@ -12,7 +12,7 @@ import { toast } from 'sonner';
 const VenueDetail: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams();
-  const { isFavorite, toggleFavorite } = useUser();
+  const { user, isFavorite, toggleFavorite } = useUser();
   const [isSummaryExpanded, setIsSummaryExpanded] = useState(false);
   const [venue, setVenue] = useState<Venue | null>(null);
   const [loading, setLoading] = useState(true);
@@ -76,6 +76,22 @@ const VenueDetail: React.FC = () => {
         <span className="material-icons-outlined text-slate-300 text-6xl">search_off</span>
         <h2 className="text-lg font-bold dark:text-white">Espacio no encontrado</h2>
         <p className="text-sm text-slate-500">Es posible que ya no esté disponible.</p>
+        <button onClick={() => navigate('/user/home')} className="bg-primary text-white px-6 py-3 rounded-xl font-bold">Volver al inicio</button>
+      </div>
+    );
+  }
+
+  const isOwnerOrAdmin = user && (user.id === venue.providerId || user.role === 'admin');
+  if (venue.status && venue.status !== 'approved' && !isOwnerOrAdmin) {
+    return (
+      <div className="bg-white dark:bg-background-dark min-h-screen max-w-md mx-auto flex flex-col items-center justify-center p-6 text-center gap-4">
+        <div className="w-16 h-16 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center text-amber-600">
+          <span className="material-icons-round text-3xl">hourglass_empty</span>
+        </div>
+        <h2 className="text-lg font-bold dark:text-white">Espacio en revisión</h2>
+        <p className="text-sm text-slate-500 max-w-xs">
+          Este espacio está siendo revisado por nuestro equipo y aún no está disponible para reservas públicas.
+        </p>
         <button onClick={() => navigate('/user/home')} className="bg-primary text-white px-6 py-3 rounded-xl font-bold">Volver al inicio</button>
       </div>
     );

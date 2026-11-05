@@ -10,6 +10,8 @@ const mapVenue = (v: any): Venue => {
 
   return {
     id: v.id,
+    providerId: v.provider_id,
+    status: v.status || 'pending',
     name: v.name,
     location: v.location,
     city: v.city,

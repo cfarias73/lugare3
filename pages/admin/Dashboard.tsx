@@ -9,7 +9,14 @@ import { toast } from 'sonner';
 const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
-  const [stats, setStats] = useState({ userCount: 0, providerCount: 0, bookingCount: 0, todayBookings: 0, revenue: 0 });
+  const [stats, setStats] = useState({ 
+    userCount: 0, 
+    providerCount: 0, 
+    bookingCount: 0, 
+    todayBookings: 0, 
+    revenue: 0,
+    pendingVenuesCount: 0,
+  });
 
   useEffect(() => {
     getAdminStats()
@@ -30,14 +37,26 @@ const AdminDashboard: React.FC = () => {
   }
 
   const cards = [
-    { label: 'Usuarios', value: stats.userCount.toLocaleString(), icon: 'people', path: '/admin/users' },
+    { 
+      label: 'Espacios por Aprobar', 
+      value: stats.pendingVenuesCount.toLocaleString(), 
+      icon: 'pending_actions', 
+      path: '/admin/spaces',
+      alert: stats.pendingVenuesCount > 0,
+    },
     { label: 'Anfitriones', value: stats.providerCount.toLocaleString(), icon: 'storefront', path: '/admin/hosts' },
+    { label: 'Usuarios', value: stats.userCount.toLocaleString(), icon: 'people', path: '/admin/users' },
     { label: 'Reservas Hoy', value: stats.todayBookings.toLocaleString(), icon: 'event', path: '/admin/bookings' },
     { label: 'Ingresos (completadas)', value: `$${stats.revenue.toLocaleString()}`, icon: 'payments', path: '/admin/finance' },
   ];
 
   const quickActions = [
-    { label: 'Aprobar espacios pendientes', path: '/admin/spaces', icon: 'pending_actions' },
+    { 
+      label: `Aprobar espacios pendientes ${stats.pendingVenuesCount > 0 ? `(${stats.pendingVenuesCount})` : ''}`, 
+      path: '/admin/spaces', 
+      icon: 'pending_actions',
+      highlight: stats.pendingVenuesCount > 0,
+    },
     { label: 'Gestionar categorías', path: '/admin/categories', icon: 'category' },
     { label: 'Ver todas las reservas', path: '/admin/bookings', icon: 'event_note' },
     { label: 'Configuración de plataforma', path: '/admin/settings', icon: 'settings' },
@@ -46,23 +65,40 @@ const AdminDashboard: React.FC = () => {
   return (
     <AdminLayout>
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
-        <header className="mb-6">
-          <h1 className="text-4xl font-bold font-display dark:text-white">Dashboard</h1>
-          <p className="text-slate-500 mt-2">Resumen general de la plataforma</p>
+        <header className="mb-6 flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h1 className="text-4xl font-bold font-display dark:text-white">Dashboard</h1>
+            <p className="text-slate-500 mt-2">Resumen general y control de calidad de la plataforma</p>
+          </div>
+          {stats.pendingVenuesCount > 0 && (
+            <button
+              onClick={() => navigate('/admin/spaces')}
+              className="bg-amber-500 hover:bg-amber-600 text-white font-bold px-4 py-2.5 rounded-2xl flex items-center gap-2 shadow-md shadow-amber-500/20 text-sm transition-all animate-pulse"
+            >
+              <span className="material-icons-round text-lg">notification_important</span>
+              <span>{stats.pendingVenuesCount} espacios por revisar</span>
+            </button>
+          )}
         </header>
 
-        <section className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+        <section className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4">
           {cards.map((stat) => (
             <button
               key={stat.label}
               onClick={() => navigate(stat.path)}
-              className="text-left bg-white dark:bg-surface-dark p-8 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 hover:border-primary hover:shadow-md transition-all"
+              className={`text-left p-6 rounded-3xl shadow-sm border transition-all ${
+                stat.alert
+                  ? 'bg-amber-50/70 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800/60 hover:border-amber-400'
+                  : 'bg-white dark:bg-surface-dark border-slate-100 dark:border-slate-800 hover:border-primary hover:shadow-md'
+              }`}
             >
-              <div className="w-14 h-14 bg-orange-50 dark:bg-orange-900/20 rounded-2xl flex items-center justify-center text-primary mb-4">
+              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-4 ${
+                stat.alert ? 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300' : 'bg-orange-50 dark:bg-orange-900/20 text-primary'
+              }`}>
                 <span className="material-icons-round text-2xl">{stat.icon}</span>
               </div>
-              <p className="text-xs text-slate-500 font-bold uppercase tracking-widest">{stat.label}</p>
-              <p className="text-3xl font-bold dark:text-white mt-2">{stat.value}</p>
+              <p className="text-[11px] text-slate-500 font-bold uppercase tracking-wider">{stat.label}</p>
+              <p className={`text-2xl font-bold mt-1 ${stat.alert ? 'text-amber-700 dark:text-amber-400' : 'dark:text-white'}`}>{stat.value}</p>
             </button>
           ))}
         </section>

@@ -1,6 +1,8 @@
 
 export interface Venue {
   id: string;
+  providerId?: string;
+  status?: string;
   name: string;
   location: string;
   city: string;

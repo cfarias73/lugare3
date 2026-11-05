@@ -15,55 +15,56 @@ const Layout: React.FC<LayoutProps> = ({ children, hideNav = false }) => {
 
   return (
     <div className="flex flex-col min-h-screen bg-background-light dark:bg-background-dark max-w-md mx-auto shadow-2xl relative overflow-hidden border-x border-slate-100 dark:border-slate-800">
-      <main className={`flex-1 flex flex-col ${hideNav ? '' : 'pb-[100px]'}`}>
+      <main className={`flex-1 flex flex-col ${hideNav ? '' : 'main-bottom-safe'}`}>
         {children}
       </main>
 
       {!hideNav && (
         <div className="fixed bottom-0 inset-x-0 max-w-md mx-auto z-50 pointer-events-none">
-          <nav className="pointer-events-auto bg-white dark:bg-surface-dark px-6 flex justify-between items-end relative h-[80px] pb-4 shadow-[0_-10px_40px_-10px_rgba(0,0,0,0.1)] rounded-t-[30px]">
+          <nav className="pointer-events-auto bg-white/98 dark:bg-surface-dark/98 backdrop-blur-md px-6 flex justify-between items-center relative min-h-[76px] pt-3 bottom-nav-safe border-t border-x border-slate-200/90 dark:border-slate-800 border-b-0 shadow-[0_-8px_30px_rgba(0,0,0,0.12),0_-2px_6px_rgba(0,0,0,0.04)] dark:shadow-[0_-8px_30px_rgba(0,0,0,0.5)] rounded-t-[28px]">
             {/* Left Items */}
-            <div className="flex gap-8 items-end pb-2">
+            <div className="flex gap-8 items-center pb-1">
               <button
                 onClick={() => navigate('/user/home')}
-                className={`flex flex-col items-center gap-1 transition-colors ${isActive('/user/home') ? 'text-primary' : 'text-slate-400 dark:text-slate-500'}`}
+                className={`flex flex-col items-center gap-1 transition-colors ${isActive('/user/home') ? 'text-primary' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'}`}
               >
-                <span className="material-icons-round text-[28px]">home</span>
+                <span className="material-icons-round text-[26px]">home</span>
                 <span className="text-[10px] font-bold">Inicio</span>
               </button>
               <button
                 onClick={() => navigate('/user/explore')}
-                className={`flex flex-col items-center gap-1 transition-colors ${isActive('/user/explore') ? 'text-primary' : 'text-slate-400 dark:text-slate-500'}`}
+                className={`flex flex-col items-center gap-1 transition-colors ${isActive('/user/explore') ? 'text-primary' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'}`}
               >
-                <span className="material-icons-round text-[28px]">explore</span>
+                <span className="material-icons-round text-[26px]">explore</span>
                 <span className="text-[10px] font-bold">Explorar</span>
               </button>
             </div>
 
             {/* Center Button */}
-            <div className="absolute left-1/2 -translate-x-1/2 -top-8">
+            <div className="absolute left-1/2 -translate-x-1/2 -top-7">
               <button 
                 onClick={() => navigate('/user/bookings')}
-                className="w-[64px] h-[64px] bg-primary rounded-full shadow-xl shadow-primary/40 flex items-center justify-center border-[5px] border-white dark:border-surface-dark transform active:scale-95 transition-transform"
+                aria-label="Reservas"
+                className="w-[60px] h-[60px] bg-primary rounded-full shadow-lg shadow-primary/35 ring-1 ring-slate-200/80 dark:ring-slate-700/80 flex items-center justify-center border-[4px] border-white dark:border-surface-dark transform active:scale-95 transition-transform"
               >
-                <span className="material-icons-round text-white text-[32px]">calendar_month</span>
+                <span className="material-icons-round text-white text-[30px]">calendar_month</span>
               </button>
             </div>
 
             {/* Right Items */}
-            <div className="flex gap-8 items-end pb-2">
+            <div className="flex gap-8 items-center pb-1">
               <button
                 onClick={() => navigate('/user/messages')}
-                className={`flex flex-col items-center gap-1 transition-colors ${isActive('/user/messages') ? 'text-primary' : 'text-slate-400 dark:text-slate-500'}`}
+                className={`flex flex-col items-center gap-1 transition-colors ${isActive('/user/messages') ? 'text-primary' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'}`}
               >
-                <span className="material-icons-round text-[28px]">chat_bubble_outline</span>
+                <span className="material-icons-round text-[26px]">chat_bubble_outline</span>
                 <span className="text-[10px] font-bold">Mensajes</span>
               </button>
               <button
                 onClick={() => navigate('/user/profile')}
-                className={`flex flex-col items-center gap-1 transition-colors ${isActive('/user/profile') ? 'text-primary' : 'text-slate-400 dark:text-slate-500'}`}
+                className={`flex flex-col items-center gap-1 transition-colors ${isActive('/user/profile') ? 'text-primary' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'}`}
               >
-                <span className="material-icons-round text-[28px]">person_outline</span>
+                <span className="material-icons-round text-[26px]">person_outline</span>
                 <span className="text-[10px] font-bold">Perfil</span>
               </button>
             </div>

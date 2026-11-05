@@ -65,13 +65,14 @@ const attachProviderProfiles = async (venues: any[]) => {
 };
 
 export const getAdminStats = async () => {
-  const [profiles, providerIds, adminIds, bookingsRes, todayRes, revenueRes] = await Promise.all([
+  const [profiles, providerIds, adminIds, bookingsRes, todayRes, revenueRes, pendingVenuesRes] = await Promise.all([
     getAllProfiles('id'),
     getProviderIds(),
     getUserIdsByRole('admin'),
     supabase.from('bookings').select('*', { count: 'exact', head: true }),
     supabase.from('bookings').select('*', { count: 'exact', head: true }).eq('event_date', new Date().toISOString().slice(0, 10)),
     supabase.from('bookings').select('total_price').eq('status', 'completed'),
+    supabase.from('venues').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
   ]);
   if (bookingsRes.error) throw bookingsRes.error;
   if (todayRes.error) throw todayRes.error;
@@ -85,6 +86,7 @@ export const getAdminStats = async () => {
     bookingCount: bookingsRes.count || 0,
     todayBookings: todayRes.count || 0,
     revenue,
+    pendingVenuesCount: pendingVenuesRes.count || 0,
   };
 };
 
@@ -185,10 +187,19 @@ export const cancelBooking = async (bookingId: string) => {
   }
 };
 
+export const getPendingVenuesCount = async (): Promise<number> => {
+  const { count, error } = await supabase
+    .from('venues')
+    .select('id', { count: 'exact', head: true })
+    .eq('status', 'pending');
+  if (error) return 0;
+  return count || 0;
+};
+
 export const getAllVenuesAdmin = async () => {
   const { data, error } = await supabase
     .from('venues')
-    .select('id, provider_id, name, status, city, category, created_at')
+    .select('*, venue_images (id, image_url)')
     .order('created_at', { ascending: false });
   if (error) throw error;
   return attachProviderProfiles(data || []);
@@ -197,8 +208,9 @@ export const getAllVenuesAdmin = async () => {
 export const getPendingVenues = async () => {
   const { data, error } = await supabase
     .from('venues')
-    .select('*')
-    .eq('status', 'pending');
+    .select('*, venue_images (id, image_url)')
+    .eq('status', 'pending')
+    .order('created_at', { ascending: false });
 
   if (error) throw error;
   return attachProviderProfiles(data || []);
@@ -207,7 +219,7 @@ export const getPendingVenues = async () => {
 export const approveVenue = async (venueId: string) => {
   const { data: venue, error } = await supabase
     .from('venues')
-    .update({ status: 'approved' })
+    .update({ status: 'approved', rejection_reason: null })
     .eq('id', venueId)
     .select('name, provider_id')
     .maybeSingle();
@@ -236,7 +248,7 @@ export const approveVenue = async (venueId: string) => {
 export const rejectVenue = async (venueId: string, reason?: string) => {
   const { data: venue, error } = await supabase
     .from('venues')
-    .update({ status: 'rejected' })
+    .update({ status: 'rejected', rejection_reason: reason || null })
     .eq('id', venueId)
     .select('name, provider_id')
     .maybeSingle();
@@ -250,7 +262,7 @@ export const rejectVenue = async (venueId: string, reason?: string) => {
     try {
       await createNotification({
         userId: venue.provider_id,
-        title: 'Espacio rechazado',
+        title: 'Espacio no aprobado',
         message: `Tu espacio "${venue.name}" no fue aprobado.${reason ? ` Motivo: ${reason}` : ''}`,
         type: 'error',
         link: '/provider/spaces',
