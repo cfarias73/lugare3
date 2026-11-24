@@ -257,7 +257,7 @@ const BookingCalendar: React.FC = () => {
 
   return (
     <div className="bg-background-light dark:bg-background-dark text-slate-800 dark:text-slate-100 min-h-screen max-w-md mx-auto flex flex-col transition-colors">
-      <header className="sticky top-0 z-50 bg-white dark:bg-background-dark border-b border-gray-100 dark:border-gray-800 px-4 py-4 flex items-center">
+      <header className="sticky top-0 z-50 bg-white dark:bg-background-dark border-b border-gray-100 dark:border-gray-800 px-4 pt-[calc(env(safe-area-inset-top,0px)+1rem)] pb-4 flex items-center">
         <button
           type="button"
           onClick={() => { if (window.history.length > 1) navigate(-1); else navigate(`/user/venue/${id}`); }}

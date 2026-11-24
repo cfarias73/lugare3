@@ -13,6 +13,7 @@ const mapVenue = (v: any): Venue => {
     providerId: v.provider_id,
     status: v.status || 'pending',
     name: v.name,
+    description: v.description || '',
     location: v.location,
     city: v.city,
     price: Number(v.price_per_hour) || 0,

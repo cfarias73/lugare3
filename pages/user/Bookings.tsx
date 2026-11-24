@@ -225,7 +225,7 @@ const Bookings: React.FC = () => {
       {cancelTarget && (
         <CancelBookingModal booking={cancelTarget} onClose={() => setCancelTarget(null)} onConfirm={handleCancel} />
       )}
-      <header className="sticky top-0 z-50 bg-white dark:bg-background-dark border-b border-slate-100 dark:border-slate-800 px-4 pt-4">
+      <header className="sticky top-0 z-50 bg-white dark:bg-background-dark border-b border-slate-100 dark:border-slate-800 px-4 pt-[calc(env(safe-area-inset-top,0px)+1rem)]">
         <div className="flex items-center justify-between mb-4">
           <h1 className="text-xl font-bold text-slate-800 dark:text-white">Historial de Reservas</h1>
           <span className="material-icons-outlined text-primary cursor-pointer">filter_alt</span>

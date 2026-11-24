@@ -125,7 +125,7 @@ const SendInvitation: React.FC = () => {
 
   return (
     <div className="bg-background-light dark:bg-background-dark text-slate-800 dark:text-slate-100 min-h-screen flex flex-col max-w-md mx-auto">
-      <header className="bg-white dark:bg-background-dark px-6 py-4 flex items-center justify-between border-b border-slate-100 dark:border-slate-800 sticky top-0 z-50">
+      <header className="bg-white dark:bg-background-dark px-6 pt-[calc(env(safe-area-inset-top,0px)+1rem)] pb-4 flex items-center justify-between border-b border-slate-100 dark:border-slate-800 sticky top-0 z-50">
         <button onClick={() => navigate(-1)} className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors">
           <span className="material-icons-outlined text-slate-700 dark:text-slate-200">arrow_back</span>
         </button>
@@ -243,7 +243,7 @@ const SendInvitation: React.FC = () => {
         )}
       </main>
 
-      <footer className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/80 dark:bg-background-dark/80 backdrop-blur-md p-6 border-t border-slate-100 dark:border-slate-800 z-50">
+      <footer className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/80 dark:bg-background-dark/80 backdrop-blur-md px-6 pt-5 pb-[calc(env(safe-area-inset-bottom,0px)+1.25rem)] border-t border-slate-100 dark:border-slate-800 z-50">
         {shareUrl ? (
           <button onClick={() => navigate('/user/home')} className="w-full py-4 bg-primary hover:bg-orange-600 text-white font-bold text-lg rounded-2xl transition-all shadow-lg shadow-primary/30 active:scale-[0.98]">
             Listo

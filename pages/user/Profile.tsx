@@ -223,7 +223,7 @@ const Profile: React.FC = () => {
 
   return (
     <Layout>
-      <header className="sticky top-0 z-10 bg-white/80 dark:bg-background-dark/80 backdrop-blur-md px-4 py-4 flex items-center justify-between">
+      <header className="sticky top-0 z-10 bg-white/80 dark:bg-background-dark/80 backdrop-blur-md px-4 pt-[calc(env(safe-area-inset-top,0px)+1rem)] pb-4 flex items-center justify-between">
         <h1 className="text-xl font-bold text-slate-800 dark:text-white">Mi Perfil</h1>
         <button 
           onClick={() => isEditing ? handleSave() : setIsEditing(true)} 

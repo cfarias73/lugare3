@@ -246,7 +246,7 @@ const Checkout: React.FC = () => {
 
   return (
     <div className="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen max-w-md mx-auto flex flex-col">
-      <header className="sticky top-0 z-50 bg-white dark:bg-background-dark border-b border-gray-100 dark:border-gray-800 px-4 py-4 flex items-center justify-between">
+      <header className="sticky top-0 z-50 bg-white dark:bg-background-dark border-b border-gray-100 dark:border-gray-800 px-4 pt-[calc(env(safe-area-inset-top,0px)+1rem)] pb-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <button
             type="button"
@@ -363,7 +363,7 @@ const Checkout: React.FC = () => {
         </div>
       </main>
 
-      <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white dark:bg-surface-dark border-t border-slate-100 dark:border-slate-800 px-6 pt-4 pb-10 flex flex-col gap-3 shadow-2xl z-50">
+      <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white dark:bg-surface-dark border-t border-slate-100 dark:border-slate-800 px-6 pt-4 pb-[calc(env(safe-area-inset-bottom,0px)+1.5rem)] flex flex-col gap-3 shadow-2xl z-50">
         <div className="flex justify-between items-center">
           <span className="text-slate-500 text-sm">Total a pagar</span>
           <span className="text-xl font-bold font-display">${total.toLocaleString()}</span>

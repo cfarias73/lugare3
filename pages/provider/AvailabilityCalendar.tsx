@@ -294,7 +294,7 @@ const AvailabilityCalendar: React.FC = () => {
   if (isWizard) {
     return (
       <div className="flex flex-col min-h-screen bg-background-light dark:bg-background-dark max-w-md mx-auto shadow-2xl relative transition-colors overflow-hidden border-x border-slate-100 dark:border-slate-800">
-        <header className="sticky top-0 z-50 bg-white/90 dark:bg-surface-dark/90 backdrop-blur-md border-b border-slate-100 dark:border-slate-800 px-6 py-4 flex items-center justify-between">
+        <header className="sticky top-0 z-50 bg-white/90 dark:bg-surface-dark/90 backdrop-blur-md border-b border-slate-100 dark:border-slate-800 px-6 pt-[calc(env(safe-area-inset-top,0px)+1rem)] pb-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <button onClick={() => navigate(-1)} className="p-2 -ml-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors active:scale-90">
               <span className="material-icons-outlined block">arrow_back</span>
@@ -310,7 +310,7 @@ const AvailabilityCalendar: React.FC = () => {
           {Content}
         </main>
 
-        <footer className="fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-surface-dark/95 backdrop-blur-xl border-t border-slate-100 dark:border-slate-800 px-6 py-6 flex gap-4 max-w-md mx-auto z-[60]">
+        <footer className="fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-surface-dark/95 backdrop-blur-xl border-t border-slate-100 dark:border-slate-800 px-6 pt-4 pb-[calc(env(safe-area-inset-bottom,0px)+1.25rem)] flex gap-4 max-w-md mx-auto z-[60]">
           <button
             onClick={() => navigate('/provider/spaces')}
             className="flex-1 py-4 bg-primary text-white font-bold text-[11px] uppercase tracking-[0.15em] rounded-2xl shadow-xl shadow-primary/20 transition-all active:scale-95 hover:bg-orange-600"
@@ -324,7 +324,7 @@ const AvailabilityCalendar: React.FC = () => {
 
   return (
     <ProviderLayout>
-      <header className="sticky top-0 z-50 bg-white/80 dark:bg-surface-dark/80 backdrop-blur-xl px-6 py-5 flex items-center justify-between border-b border-slate-100 dark:border-slate-800 transition-colors">
+      <header className="sticky top-0 z-50 bg-white/80 dark:bg-surface-dark/80 backdrop-blur-xl px-6 pt-[calc(env(safe-area-inset-top,0px)+1.25rem)] pb-5 flex items-center justify-between border-b border-slate-100 dark:border-slate-800 transition-colors">
         <div className="flex items-center gap-4">
           <button onClick={() => navigate(-1)} className="w-11 h-11 flex items-center justify-center rounded-2xl bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 transition-all active:scale-90 shadow-sm border border-slate-100 dark:border-slate-800">
             <span className="material-icons-outlined text-xl">arrow_back</span>

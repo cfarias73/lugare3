@@ -101,8 +101,13 @@ const VenueDetail: React.FC = () => {
   }
 
   const address = venue.location;
-  const embedUrl = `https://maps.google.com/maps?q=${encodeURIComponent(address)}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
-  const directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}`;
+  const hasExactCoords =
+    Number.isFinite(venue.lat) &&
+    Number.isFinite(venue.lng) &&
+    !(venue.lat === 19.4326 && venue.lng === -99.1332 && Boolean(address));
+  const mapTarget = hasExactCoords ? `${venue.lat},${venue.lng}` : address;
+  const embedUrl = `https://maps.google.com/maps?q=${encodeURIComponent(mapTarget)}&t=&z=16&ie=UTF8&iwloc=&output=embed`;
+  const directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(mapTarget)}`;
   const handleBack = () => {
     if (window.history.length > 1) {
       navigate(-1);
@@ -301,8 +306,10 @@ const VenueDetail: React.FC = () => {
 
           <section>
             <h2 className="text-lg font-bold mb-2 font-display">Descripción</h2>
-            <p className="text-slate-600 dark:text-slate-400 leading-relaxed text-[15px]">
-              {venue.name} es un espacio elegante ideal para eventos corporativos, bodas y celebraciones especiales. El lugar cuenta con instalaciones modernas que proporcionan comodidad y estilo para todos tus invitados.
+            <p className="text-slate-600 dark:text-slate-400 leading-relaxed text-[15px] whitespace-pre-line">
+              {venue.description?.trim()
+                ? venue.description
+                : `${venue.name} es un espacio disponible para eventos y celebraciones.`}
             </p>
           </section>
 

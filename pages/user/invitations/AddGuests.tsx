@@ -106,7 +106,7 @@ const AddGuests: React.FC = () => {
 
   return (
     <div className="bg-background-light dark:bg-background-dark text-slate-800 dark:text-slate-100 min-h-screen flex flex-col max-w-md mx-auto">
-      <header className="sticky top-0 z-10 bg-white dark:bg-background-dark border-b border-slate-100 dark:border-slate-800 px-4 py-4 flex items-center justify-between">
+      <header className="sticky top-0 z-10 bg-white dark:bg-background-dark border-b border-slate-100 dark:border-slate-800 px-4 pt-[calc(env(safe-area-inset-top,0px)+1rem)] pb-4 flex items-center justify-between">
         <button 
           onClick={() => navigate(-1)}
           className="p-2 -ml-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
@@ -252,7 +252,7 @@ const AddGuests: React.FC = () => {
         </div>
       </main>
 
-      <footer className="fixed bottom-0 left-0 right-0 bg-white dark:bg-background-dark border-t border-slate-100 dark:border-slate-800 px-6 py-5 flex gap-4 max-w-md mx-auto z-50">
+      <footer className="fixed bottom-0 left-0 right-0 bg-white dark:bg-background-dark border-t border-slate-100 dark:border-slate-800 px-6 pt-4 pb-[calc(env(safe-area-inset-bottom,0px)+1.25rem)] flex gap-4 max-w-md mx-auto z-50">
         <button 
           onClick={() => navigate(-1)}
           className="flex-1 py-4 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold rounded-2xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"

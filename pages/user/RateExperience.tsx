@@ -225,7 +225,7 @@ const RateExperience: React.FC = () => {
 
   return (
     <div className="bg-background-light dark:bg-background-dark text-slate-800 dark:text-slate-100 min-h-screen flex flex-col max-w-md mx-auto">
-      <header className="sticky top-0 z-50 bg-background-light dark:bg-background-dark border-b border-gray-200 dark:border-gray-800 px-4 py-4 flex items-center">
+      <header className="sticky top-0 z-50 bg-background-light dark:bg-background-dark border-b border-gray-200 dark:border-gray-800 px-4 pt-[calc(env(safe-area-inset-top,0px)+1rem)] pb-4 flex items-center">
         <button 
           onClick={() => navigate(-1)}
           className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
@@ -347,7 +347,7 @@ const RateExperience: React.FC = () => {
       </main>
 
 
-      <footer className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/90 dark:bg-background-dark/90 backdrop-blur-md border-t border-gray-100 dark:border-gray-800 px-5 pt-4 pb-8 space-y-3 z-50">
+      <footer className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/90 dark:bg-background-dark/90 backdrop-blur-md border-t border-gray-100 dark:border-gray-800 px-5 pt-4 pb-[calc(env(safe-area-inset-bottom,0px)+1.25rem)] space-y-3 z-50">
         <div className="flex gap-3">
           <button 
             onClick={() => navigate(-1)}

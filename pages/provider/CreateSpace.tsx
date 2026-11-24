@@ -283,7 +283,7 @@ const CreateSpaceContent: React.FC = () => {
 
   return (
     <div className="bg-background-light dark:bg-background-dark font-sans text-slate-800 dark:text-slate-100 antialiased min-h-screen flex flex-col max-w-md mx-auto relative shadow-2xl transition-colors">
-      <header className="sticky top-0 z-50 bg-white/90 dark:bg-surface-dark/90 backdrop-blur-md border-b border-slate-100 dark:border-slate-800 px-6 py-4 flex items-center justify-between">
+      <header className="sticky top-0 z-50 bg-white/90 dark:bg-surface-dark/90 backdrop-blur-md border-b border-slate-100 dark:border-slate-800 px-6 pt-[calc(env(safe-area-inset-top,0px)+1rem)] pb-4 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <button onClick={handleBack} className="p-2 -ml-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors active:scale-90">
             <span className="material-icons-outlined block">arrow_back</span>
@@ -966,7 +966,7 @@ const CreateSpaceContent: React.FC = () => {
         )}
       </main>
 
-      <footer className="fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-surface-dark/95 backdrop-blur-xl border-t border-slate-100 dark:border-slate-800 px-6 py-6 flex gap-4 max-w-md mx-auto z-[60]">
+      <footer className="fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-surface-dark/95 backdrop-blur-xl border-t border-slate-100 dark:border-slate-800 px-6 pt-4 pb-[calc(env(safe-area-inset-bottom,0px)+1.25rem)] flex gap-4 max-w-md mx-auto z-[60]">
         <button
           onClick={handleBack}
           disabled={loading}

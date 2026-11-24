@@ -191,7 +191,7 @@ const CreateInvitation: React.FC = () => {
 
   return (
     <div className="bg-background-light dark:bg-background-dark text-slate-800 dark:text-slate-100 min-h-screen flex flex-col max-w-md mx-auto">
-      <header className="sticky top-0 z-50 bg-white/80 dark:bg-background-dark/80 backdrop-blur-md px-4 py-4 flex items-center justify-between border-b border-gray-100 dark:border-gray-800">
+      <header className="sticky top-0 z-50 bg-white/80 dark:bg-background-dark/80 backdrop-blur-md px-4 pt-[calc(env(safe-area-inset-top,0px)+1rem)] pb-4 flex items-center justify-between border-b border-gray-100 dark:border-gray-800">
         <button 
           onClick={() => navigate('/user/home')}
           className="p-2 -ml-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors active:scale-90"
@@ -399,7 +399,7 @@ const CreateInvitation: React.FC = () => {
         </div>
       </main>
 
-      <footer className="fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-background-dark/95 backdrop-blur-xl p-5 pb-8 border-t border-slate-100 dark:border-slate-800 max-w-md mx-auto z-50">
+      <footer className="fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-background-dark/95 backdrop-blur-xl px-5 pt-4 pb-[calc(env(safe-area-inset-bottom,0px)+1.25rem)] border-t border-slate-100 dark:border-slate-800 max-w-md mx-auto z-50">
         <div className="flex gap-3">
           <button
             onClick={openPreview}
