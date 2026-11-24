@@ -8,6 +8,7 @@ import { getProfile } from '../../src/services/profileService';
 import { getCategories, Category } from '../../src/services/categoryService';
 import { shareVenue } from '../../src/utils/shareVenue';
 import { getInitialsAvatar } from '../../src/utils/avatar';
+import { getTodayDateStr } from '../../src/utils/date';
 import { toast } from 'sonner';
 import { Capacitor } from '@capacitor/core';
 import { Venue } from '../../types';
@@ -78,12 +79,18 @@ const Home: React.FC = () => {
 
   const nextBooking = useMemo(() => {
     if (!bookings || bookings.length === 0) return null;
-    const todayStr = new Date().toISOString().split('T')[0];
+    const todayStr = getTodayDateStr();
     const upcoming = bookings
-      .filter((b) => (b.eventDate ? b.eventDate >= todayStr : true) && b.rawStatus !== 'cancelled')
+      .filter(
+        (b) =>
+          Boolean(b.eventDate) &&
+          b.eventDate >= todayStr &&
+          b.rawStatus !== 'cancelled' &&
+          b.rawStatus !== 'rejected' &&
+          b.rawStatus !== 'completed'
+      )
       .sort((a, b) => (a.eventDate || '').localeCompare(b.eventDate || ''));
-    if (upcoming.length > 0) return upcoming[0];
-    return bookings[0] || null;
+    return upcoming[0] || null;
   }, [bookings]);
 
   const handleShare = async (e: React.MouseEvent, venue: Venue) => {

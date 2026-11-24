@@ -2,10 +2,13 @@
 import React, { useRef, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, Star, ImagePlus, X } from 'lucide-react';
+import { toast } from 'sonner';
 import { supabase } from '../../lib/supabaseClient';
+import { useUser } from '../../context/UserContext';
 import { createNotification } from '../../src/services/notificationService';
 
 interface RateState {
+  bookingId?: string;
   venueId?: string;
   venueName?: string;
   image?: string;
@@ -15,10 +18,68 @@ interface RateState {
 
 const DEFAULT_IMAGE = 'https://images.unsplash.com/photo-1519167758481-83f5e181dcc3?auto=format&fit=crop&q=80&w=400';
 
+const withTimeout = <T,>(promise: Promise<T>, ms: number, label: string): Promise<T> =>
+  Promise.race([
+    promise,
+    new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error(`Tiempo de espera agotado (${label}). Intenta de nuevo.`)), ms)
+    ),
+  ]);
+
+const compressImageFile = (file: File, maxDim = 1400, quality = 0.8): Promise<{ blob: Blob; ext: string; contentType: string }> =>
+  new Promise((resolve) => {
+    const fallbackExt = (file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg';
+    const fallback = () => resolve({ blob: file, ext: fallbackExt, contentType: file.type || 'image/jpeg' });
+
+    const img = new Image();
+    const objUrl = URL.createObjectURL(file);
+    const timer = setTimeout(() => {
+      URL.revokeObjectURL(objUrl);
+      fallback();
+    }, 5000);
+
+    img.onload = () => {
+      clearTimeout(timer);
+      URL.revokeObjectURL(objUrl);
+      try {
+        let { width, height } = img;
+        if (width > maxDim || height > maxDim) {
+          const ratio = Math.min(maxDim / width, maxDim / height);
+          width = Math.round(width * ratio);
+          height = Math.round(height * ratio);
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return fallback();
+        ctx.drawImage(img, 0, 0, width, height);
+        canvas.toBlob(
+          (blob) => {
+            if (!blob) return fallback();
+            resolve({ blob, ext: 'jpg', contentType: 'image/jpeg' });
+          },
+          'image/jpeg',
+          quality
+        );
+      } catch {
+        fallback();
+      }
+    };
+    img.onerror = () => {
+      clearTimeout(timer);
+      URL.revokeObjectURL(objUrl);
+      fallback();
+    };
+    img.src = objUrl;
+  });
+
 const RateExperience: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user: ctxUser } = useUser();
   const state = (location.state as RateState | null) || {};
+  const bookingId = state.bookingId || null;
   const venueId = state.venueId || null;
   const venueName = state.venueName || 'Tu reserva';
   const venueImage = state.image || DEFAULT_IMAGE;
@@ -63,16 +124,21 @@ const RateExperience: React.FC = () => {
   };
 
   const handleSubmit = async () => {
-    if (!venueId) {
-      alert('Selecciona una reserva desde "Pasadas" en Reservas para valorarla.');
+    if (isSubmitting) return;
+    if (!venueId || !bookingId) {
+      toast.error('Selecciona una reserva desde "Pasadas" en Reservas para valorarla.');
       navigate('/user/bookings');
       return;
     }
     setIsSubmitting(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        alert('Debes iniciar sesión para publicar una reseña.');
+      let userId = ctxUser?.id;
+      if (!userId) {
+        const { data: { user } } = await withTimeout(supabase.auth.getUser(), 10000, 'sesión');
+        userId = user?.id;
+      }
+      if (!userId) {
+        toast.error('Debes iniciar sesión para publicar una reseña.');
         navigate('/user/login');
         return;
       }
@@ -81,50 +147,66 @@ const RateExperience: React.FC = () => {
       const uploadedUrls: string[] = [];
       for (let i = 0; i < photos.length; i++) {
         const { file } = photos[i];
-        const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
-        const path = `${user.id}/${Date.now()}-${i}.${ext}`;
-        const { error: upErr } = await supabase.storage
-          .from('review-photos')
-          .upload(path, file, { contentType: file.type, upsert: false });
+        const { blob, ext, contentType } = await compressImageFile(file);
+        const path = `${userId}/${Date.now()}-${i}.${ext}`;
+        const { error: upErr } = await withTimeout(
+          supabase.storage.from('review-photos').upload(path, blob, { contentType, upsert: false }),
+          25000,
+          `foto ${i + 1}`
+        );
         if (upErr) throw upErr;
         const { data: pub } = supabase.storage.from('review-photos').getPublicUrl(path);
         uploadedUrls.push(pub.publicUrl);
       }
 
-      const { error } = await supabase.from('reviews').insert({
-        user_id: user.id,
-        venue_id: venueId,
-        rating: mainRating,
-        comment: comment || null,
-        photos: uploadedUrls,
-      });
-      if (error) throw error;
-
-      // Notificar al anfitrión
-      try {
-        const { data: venue } = await supabase
-          .from('venues')
-          .select('name, provider_id')
-          .eq('id', venueId)
-          .maybeSingle();
-        if (venue?.provider_id) {
-          await createNotification({
-            userId: venue.provider_id,
-            title: 'Nueva reseña recibida',
-            message: `Recibiste una reseña de ${mainRating}★ en ${venue.name}.`,
-            type: 'info',
-            link: '/provider/stats',
-          });
+      const { error } = await withTimeout(
+        Promise.resolve(
+          supabase.from('reviews').insert({
+            booking_id: bookingId,
+            user_id: userId,
+            venue_id: venueId,
+            rating: mainRating,
+            comment: comment.trim() || null,
+            photos: uploadedUrls,
+          })
+        ),
+        15000,
+        'guardar reseña'
+      );
+      if (error) {
+        if ((error as any).code === '23505') {
+          throw new Error('Ya calificaste esta reserva.');
         }
-      } catch (notifErr) {
-        console.error('notify provider review failed', notifErr);
+        throw error;
       }
 
-      alert('¡Gracias por tu reseña!');
+      // Notificar al anfitrión en segundo plano sin bloquear la navegación
+      void (async () => {
+        try {
+          const { data: venue } = await supabase
+            .from('venues')
+            .select('name, provider_id')
+            .eq('id', venueId)
+            .maybeSingle();
+          if (venue?.provider_id) {
+            await createNotification({
+              userId: venue.provider_id,
+              title: 'Nueva reseña recibida',
+              message: `Recibiste una reseña de ${mainRating}★ en ${venue.name}.`,
+              type: 'info',
+              link: '/provider/stats',
+            });
+          }
+        } catch (notifErr) {
+          console.error('notify provider review failed', notifErr);
+        }
+      })();
+
+      toast.success('¡Gracias por tu reseña!');
       navigate('/user/bookings');
     } catch (e: any) {
       console.error(e);
-      alert(`No se pudo guardar la reseña: ${e?.message || 'error desconocido'}`);
+      toast.error(`No se pudo guardar la reseña: ${e?.message || 'error desconocido'}`);
     } finally {
       setIsSubmitting(false);
     }

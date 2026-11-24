@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { getVenueById, getVenueServices, PublicVenueService } from '../../src/services/venueService';
+import { getVenueById, getVenueServices, getVenueReviews, PublicVenueService, VenueReview } from '../../src/services/venueService';
 import { useUser } from '../../context/UserContext';
 import { Venue } from '../../types';
 import { getAmenity } from '../../src/constants/amenities';
@@ -17,9 +17,11 @@ const VenueDetail: React.FC = () => {
   const [venue, setVenue] = useState<Venue | null>(null);
   const [loading, setLoading] = useState(true);
   const [extras, setExtras] = useState<PublicVenueService[]>([]);
+  const [reviews, setReviews] = useState<VenueReview[]>([]);
   const [selectedExtras, setSelectedExtras] = useState<Set<string>>(new Set());
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const galleryRef = useRef<HTMLDivElement | null>(null);
+  const reviewsRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -29,6 +31,7 @@ const VenueDetail: React.FC = () => {
       setLoading(false);
     });
     getVenueServices(id).then(setExtras).catch(() => setExtras([]));
+    getVenueReviews(id).then(setReviews).catch(() => setReviews([]));
   }, [id]);
 
   const toggleExtra = (sid: string) => {
@@ -261,11 +264,22 @@ const VenueDetail: React.FC = () => {
           <section>
             <div className="flex justify-between items-start">
               <h1 className="text-2xl font-bold dark:text-white font-display">{venue.name}</h1>
-              <div className="flex items-center gap-1 mt-1">
+              <button
+                type="button"
+                onClick={() => reviewsRef.current?.scrollIntoView({ behavior: 'smooth' })}
+                className="flex items-center gap-1 mt-1 hover:opacity-80 transition-opacity"
+                aria-label="Ver reseñas"
+              >
                 <span className="material-icons-outlined text-yellow-400 text-[18px]">star</span>
-                <span className="font-bold">{venue.rating}</span>
-                <span className="text-slate-500 dark:text-slate-400 text-sm">({venue.reviewsCount})</span>
-              </div>
+                <span className="font-bold">
+                  {reviews.length > 0
+                    ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
+                    : venue.rating}
+                </span>
+                <span className="text-slate-500 dark:text-slate-400 text-sm">
+                  ({reviews.length > 0 ? reviews.length : venue.reviewsCount})
+                </span>
+              </button>
             </div>
             <div className="flex items-center gap-1 text-slate-500 dark:text-slate-400 mt-1">
               <span className="material-icons-outlined text-primary text-[18px]">location_on</span>
@@ -404,6 +418,76 @@ const VenueDetail: React.FC = () => {
                 Obtener indicaciones
               </a>
             </div>
+          </section>
+
+          <hr className="border-slate-100 dark:border-slate-800"/>
+
+          <section ref={reviewsRef} className="scroll-mt-20">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold font-display">
+                Reseñas ({reviews.length > 0 ? reviews.length : venue.reviewsCount})
+              </h2>
+              {reviews.length > 0 && (
+                <div className="flex items-center gap-1 text-sm font-bold">
+                  <span className="material-icons-outlined text-yellow-400 text-[18px]">star</span>
+                  <span>{(reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)}</span>
+                </div>
+              )}
+            </div>
+            {reviews.length === 0 ? (
+              <p className="text-sm text-slate-400 dark:text-slate-500">
+                Aún no hay reseñas para este espacio.
+              </p>
+            ) : (
+              <div className="space-y-4">
+                {reviews.map((rev) => (
+                  <div
+                    key={rev.id}
+                    className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 space-y-2"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <div>
+                        <p className="text-sm font-bold text-slate-800 dark:text-white">{rev.authorName}</p>
+                        <p className="text-[11px] text-slate-400">
+                          {new Date(rev.createdAt).toLocaleDateString('es-MX', {
+                            day: 'numeric',
+                            month: 'short',
+                            year: 'numeric',
+                          })}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-0.5">
+                        {[1, 2, 3, 4, 5].map((s) => (
+                          <span
+                            key={s}
+                            className={`material-icons-outlined text-[16px] ${
+                              s <= rev.rating ? 'text-yellow-400' : 'text-slate-300 dark:text-slate-600'
+                            }`}
+                          >
+                            star
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                    {rev.comment && (
+                      <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">{rev.comment}</p>
+                    )}
+                    {rev.photos.length > 0 && (
+                      <div className="flex gap-2 overflow-x-auto pt-1 no-scrollbar">
+                        {rev.photos.map((url, idx) => (
+                          <img
+                            key={idx}
+                            src={url}
+                            alt={`Foto reseña ${idx + 1}`}
+                            className="w-20 h-20 rounded-xl object-cover flex-shrink-0 border border-slate-200 dark:border-slate-700"
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </section>
         </div>
       </main>

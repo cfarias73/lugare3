@@ -72,7 +72,7 @@ const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
           Logout
         </button>
       </aside>
-      <main className="flex-1 p-8 md:p-12 overflow-y-auto">
+      <main className="flex-1 min-w-0 p-8 md:p-12 overflow-y-auto">
         {children}
       </main>
     </div>

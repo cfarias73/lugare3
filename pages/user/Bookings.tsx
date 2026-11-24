@@ -314,7 +314,7 @@ const Bookings: React.FC = () => {
                     <div className="flex gap-2 flex-wrap">
                       {tab === 'past' && (
                         <button
-                          onClick={() => navigate('/user/rate', { state: { venueId: booking.venueId, venueName: booking.venueName, image: booking.image, date: booking.date, time: booking.time } })}
+                          onClick={() => navigate('/user/rate', { state: { bookingId: booking.id, venueId: booking.venueId, venueName: booking.venueName, image: booking.image, date: booking.date, time: booking.time } })}
                           className="bg-yellow-400 hover:bg-yellow-500 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-colors flex items-center gap-1"
                         >
                           <span className="material-icons-outlined text-base">star</span>

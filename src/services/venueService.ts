@@ -109,6 +109,53 @@ export const getVenueServices = async (venueId: string): Promise<PublicVenueServ
   }));
 };
 
+export interface VenueReview {
+  id: string;
+  rating: number;
+  comment: string | null;
+  photos: string[];
+  createdAt: string;
+  authorName: string;
+}
+
+export const getVenueReviews = async (venueId: string): Promise<VenueReview[]> => {
+  const { data, error } = await supabase
+    .from('reviews')
+    .select('id, rating, comment, photos, created_at, profiles(name)')
+    .eq('venue_id', venueId)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    // Fallback sin join a profiles por si RLS restringe la lectura de perfiles
+    const { data: plain, error: plainErr } = await supabase
+      .from('reviews')
+      .select('id, rating, comment, photos, created_at')
+      .eq('venue_id', venueId)
+      .order('created_at', { ascending: false });
+    if (plainErr) {
+      console.warn('Error fetching venue reviews', plainErr);
+      return [];
+    }
+    return (plain || []).map((r: any) => ({
+      id: r.id,
+      rating: Number(r.rating) || 0,
+      comment: r.comment || null,
+      photos: Array.isArray(r.photos) ? r.photos.filter(Boolean) : [],
+      createdAt: r.created_at,
+      authorName: 'Huésped',
+    }));
+  }
+
+  return (data || []).map((r: any) => ({
+    id: r.id,
+    rating: Number(r.rating) || 0,
+    comment: r.comment || null,
+    photos: Array.isArray(r.photos) ? r.photos.filter(Boolean) : [],
+    createdAt: r.created_at,
+    authorName: r.profiles?.name || 'Huésped',
+  }));
+};
+
 export const getServicesByIds = async (ids: string[]): Promise<PublicVenueService[]> => {
   if (ids.length === 0) return [];
   const { data, error } = await supabase

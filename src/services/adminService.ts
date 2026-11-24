@@ -71,7 +71,7 @@ export const getAdminStats = async () => {
     getUserIdsByRole('admin'),
     supabase.from('bookings').select('*', { count: 'exact', head: true }),
     supabase.from('bookings').select('*', { count: 'exact', head: true }).eq('event_date', new Date().toISOString().slice(0, 10)),
-    supabase.from('bookings').select('total_price').eq('status', 'completed'),
+    supabase.from('bookings').select('total_price').in('status', ['confirmed', 'completed', 'paid']),
     supabase.from('venues').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
   ]);
   if (bookingsRes.error) throw bookingsRes.error;
@@ -285,7 +285,7 @@ export const getFinanceData = async () => {
   const { data, error } = await supabase
     .from('bookings')
     .select('id, event_date, status, total_price, venues(name, category)')
-    .eq('status', 'completed')
+    .in('status', ['confirmed', 'completed', 'paid'])
     .order('event_date', { ascending: false });
   if (error) throw error;
   return data || [];
@@ -320,9 +320,8 @@ export const getPayouts = async () => {
   const { data, error } = await supabase
     .from('bookings')
     .select('id, event_date, status, total_price, host_paid_at, venues(name, provider_id)')
-    .in('status', ['confirmed', 'completed'])
-    .order('event_date', { ascending: false })
-    .limit(300);
+    .in('status', ['confirmed', 'completed', 'paid'])
+    .order('event_date', { ascending: false });
   if (error) throw error;
 
   const rows = data || [];

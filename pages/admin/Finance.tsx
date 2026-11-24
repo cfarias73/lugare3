@@ -15,11 +15,25 @@ import {
 
 type Period = 'day' | 'week' | 'month' | 'year' | 'all';
 
-const PERIOD_MS: Record<Exclude<Period, 'all'>, number> = {
-  day: 24 * 60 * 60 * 1000,
-  week: 7 * 24 * 60 * 60 * 1000,
-  month: 30 * 24 * 60 * 60 * 1000,
-  year: 365 * 24 * 60 * 60 * 1000,
+const matchesPeriod = (eventDateValue: string, period: Exclude<Period, 'all'>) => {
+  const [year, month, day] = eventDateValue.slice(0, 10).split('-').map(Number);
+  const eventDate = new Date(year, month - 1, day);
+  const today = new Date();
+
+  if (Number.isNaN(eventDate.getTime())) return false;
+  if (period === 'year') return eventDate.getFullYear() === today.getFullYear();
+  if (period === 'month') {
+    return eventDate.getFullYear() === today.getFullYear() && eventDate.getMonth() === today.getMonth();
+  }
+  if (period === 'day') {
+    return eventDate.getFullYear() === today.getFullYear() &&
+      eventDate.getMonth() === today.getMonth() &&
+      eventDate.getDate() === today.getDate();
+  }
+
+  const startOfWeek = new Date(today.getFullYear(), today.getMonth(), today.getDate() - ((today.getDay() + 6) % 7));
+  const endOfWeek = new Date(startOfWeek.getFullYear(), startOfWeek.getMonth(), startOfWeek.getDate() + 7);
+  return eventDate >= startOfWeek && eventDate < endOfWeek;
 };
 
 const Finance: React.FC = () => {
@@ -43,12 +57,11 @@ const Finance: React.FC = () => {
   }, [rows]);
 
   const filtered = useMemo(() => {
-    const now = Date.now();
     return rows.filter((r) => {
       if (category !== 'all' && r.venues?.category !== category) return false;
       if (period === 'all') return true;
       if (!r.event_date) return false;
-      return now - new Date(r.event_date).getTime() <= PERIOD_MS[period];
+      return matchesPeriod(r.event_date, period);
     });
   }, [rows, period, category]);
 
@@ -109,7 +122,7 @@ const Finance: React.FC = () => {
     { label: 'Comisión Stripe', value: `-${fmtMXN(totals.stripe)}`, icon: 'credit_card', color: 'text-red-500 bg-red-50 dark:bg-red-900/20' },
     { label: 'Neto Lugare', value: fmtMXN(totals.lugareNet), icon: 'account_balance', color: 'text-blue-600 bg-blue-50 dark:bg-blue-900/20' },
     { label: 'Pago anfitriones', value: fmtMXN(totals.hostPayout), icon: 'storefront', color: 'text-purple-600 bg-purple-50 dark:bg-purple-900/20' },
-    { label: 'Reservas completadas', value: totals.count.toLocaleString(), icon: 'event_available', color: 'text-slate-700 bg-slate-100 dark:bg-slate-800' },
+    { label: 'Reservas pagadas', value: totals.count.toLocaleString(), icon: 'event_available', color: 'text-slate-700 bg-slate-100 dark:bg-slate-800' },
   ];
 
   return (
@@ -159,7 +172,7 @@ const Finance: React.FC = () => {
             </div>
             {byCategory.length === 0 ? (
               <div className="p-6">
-                <EmptyState title="Sin ingresos" description="No hay reservas completadas en este periodo." icon="payments" />
+                <EmptyState title="Sin ingresos" description="No hay reservas pagadas en este periodo." icon="payments" />
               </div>
             ) : (
               <table className="w-full text-left">
